@@ -269,7 +269,7 @@ def ask_medimind(question, langue_precedente="fr"):
         model=MODELE,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_content},   # ← ICI
+            {"role": "user", "content": user_content},
         ],
         options={"temperature": 0.4, "num_predict": 300},
     )
