@@ -67,22 +67,24 @@ Dans ce cas, termine ta réponse par la balise [ORIENTER].
 
 CLASSIF_PROMPT = """
 Tu es un filtre. Réponds uniquement par OUI ou NON.
+Le message peut être en français ou en anglais.
 
 OUI si le message parle de ce que ressent ou vit l'étudiant : stress, examens,
 moral, fatigue, sommeil, alimentation, solitude, confiance en soi,
 procrastination, concentration, argent, relations, orientation, écrans,
-ou s'il s'agit d'une salutation.
+s'il s'agit d'une salutation, ou s'il répond à une proposition de MediMind
+("oui", "ok", "yes", "sure", "non merci").
 NON si c'est une demande d'information ou de service sans lien avec son bien-être.
 
 Exemples :
 "Comment cuisiner du riz ?" -> NON
+"How do I cook pasta?" -> NON
 "Je saute des repas depuis les partiels" -> OUI
-"Fais mon exercice de maths" -> NON
-"Je n'arrive pas à me mettre à mes devoirs" -> OUI
-"Quelle est la capitale du Japon ?" -> NON
-"J'ai plus d'argent pour finir le mois et ça m'angoisse" -> OUI
+"I can't sleep before my exams" -> OUI
+"Fix my Python code" -> NON
+"I feel lonely since I moved here" -> OUI
 "Je doute de ma filière" -> OUI
-"Bonjour" -> OUI
+"Hello" -> OUI
 """
 
 MOTS_RISQUE = {
@@ -158,6 +160,9 @@ TEXTES = {
 
 def contient(texte, mots):
     texte = texte.lower()
+    # re.escape : évite de combiner le texte avec du regex
+    # f permet d'écrire une varibale dans un string à l'aide de { }
+    # r permet d'écrire du regex dans un string
     return any(re.search(rf"\b{re.escape(m)}\b", texte) for m in mots)
 
 def detecter_risque(texte):
