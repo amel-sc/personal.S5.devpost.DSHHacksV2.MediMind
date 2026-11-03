@@ -281,10 +281,10 @@ def ask_medimind(question, langue_precedente="fr"):
     return reponse
 
 
-langue = "fr"
+# langue = "fr"
 
-while True:
-    question = input("\nÉtudiant : ")
-    if question.lower() == "quit":
-        break
-    print("\nMediMind :", ask_medimind(question, langue))
+# while True:
+#     question = input("\nÉtudiant : ")
+#     if question.lower() == "quit":
+#         break
+#     print("\nMediMind :", ask_medimind(question, langue))
