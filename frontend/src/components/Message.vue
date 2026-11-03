@@ -1,17 +1,14 @@
 <script setup>
 defineProps({
-  messages: {
+  message: {
     type: Array,
-    default: () => []
+    required: true
   }
 });
 </script>
 
 <template>
-  <div class="d-flex flex-column gap-3">
     <div
-      v-for="(message, index) in messages"
-      :key="index"
       class="d-flex"
       :class="message.sender === 'user'
         ? 'justify-content-end'
@@ -30,7 +27,6 @@ defineProps({
         <p class="mb-0">{{ message.content }}</p>
       </div>
     </div>
-  </div>
 </template>
 
 <style scoped>

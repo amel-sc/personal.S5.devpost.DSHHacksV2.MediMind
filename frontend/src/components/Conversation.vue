@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import Messages from './Messages.vue';
+import Message from './Message.vue';
 
 const message = ref('');
 
@@ -91,7 +92,9 @@ function envoyerMessage() {
 
 <template>
   <div class="conversation">
-    <Messages :messages="messages" />
+      <div class="d-flex flex-column gap-3">
+            <Message v-for="message in messages" :message="message" />
+      </div>
   </div>
 
   <div class="fixed-bottom border-top">
