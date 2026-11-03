@@ -1,7 +1,7 @@
 <script setup>
 defineProps({
   message: {
-    type: Array,
+    type: Object,
     required: true
   }
 });
