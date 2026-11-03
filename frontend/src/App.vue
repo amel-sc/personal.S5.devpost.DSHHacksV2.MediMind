@@ -4,7 +4,7 @@ import Conversation from './components/Conversation.vue';
 
 <template>
   <header>
-    <nav class="navbar bg-1 fg-2">
+    <nav class="navbar fixed-top bg-1 fg-2">
       <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">MediMind</span>
       </div>

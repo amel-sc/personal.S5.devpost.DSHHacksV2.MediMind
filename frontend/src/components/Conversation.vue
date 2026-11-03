@@ -130,5 +130,6 @@ function envoyerMessage() {
 <style scoped>
 .conversation {
   padding-bottom: 100px;
+  padding-top: 100px;
 }
 </style>
