@@ -38,12 +38,7 @@ async function requete(methode, chemin, donnees) {
   return corps
 }
 
-// // function to to prediction
-// export function prediction(donnees) {
-//   return requete ('POST', `/prediction`, donnees)
-// }
-
-// // function to get prediction by id
-// export function getPrediction(id) {
-//     return requete('GET', `/prediction/${id}`)
-// }
+// function to send message to medimind
+export function sendMessage(donnees) {
+    return requete('POST', '/message/send', donnees)
+}
