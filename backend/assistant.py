@@ -7,7 +7,7 @@ import re
 from lingua import Language, LanguageDetectorBuilder
 
 MODELE = "qwen3:4b-instruct"
-SEUIL_DISTANCE = 0.64
+SEUIL_DISTANCE = {"fr": 0.64, "en": 0.62}
 
 client = chromadb.PersistentClient(path="./chroma_db")
 embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -236,7 +236,7 @@ def ask_medimind(question, langue_precedente="fr"):
             results["metadatas"][0],
             results["distances"][0],
         )
-        if dist < SEUIL_DISTANCE
+        if dist < SEUIL_DISTANCE[langue]
     ]
 
     # ③ Cas douteux : aucun document pertinent

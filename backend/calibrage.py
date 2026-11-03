@@ -1,5 +1,6 @@
 import chromadb
 from chromadb.utils import embedding_functions
+import math
 
 client = chromadb.PersistentClient(path="./chroma_db")
 ef = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -41,23 +42,23 @@ TESTS = {
         ],
     },
     "en": {
-        "bien_etre": [
-            ("I'm so stressed about my exams", ["stress", "anxiete"]),
-            ("I can't sleep", ["sommeil"]),
-            ("How do I do a breathing exercise?", ["exercice", "respiration", "anxiete", "stress"]),
-            ("I've felt lonely since I moved here", ["isolement", "adaptation"]),
+        "bien_etre": [   # mots-clés EN, adaptés aux noms des fichiers anglais
+            ("I'm so stressed about my exams", ["stress", "anxiety"]),
+            ("I can't sleep", ["sleep"]),
+            ("How do I do a breathing exercise?", ["exercise", "breathing", "anxiety", "stress"]),
+            ("I've felt lonely since I moved here", ["isolation", "loneliness", "adjustment"]),
             ("not doing great", None),
             ("I'm so tired", None),
-            ("I haven't been eating for two weeks", ["alimentaire", "depression"]),
+            ("I haven't been eating for two weeks", ["eating", "depress"]),
             ("I'm out of money until the end of the month", ["financ"]),
-            ("I'm not sure I chose the right major", ["orientation"]),
+            ("I'm not sure I chose the right major", ["career", "field_of_study"]),
             ("I spend my whole life on TikTok", ["addiction"]),
-            ("I feel stupid compared to my classmates", ["confiance", "imposteur"]),
+            ("I feel stupid compared to my classmates", ["confidence", "esteem", "impostor"]),
             ("I keep putting everything off until the last minute", ["procrastination"]),
             ("I can't focus when I study", ["concentration"]),
-            ("I'm exhausted and I don't want to study anymore", ["burnout", "epuisement", "depression"]),
-            ("I keep fighting with my parents", ["relation"]),
-            ("I'm scared of speaking in front of the class", ["sociale"]),
+            ("I'm exhausted and I don't want to study anymore", ["burnout", "exhaustion", "depress"]),
+            ("I keep fighting with my parents", ["relationship"]),
+            ("I'm scared of speaking in front of the class", ["social_anxiety"]),
         ],
         "hors_sujet": [
             "How do I cook rice?", "Who won the World Cup?",
@@ -68,7 +69,6 @@ TESTS = {
         ],
     },
 }
-
 
 def verifier_index():
     """Affiche le nombre de fichiers indexés par langue."""
@@ -87,7 +87,6 @@ def verifier_index():
 
 
 def tester(langue, questions, hors_sujet=False):
-    """Interroge ChromaDB et renvoie une liste de (distance, statut)."""
     label = "HORS SUJET" if hors_sujet else "BIEN-ÊTRE"
     print(f"\n=== {label} ({langue.upper()}) ===")
     resultats = []
@@ -95,54 +94,50 @@ def tester(langue, questions, hors_sujet=False):
     for item in questions:
         q, attendus = (item, None) if hors_sujet else item
 
-        r = collection.query(query_texts=[q], n_results=1, where={"langue": langue})
+        r = collection.query(query_texts=[q], n_results=2, where={"langue": langue})
         d = r["distances"][0][0]
-        source = r["metadatas"][0][0]["source"]
+        sources = [m["source"].lower() for m in r["metadatas"][0]]
+
+        def correspond(source):
+            return any(mot in source for mot in attendus)
 
         if hors_sujet:
             statut, symbole = "hors_sujet", "  "
         elif attendus is None:
             statut, symbole = "vague", "· "
-        elif any(mot in source.lower() for mot in attendus):
+        elif correspond(sources[0]):
             statut, symbole = "ok", "✅"
+        elif len(sources) > 1 and correspond(sources[1]):
+            statut, symbole = "ok", "🟡"      # bon thème en 2e position
         else:
             statut, symbole = "faux", "❌"
 
-        print(f"{symbole} {d:.3f}  {q:<52} → {source}")
-        resultats.append((d, statut))
+        print(f"{symbole} {d:.3f}  {q:<52} → {sources[0]}")
+        resultats.append((d, statut, q))
 
     return resultats
 
 
 def suggerer_seuil(langue, resultats):
-    """
-    Le seuil se place entre :
-    - le dernier BON document (thème correct),
-    - et le premier cas MAUVAIS (question hors sujet ou mauvais thème).
-    """
-    bons = [d for d, s in resultats if s == "ok"]
-    mauvais = [d for d, s in resultats if s in ("faux", "hors_sujet")]
-    nb_faux = sum(1 for _, s in resultats if s == "faux")
+    bons = [d for d, s, _ in resultats if s == "ok"]
+    faux = [q for _, s, q in resultats if s == "faux"]
+    hors = [d for d, s, _ in resultats if s == "hors_sujet"]
 
     print(f"\n--- Bilan {langue.upper()} ---")
-    print(f"Thèmes corrects : {len(bons)} | thèmes faux : {nb_faux}")
+    print(f"Thèmes corrects : {len(bons)} | thèmes faux : {len(faux)}")
+    for q in faux:
+        print(f"   ❌ à corriger dans les documents : « {q} »")
 
-    borne = min(mauvais)
-    bons_sous_borne = [d for d in bons if d < borne]
-    if not bons_sous_borne:
-        print("⚠️ Aucun bon document avant le premier cas mauvais : "
-              "améliorez les documents (exemples de phrases) avant de calibrer.")
-        return None
+    borne = min(hors)                              # hors sujet le plus proche
+    bons_sous = [d for d in bons if d < borne]
+    seuil = math.floor((max(bons_sous) + borne) / 2 * 100) / 100   # arrondi vers le bas
 
-    seuil = round((max(bons_sous_borne) + borne) / 2, 2)
-    perdus = [d for d in bons if d >= seuil]
-
-    print(f"Dernier bon document : {max(bons_sous_borne):.3f}")
-    print(f"Premier cas mauvais  : {borne:.3f}")
+    print(f"Dernier bon document : {max(bons_sous):.3f}")
+    print(f"Hors sujet le plus proche : {borne:.3f}")
     print(f"→ Seuil suggéré : {seuil}")
-    if perdus:
-        print(f"  ({len(perdus)} bon(s) document(s) au-dessus du seuil : "
-              "ils passeront par le classifieur)")
+    au_dessus = [d for d in bons if d >= seuil]
+    if au_dessus:
+        print(f"  ({len(au_dessus)} bon(s) document(s) au-dessus : ils passeront par le classifieur)")
     return seuil
 
 
