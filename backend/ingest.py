@@ -51,9 +51,8 @@ for langue in ["fr", "en"]:
 
         collection.upsert(
             ids=[f"{langue}_{file_path.stem}_{i}" for i in range(len(chunks))],
-            documents=[contenu for _, contenu in chunks],
-            metadatas=[{"source": file_path.name, "theme": titre, "langue": langue}
-                       for titre, _ in chunks],
+            documents=chunks,
+            metadatas=[{"source": file_path.name, "langue": langue} for _ in chunks],
         )
         print(f"[{langue}] {file_path.name} : {len(chunks)} thèmes")
 
