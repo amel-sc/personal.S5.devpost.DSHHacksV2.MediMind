@@ -3,10 +3,11 @@ import { ref } from 'vue';
 import Message from './Message.vue';
 import { sendMessage } from '@/services/api.js';
 
-const message = ref('');
+const message = ref('')
 const erreur = ref(null)
+const chargment = ref(false)
 
-const messages = ref([]);
+const messages = ref([])
 
 async function envoyerMessage() {
   const contenu = message.value.trim();
@@ -20,8 +21,13 @@ async function envoyerMessage() {
 
   console.log('Message envoyé :', contenu);
 
+  message.value = '';
+
   // TODO : envoyer le message au backend et ajouter sa réponse
   try {
+    // active loading
+    chargment.value = true;
+
     const reponse = await sendMessage({
       message: contenu,
       langue: "fr"
@@ -31,9 +37,9 @@ async function envoyerMessage() {
     
   } catch (e) {
     erreur.value = "Une erreur s'est produite"
+  } finally {
+    chargment.value = false
   }
-
-  message.value = '';
 }
 </script>
 
@@ -44,6 +50,9 @@ async function envoyerMessage() {
       </div>
       <div v-else>
           <p><strong>MediMind</strong> : En quoi puis-je vous aidez en tant qu'assistant psychologique</p>
+      </div>
+      <div v-if="chargment" class="d-flex justify-content-start">
+        <span class="placeholder-wave fg-3">Traitement de réponse pour vous aidez…</span>
       </div>
   </div>
 
@@ -70,7 +79,7 @@ async function envoyerMessage() {
               type="submit"
               class="btn btn-primary"
               aria-label="Envoyer"
-              :disabled="!message.trim()"
+              :disabled="!message.trim() || chargment"
             >
               <i class="bi bi-send-fill"></i>
             </button>
