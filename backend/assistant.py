@@ -103,6 +103,10 @@ Réponds de manière claire, bienveillante et adaptée.
 
     return output[0]["generated_text"][-1]["content"]
 
+# Test
+question = "Comment réduire mon stress avant les examens ?"
+
+print(ask_medimind(question))
 
 # # Test
 # while True:
