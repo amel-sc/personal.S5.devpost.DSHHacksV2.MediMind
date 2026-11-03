@@ -83,14 +83,19 @@ Exemples :
 "Bonjour" -> OUI
 """
 
-# Mots risque (suicide)
-MOTS_RISQUE = ["suicide", "me suicider", "en finir", "mourir",
-               "me faire du mal", "me tuer", "plus envie de vivre"]
+MOTS_RISQUE = {
+    "fr": ["suicide", "me suicider", "en finir", "mourir", "me faire du mal",
+           "me tuer", "plus envie de vivre", "me scarifier"],
+    "en": ["suicide", "kill myself", "end it all", "want to die", "hurt myself",
+           "self harm", "self-harm", "no reason to live", "better off dead"],
+}
 
-# Mots physiques
-MOTS_PHYSIQUES = ["fièvre", "malade", "grippe", "vomi", "douleur",
-                  "mal à la tête", "mal au ventre", "migraine",
-                  "tousse", "toux", "blessé", "malaise"]
+MOTS_PHYSIQUES = {
+    "fr": ["fièvre", "malade", "grippe", "vomi", "douleur", "mal à la tête",
+           "mal au ventre", "migraine", "toux", "tousse", "malaise", "blessé"],
+    "en": ["fever", "flu", "vomit", "headache", "stomach ache", "migraine",
+           "cough", "injured", "i feel sick", "i'm sick", "i am sick"],
+}
 
 TEXTES = {
     "fr": {
