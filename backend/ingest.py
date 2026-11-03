@@ -60,6 +60,7 @@ for file_path in knowledge_dir.glob("*.txt"):
         for _ in chunks
     ]
 
+    # update or insert : mettre à jour ou insérer le document
     collection.upsert(
         ids=ids,
         documents=chunks,

@@ -55,9 +55,12 @@ def ask_medimind(question):
     # 4. Rechercher les documents pertinents
     results = collection.query(
         query_texts=[question],
+        # ne retourne que 3 résultat trouver
         n_results=3
     )
 
+    # récupère le document et la sources (metadatas) des resultats
+    # [0] car results est un tableau de tableau de resultat [ [documents] ] et [ [metadatas] ]
     documents = results["documents"][0]
     sources = results["metadatas"][0]
 
