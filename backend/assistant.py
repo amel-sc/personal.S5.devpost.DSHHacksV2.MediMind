@@ -225,6 +225,7 @@ def ask_medimind(question, langue_precedente="fr"):
     results = collection.query(
         query_texts=[question],
         n_results=3,
+        where={"langue": langue}, 
         include=["documents", "metadatas", "distances"],
     )
 
