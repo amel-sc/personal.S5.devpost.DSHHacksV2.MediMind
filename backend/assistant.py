@@ -3,6 +3,8 @@ from chromadb.utils import embedding_functions
 from ollama import chat
 # re signifie Regex
 import re
+# gestion de langue
+from lingua import Language, LanguageDetectorBuilder
 
 MODELE = "qwen3:4b-instruct"
 SEUIL_DISTANCE = 0.64
@@ -14,6 +16,10 @@ embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
 collection = client.get_collection(
     name="medimind_knowledge", embedding_function=embedding_function
 )
+
+detecteur = LanguageDetectorBuilder.from_languages(
+    Language.FRENCH, Language.ENGLISH
+).build()
 
 SYSTEM_PROMPT = """
 Tu es MediMind, un assistant de bien-être pour les étudiants.
@@ -158,6 +164,23 @@ TEXTES = {
     },
 }
 
+CONSIGNE_LANGUE = {
+    "fr": "Réponds en français.",
+    "en": "Answer in English only. The documents are in French: "
+          "translate the ideas naturally, do not quote them in French.",
+}
+
+def detecter_langue(texte, langue_precedente="fr"):
+    # "oui", "ok", "yes" : trop court pour être fiable, on garde la langue de la conversation
+    if len(texte.split()) < 3:
+        return langue_precedente
+    langue = detecteur.detect_language_of(texte)
+    if langue == Language.ENGLISH:
+        return "en"
+    if langue == Language.FRENCH:
+        return "fr"
+    return langue_precedente
+
 def contient(texte, mots):
     texte = texte.lower()
     # re.escape : évite de combiner le texte avec du regex
@@ -185,15 +208,18 @@ def est_dans_le_sujet(question):
     return r.message.content.strip().upper().startswith("OUI")
 
 
-def ask_medimind(question):
+def ask_medimind(question, langue_precedente="fr"):
+
+    langue = detecter_langue(question, langue_precedente) 
+    T = TEXTES[langue]   
 
     # ① Détection de risque
     if detecter_risque(question):
-        return REPONSE_URGENCE
+        return T["urgence"], langue
 
-     # ① bis Symptômes physiques : réponse fixe, sans LLM
-    if detecter_physique(question):
-        return REPONSE_PHYSIQUE
+    # ① bis Symptômes physiques : réponse fixe, sans LLM
+    if detecter_physique(question, langue):
+        return T["physique"], langue
 
     # ② Recherche + filtre de distance
     results = collection.query(
@@ -214,15 +240,17 @@ def ask_medimind(question):
 
     # ③ Cas douteux : aucun document pertinent
     if not pertinents and not est_dans_le_sujet(question):
-        return REPONSE_HORS_SUJET   # aucune génération : réponse immédiate
+        return T["hors_sujet"], langue
 
     # ④ Construction du contexte
     if pertinents:
         contexte = "\n\n".join(
                 f"[Thème : {meta['theme']}]\n{doc}" for doc, meta in pertinents
-            ) if pertinents else "Aucun document pertinent : écoute et pose une question."
+            )
     else:
-        contexte = "Aucun document pertinent. Propose simplement une écoute bienveillante."
+        contexte = ("Aucun document pertinent. N'invente aucun conseil. "
+                    "Si le message est vague, pose une question ouverte. "
+                    "Sinon, montre que tu as compris et propose d'en parler.")
 
     # Construit dans les deux cas
     user_content = f"""<documents>
@@ -231,7 +259,9 @@ def ask_medimind(question):
 
         <message_etudiant>
         {question}
-        </message_etudiant>"""
+        </message_etudiant>
+
+        {CONSIGNE_LANGUE[langue]}"""
 
     # ⑤ Génération
     response = chat(
@@ -246,12 +276,14 @@ def ask_medimind(question):
     reponse = response.message.content
 
     if "[ORIENTER]" in reponse:
-        reponse = reponse.replace("[ORIENTER]", "").strip() + RESSOURCES
+        reponse = reponse.replace("[ORIENTER]", "").strip() + T["ressources"]
     return reponse
 
+
+langue = "fr"
 
 while True:
     question = input("\nÉtudiant : ")
     if question.lower() == "quit":
         break
-    print("\nMediMind :", ask_medimind(question))
+    print("\nMediMind :", ask_medimind(question, langue))
