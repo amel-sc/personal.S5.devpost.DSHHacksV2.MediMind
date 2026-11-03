@@ -103,8 +103,23 @@ REPONSE_URGENCE = (
     "Tu peux aussi contacter le service de santé de ton université."
 )
 
+# Mots risque (suicide)
 MOTS_RISQUE = ["suicide", "me suicider", "en finir", "mourir",
                "me faire du mal", "me tuer", "plus envie de vivre"]
+
+# Mots physiques
+MOTS_PHYSIQUES = ["fièvre", "malade", "grippe", "vomi", "douleur",
+                  "mal à la tête", "mal au ventre", "migraine",
+                  "tousse", "toux", "blessé", "malaise"]
+
+REPONSE_PHYSIQUE = (
+    "Je suis désolé que tu ne te sentes pas bien physiquement. "
+    "Je ne peux pas donner d'avis médical : pour ces symptômes, le mieux est "
+    "de te reposer et de demander conseil à un médecin ou un pharmacien, "
+    "surtout si ça dure ou s'aggrave. En cas d'urgence, appelle le 15.\n"
+    "Si le fait d'être malade te stresse (cours manqués, examens, solitude...), "
+    "je suis là pour en parler."
+)
 
 
 def detecter_risque(texte):
@@ -112,6 +127,9 @@ def detecter_risque(texte):
     texte = texte.lower()
     return any(mot in texte for mot in MOTS_RISQUE)
 
+def detecter_physique(texte):
+    texte = texte.lower()
+    return any(mot in texte for mot in MOTS_PHYSIQUES)
 
 def est_dans_le_sujet(question):
     r = chat(
@@ -130,6 +148,10 @@ def ask_medimind(question):
     # ① Détection de risque
     if detecter_risque(question):
         return REPONSE_URGENCE
+
+     # ① bis Symptômes physiques : réponse fixe, sans LLM
+    if detecter_physique(question):
+        return REPONSE_PHYSIQUE
 
     # ② Recherche + filtre de distance
     results = collection.query(
