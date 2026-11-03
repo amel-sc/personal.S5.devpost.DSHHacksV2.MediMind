@@ -1,6 +1,8 @@
 import chromadb
 from chromadb.utils import embedding_functions
 from ollama import chat
+# re signifie Regex
+import re
 
 MODELE = "qwen3:4b-instruct"
 SEUIL_DISTANCE = 0.64
@@ -154,14 +156,17 @@ TEXTES = {
     },
 }
 
-def detecter_risque(texte):
-    # Version simple par mots-clés : à compléter avec le psychologue
+def contient(texte, mots):
     texte = texte.lower()
-    return any(mot in texte for mot in MOTS_RISQUE)
+    return any(re.search(rf"\b{re.escape(m)}\b", texte) for m in mots)
 
-def detecter_physique(texte):
-    texte = texte.lower()
-    return any(mot in texte for mot in MOTS_PHYSIQUES)
+def detecter_risque(texte):
+    # SÉCURITÉ : on vérifie TOUJOURS les deux langues, quelle que soit la langue détectée
+    return contient(texte, MOTS_RISQUE["fr"] + MOTS_RISQUE["en"])
+
+def detecter_physique(texte, langue):
+    # Ici, seulement la langue détectée (voir explication ci-dessous)
+    return contient(texte, MOTS_PHYSIQUES[langue])
 
 def est_dans_le_sujet(question):
     r = chat(
