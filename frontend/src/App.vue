@@ -1,3 +1,7 @@
+<script setup>
+import Conversation from './components/Conversation.vue';
+</script>
+
 <template>
   <header>
     <nav class="navbar bg-1 fg-2">
@@ -6,7 +10,8 @@
       </div>
     </nav>
   </header>
-  <main class="container mt-3">
 
+  <main class="container mt-3">
+    <Conversation />
   </main>
 </template>
