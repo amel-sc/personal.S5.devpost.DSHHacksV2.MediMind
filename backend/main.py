@@ -13,9 +13,9 @@ class MessageRequest(BaseModel):
 @app.post("/api/message/send")
 def traitement_message(data: MessageRequest):
     question = data.message
-    langue = data.langue
+    langue_recu = data.langue
 
-    reponse = ask_medimind(question, langue)
+    reponse, langue = ask_medimind(question, langue_recu)
 
     return JSONResponse(
         status_code = 200,

@@ -278,7 +278,7 @@ def ask_medimind(question, langue_precedente="fr"):
 
     if "[ORIENTER]" in reponse:
         reponse = reponse.replace("[ORIENTER]", "").strip() + T["ressources"]
-    return reponse
+    return reponse, langue
 
 
 # langue = "fr"

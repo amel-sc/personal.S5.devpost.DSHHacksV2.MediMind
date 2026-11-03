@@ -51,8 +51,8 @@ async function envoyerMessage() {
       <div v-else>
           <p><strong>MediMind</strong> : En quoi puis-je vous aidez en tant qu'assistant psychologique</p>
       </div>
-      <div v-if="chargment" class="d-flex justify-content-start">
-        <span class="placeholder-wave fg-3">Traitement de réponse pour vous aidez…</span>
+      <div v-if="chargment" class="d-flex justify-content-start mt-3">
+        <span class="placeholder-wave fg-3">Traitement des réponses pour vous aidez…</span>
       </div>
   </div>
 
