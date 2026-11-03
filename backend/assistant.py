@@ -246,7 +246,7 @@ def ask_medimind(question, langue_precedente="fr"):
     # ④ Construction du contexte
     if pertinents:
         contexte = "\n\n".join(
-                f"[Thème : {meta['theme']}]\n{doc}" for doc, meta in pertinents
+                f"[Thème : {meta['source']}]\n{doc}" for doc, meta in pertinents
             )
     else:
         contexte = ("Aucun document pertinent. N'invente aucun conseil. "
