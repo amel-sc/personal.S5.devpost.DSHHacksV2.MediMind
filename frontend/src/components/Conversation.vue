@@ -1,13 +1,23 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import Message from './Message.vue';
 import { sendMessage } from '@/services/api.js';
 
 const message = ref('')
 const erreur = ref(null)
 const chargment = ref(false)
+const finConversation = ref(null);
 
 const messages = ref([])
+
+async function scrollToBottom() {
+  await nextTick();
+
+  finConversation.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'end'
+  });
+}
 
 async function envoyerMessage() {
   const contenu = message.value.trim();
@@ -23,10 +33,16 @@ async function envoyerMessage() {
 
   message.value = '';
 
+  // Descendre après l'ajout du message utilisateur
+  await scrollToBottom();
+
   // TODO : envoyer le message au backend et ajouter sa réponse
   try {
     // active loading
     chargment.value = true;
+
+    // Faire apparaître l'indicateur de chargement
+    await scrollToBottom();
 
     const reponse = await sendMessage({
       message: contenu,
@@ -39,6 +55,9 @@ async function envoyerMessage() {
     erreur.value = "Une erreur s'est produite"
   } finally {
     chargment.value = false
+
+    // Descendre après la réponse de MediMind
+    await scrollToBottom();
   }
 }
 </script>
@@ -87,6 +106,9 @@ async function envoyerMessage() {
         </div>
       </form>
     </div>
+
+    <!-- Repère pour le scroll automatique -->
+    <div ref="finConversation"></div>
   </div>
 </template>
 <style scoped>
