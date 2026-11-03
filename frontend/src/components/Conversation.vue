@@ -1,76 +1,11 @@
 <script setup>
 import { ref } from 'vue';
-import Messages from './Messages.vue';
 import Message from './Message.vue';
+import { sendMessage } from '@/services/api.js';
 
 const message = ref('');
 
-const messages = ref([
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-  {
-    sender: 'medimind',
-    content: 'Commencez à écrire votre message.'
-  },
-  {
-    sender: 'user',
-    content: 'Voici mon premier message.'
-  },
-]);
+const messages = ref([]);
 
 function envoyerMessage() {
   const contenu = message.value.trim();
@@ -92,8 +27,11 @@ function envoyerMessage() {
 
 <template>
   <div class="conversation">
-      <div class="d-flex flex-column gap-3">
-            <Message v-for="message in messages" :message="message" />
+      <div v-if="messages.length > 0" class="d-flex flex-column gap-3">
+            <Message v-for="item in messages" :message="item" />
+      </div>
+      <div v-else>
+          <p><strong>MediMind</strong> : En quoi puis-je vous aidez en tant qu'assistant psychologique</p>
       </div>
   </div>
 
