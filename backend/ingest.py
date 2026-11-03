@@ -44,30 +44,17 @@ def split_text(text, chunk_size=1000, overlap=150):
 # 4. Lire les fichiers
 knowledge_dir = Path("./knowledge")
 
-for file_path in knowledge_dir.glob("*.txt"):
+for langue in ["fr", "en"]:
+    for file_path in (knowledge_dir / langue).glob("*.txt"):
+        text = file_path.read_text(encoding="utf-8")
+        chunks = split_text(text)
 
-    text = file_path.read_text(encoding="utf-8")
-    chunks = split_text(text)
-
-    # 5. Enregistrer les morceaux
-    ids = [
-        f"{file_path.stem}_{i}"
-        for i in range(len(chunks))
-    ]
-
-    # Spécifier la source de chaque chunks
-    metadatas = [
-        {"source": file_path.name}
-        for _ in chunks
-    ]
-
-    # update or insert : mettre à jour ou insérer le document
-    collection.upsert(
-        ids=ids,
-        documents=chunks,
-        metadatas=metadatas
-    )
-
-    print(f"{file_path.name} : {len(chunks)} morceaux enregistrés.")
+        collection.upsert(
+            ids=[f"{langue}_{file_path.stem}_{i}" for i in range(len(chunks))],
+            documents=[contenu for _, contenu in chunks],
+            metadatas=[{"source": file_path.name, "theme": titre, "langue": langue}
+                       for titre, _ in chunks],
+        )
+        print(f"[{langue}] {file_path.name} : {len(chunks)} thèmes")
 
 print("Base de connaissances créée !")
