@@ -1,14 +1,7 @@
 
 import chromadb
 from chromadb.utils import embedding_functions
-from transformers import pipeline
-
-# 1. Charger Qwen
-chat = pipeline(
-    "text-generation",
-    model="Qwen/Qwen3-4B-Instruct-2507",
-    device_map="auto"
-)
+from ollama import chat
 
 # 2. Charger ChromaDB
 client = chromadb.PersistentClient(
@@ -74,48 +67,43 @@ def ask_medimind(question):
         )
 
     # 6. Envoyer la question et le contexte à Qwen
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT
-        },
-        {
-            "role": "user",
-            "content": f"""
-Voici les informations retrouvées dans la base
-de connaissances de MediMind :
+    # Génération avec Ollama
+    response = chat(
+        model="qwen3:4b-instruct",
+        messages=[
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            {
+                "role": "user",
+                "content": f"""
+                Informations retrouvées :
 
-{contexte}
+                {contexte}
 
-Question de l'étudiant :
-{question}
+                Question : {question}
 
-Réponds de manière claire, bienveillante et adaptée.
-"""
+                Réponds de manière claire et bienveillante.
+                """
+            }
+        ],
+        options={
+            "temperature": 0.7,
+            "num_predict": 300
         }
-    ]
-
-    # 7. Générer la réponse
-    output = chat(
-        messages,
-        max_new_tokens=300
     )
 
-    return output[0]["generated_text"][-1]["content"]
+    return response.message.content
 
 # Test
-question = "Comment réduire mon stress avant les examens ?"
+while True:
 
-print(ask_medimind(question))
+    question = input("\nÉtudiant : ")
 
-# # Test
-# while True:
+    if question.lower() == "quit":
+        break
 
-#     question = input("\nÉtudiant : ")
+    reponse = ask_medimind(question)
 
-#     if question.lower() == "quit":
-#         break
-
-#     reponse = ask_medimind(question)
-
-#     print("\nMediMind :", reponse)
+    print("\nMediMind :", reponse)
