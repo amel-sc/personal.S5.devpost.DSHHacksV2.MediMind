@@ -1,0 +1,17 @@
+<script setup>
+import Conversation from './components/Conversation.vue';
+</script>
+
+<template>
+  <header>
+    <nav class="navbar fixed-top bg-1 fg-2">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">MediMind</span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container mt-3">
+    <Conversation />
+  </main>
+</template>
