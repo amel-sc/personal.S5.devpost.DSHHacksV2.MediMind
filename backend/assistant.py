@@ -63,13 +63,6 @@ Présente cela comme une démarche normale, pas comme un signe de gravité.
 Dans ce cas, termine ta réponse par la balise [ORIENTER].
 """
 
-RESSOURCES = (
-    "\n\n📌 Pour en parler à quelqu'un :\n"
-    "• Le service de santé de ton établissement\n"
-    "• Santé Psy Étudiant : séances gratuites avec un psychologue\n"
-    "• Nightline : écoute de nuit par des étudiants"
-)
-
 CLASSIF_PROMPT = """
 Tu es un filtre. Réponds uniquement par OUI ou NON.
 
@@ -90,19 +83,6 @@ Exemples :
 "Bonjour" -> OUI
 """
 
-REPONSE_HORS_SUJET = (
-    "Je suis MediMind, je suis là pour parler de ton bien-être "
-    "(stress, sommeil, moral...). Je ne peux pas t'aider sur ce sujet, "
-    "mais si tu veux, dis-moi comment tu te sens en ce moment ?"
-)
-
-REPONSE_URGENCE = (
-    "Ce que tu ressens est important et tu n'as pas à rester seul·e avec ça.\n"
-    "📞 3114 : numéro national de prévention du suicide (gratuit, 24h/24)\n"
-    "🚑 15 ou 112 en cas de danger immédiat\n"
-    "Tu peux aussi contacter le service de santé de ton université."
-)
-
 # Mots risque (suicide)
 MOTS_RISQUE = ["suicide", "me suicider", "en finir", "mourir",
                "me faire du mal", "me tuer", "plus envie de vivre"]
@@ -112,15 +92,62 @@ MOTS_PHYSIQUES = ["fièvre", "malade", "grippe", "vomi", "douleur",
                   "mal à la tête", "mal au ventre", "migraine",
                   "tousse", "toux", "blessé", "malaise"]
 
-REPONSE_PHYSIQUE = (
-    "Je suis désolé que tu ne te sentes pas bien physiquement. "
-    "Je ne peux pas donner d'avis médical : pour ces symptômes, le mieux est "
-    "de te reposer et de demander conseil à un médecin ou un pharmacien, "
-    "surtout si ça dure ou s'aggrave. En cas d'urgence, appelle le 15.\n"
-    "Si le fait d'être malade te stresse (cours manqués, examens, solitude...), "
-    "je suis là pour en parler."
-)
-
+TEXTES = {
+    "fr": {
+        "hors_sujet": (
+            "Je suis MediMind, je suis là pour parler de ton bien-être "
+            "(stress, sommeil, moral...). Je ne peux pas t'aider sur ce sujet, "
+            "mais si tu veux, dis-moi comment tu te sens en ce moment ?"
+        ),
+        "urgence": (
+            "Ce que tu ressens est important et tu n'as pas à rester seul·e avec ça.\n"
+            "📞 3114 : numéro national de prévention du suicide (gratuit, 24h/24)\n"
+            "🚑 15 ou 112 en cas de danger immédiat\n"
+            "Tu peux aussi contacter le service de santé de ton université."
+        ),
+        "physique": (
+            "Je suis désolé que tu ne te sentes pas bien physiquement. "
+            "Je ne peux pas donner d'avis médical : pour ces symptômes, le mieux est "
+            "de te reposer et de demander conseil à un médecin ou un pharmacien, "
+            "surtout si ça dure ou s'aggrave. En cas d'urgence, appelle le 15.\n"
+            "Si le fait d'être malade te stresse (cours manqués, examens, solitude...), "
+            "je suis là pour en parler."
+        ),
+        "ressources": (
+            "\n\n📌 Pour en parler à quelqu'un :\n"
+            "• Le service de santé de ton établissement\n"
+            "• Santé Psy Étudiant : séances gratuites avec un psychologue\n"
+            "• Nightline : écoute de nuit par des étudiants"
+        ),
+    },
+    "en": {
+        "hors_sujet": (
+            "I'm MediMind, I'm here to talk about your well-being "
+            "(stress, sleep, mood...). I can't help with that topic, "
+            "but if you'd like, tell me how you're feeling right now?"
+        ),
+        "urgence": (
+            "What you're feeling matters, and you don't have to face it alone.\n"
+            "📞 3114: French national suicide prevention line (free, 24/7)\n"
+            "🚑 Call 15 or 112 if you are in immediate danger\n"
+            "You can also contact your university's health service."
+        ),
+        "physique": (
+            "I'm sorry you're not feeling well physically. "
+            "I can't give medical advice: for these symptoms, the best thing is to rest "
+            "and ask a doctor or a pharmacist, especially if it lasts or gets worse. "
+            "In an emergency, call 15.\n"
+            "If being sick is stressing you out (missed classes, exams, loneliness...), "
+            "I'm here to talk about it."
+        ),
+        "ressources": (
+            "\n\n📌 To talk to someone:\n"
+            "• Your university's health service\n"
+            "• Santé Psy Étudiant: free sessions with a psychologist\n"
+            "• Nightline: night-time listening service run by students"
+        ),
+    },
+}
 
 def detecter_risque(texte):
     # Version simple par mots-clés : à compléter avec le psychologue
