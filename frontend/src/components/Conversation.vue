@@ -1,19 +1,99 @@
 <script setup>
 import { ref } from 'vue';
+import Messages from './Messages.vue';
 
 const message = ref('');
 
+const messages = ref([
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+  {
+    sender: 'medimind',
+    content: 'Commencez à écrire votre message.'
+  },
+  {
+    sender: 'user',
+    content: 'Voici mon premier message.'
+  },
+]);
+
 function envoyerMessage() {
-  if (!message.value.trim()) return;
+  const contenu = message.value.trim();
 
-  console.log('Message envoyé :', message.value);
+  if (!contenu) return;
 
-  // TODO : envoyer le message à ton backend / MediMind
+  messages.value.push({
+    sender: 'user',
+    content: contenu
+  });
+
+  console.log('Message envoyé :', contenu);
+
+  // TODO : envoyer le message au backend et ajouter sa réponse
+
   message.value = '';
 }
 </script>
 
 <template>
+  <div class="conversation">
+    <Messages :messages="messages" />
+  </div>
+
   <div class="fixed-bottom border-top">
     <div class="container py-3">
       <form @submit.prevent="envoyerMessage">
@@ -47,3 +127,8 @@ function envoyerMessage() {
     </div>
   </div>
 </template>
+<style scoped>
+.conversation {
+  padding-bottom: 100px;
+}
+</style>
