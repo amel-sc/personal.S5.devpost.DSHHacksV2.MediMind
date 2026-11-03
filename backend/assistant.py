@@ -3,7 +3,7 @@ from chromadb.utils import embedding_functions
 from ollama import chat
 
 MODELE = "qwen3:4b-instruct"
-SEUIL_DISTANCE = 0.65
+SEUIL_DISTANCE = 0.64
 
 client = chromadb.PersistentClient(path="./chroma_db")
 embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -160,7 +160,7 @@ def ask_medimind(question):
     else:
         contexte = "Aucun document pertinent. Propose simplement une écoute bienveillante."
 
-    # Construit dans les deux cas → plus de NameError
+    # Construit dans les deux cas
     user_content = f"""<documents>
         {contexte}
         </documents>
