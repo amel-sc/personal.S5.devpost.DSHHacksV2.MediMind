@@ -6,4 +6,7 @@
       </div>
     </nav>
   </header>
+  <main class="container mt-3">
+
+  </main>
 </template>
