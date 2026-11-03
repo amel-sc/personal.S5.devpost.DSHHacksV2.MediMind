@@ -10,7 +10,7 @@ class MessageRequest(BaseModel):
     message: str
     langue: str
 
-@app.post("/message/send")
+@app.post("/api/message/send")
 def traitement_message(data: MessageRequest):
     question = data.message
     langue = data.langue
