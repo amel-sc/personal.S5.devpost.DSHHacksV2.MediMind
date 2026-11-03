@@ -18,7 +18,8 @@ embedding_function = (
 # 3. Créer ou récupérer la collection
 collection = client.get_or_create_collection(
     name="medimind_knowledge",
-    embedding_function=embedding_function
+    embedding_function=embedding_function,
+    metadata={"hnsw:space": "cosine"},
 )
 
 
