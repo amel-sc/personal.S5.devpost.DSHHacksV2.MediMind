@@ -13,18 +13,19 @@ async function envoyerMessage() {
 
   if (!contenu) return;
 
-  const data = {
+  messages.value.push({
     sender: 'user',
     content: contenu
-  }
-
-  messages.value.push(data);
+  });
 
   console.log('Message envoyé :', contenu);
 
   // TODO : envoyer le message au backend et ajouter sa réponse
   try {
-    const reponse = await sendMessage(data)
+    const reponse = await sendMessage({
+      message: contenu,
+      langue: "fr"
+    })
     // add reponse in messages
     messages.value.push(reponse)
     
