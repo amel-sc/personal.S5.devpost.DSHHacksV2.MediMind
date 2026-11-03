@@ -4,22 +4,33 @@ import Message from './Message.vue';
 import { sendMessage } from '@/services/api.js';
 
 const message = ref('');
+const erreur = ref(null)
 
 const messages = ref([]);
 
-function envoyerMessage() {
+async function envoyerMessage() {
   const contenu = message.value.trim();
 
   if (!contenu) return;
 
-  messages.value.push({
+  const data = {
     sender: 'user',
     content: contenu
-  });
+  }
+
+  messages.value.push(data);
 
   console.log('Message envoyé :', contenu);
 
   // TODO : envoyer le message au backend et ajouter sa réponse
+  try {
+    const reponse = await sendMessage(data)
+    // add reponse in messages
+    messages.value.push(reponse)
+    
+  } catch (e) {
+    erreur.value = "Une erreur s'est produite"
+  }
 
   message.value = '';
 }
