@@ -3,117 +3,104 @@ import { ref, nextTick } from 'vue';
 import Message from './Message.vue';
 import { sendMessage } from '@/services/api.js';
 
-const message = ref('')
-const erreur = ref(null)
-const chargment = ref(false)
-const finConversation = ref(null);
-
-const messages = ref([])
+const message = ref('');
+const erreur = ref(null);
+const chargement = ref(false);
+const messages = ref([]);
+const zoneMessages = ref(null);
 
 async function scrollToBottom() {
-  await nextTick();
-
-  finConversation.value?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'end'
-  });
+  await nextTick(); // attend que Vue ait affiché le nouveau message
+  const zone = zoneMessages.value;
+  zone?.scrollTo({ top: zone.scrollHeight, behavior: 'smooth' });
 }
 
 async function envoyerMessage() {
   const contenu = message.value.trim();
+  if (!contenu || chargement.value) return;
 
-  if (!contenu) return;
-
-  messages.value.push({
-    sender: 'user',
-    content: contenu
-  });
-
-  console.log('Message envoyé :', contenu);
-
+  erreur.value = null;
+  messages.value.push({ sender: 'user', content: contenu });
   message.value = '';
 
-  // Descendre après l'ajout du message utilisateur
+  chargement.value = true;
   await scrollToBottom();
 
-  // TODO : envoyer le message au backend et ajouter sa réponse
   try {
-    // active loading
-    chargment.value = true;
-
-    // Faire apparaître l'indicateur de chargement
-    await scrollToBottom();
-
-    const reponse = await sendMessage({
-      message: contenu,
-      langue: "fr"
-    })
-    // add reponse in messages
-    messages.value.push(reponse)
-    
+    const reponse = await sendMessage({ message: contenu, langue: 'fr' });
+    messages.value.push(reponse);
   } catch (e) {
-    erreur.value = "Une erreur s'est produite"
+    erreur.value = "Une erreur s'est produite. Réessayez dans un instant.";
   } finally {
-    chargment.value = false
-
-    // Descendre après la réponse de MediMind
+    chargement.value = false;
     await scrollToBottom();
+  }
+}
+
+// Entrée = envoyer, Maj + Entrée = retour à la ligne
+function onKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    envoyerMessage();
   }
 }
 </script>
 
 <template>
-  <div class="conversation">
-      <div v-if="messages.length > 0" class="d-flex flex-column gap-3">
-            <Message v-for="item in messages" :message="item" />
-      </div>
-      <div v-else>
-          <p><strong>MediMind</strong> : En quoi puis-je vous aidez en tant qu'assistant psychologique</p>
-      </div>
-      <div v-if="chargment" class="d-flex justify-content-start mt-3">
-        <span class="placeholder-wave fg-3">Traitement des réponses pour vous aidez…</span>
-      </div>
+  <!-- overflow-hidden : empêche la zone de grandir au lieu de défiler (remplace min-height: 0) -->
+  <div class="flex-grow-1 d-flex flex-column overflow-hidden">
 
-      <!-- Repère pour le scroll automatique -->
-      <div ref="finConversation"></div>
-  </div>
+    <!-- Zone qui défile -->
+    <div ref="zoneMessages" class="flex-grow-1 overflow-auto">
+      <div class="container py-4">
 
-  <div class="fixed-bottom border-top">
-    <div class="container py-3">
-      <form @submit.prevent="envoyerMessage">
-        <div class="row g-2 align-items-end">
-          <div class="col">
-            <label for="message" class="visually-hidden">
-              Écrire un message
-            </label>
-
-            <textarea
-              id="message"
-              v-model="message"
-              class="form-control"
-              rows="1"
-              placeholder="Écrivez votre message..."
-            ></textarea>
-          </div>
-
-          <div class="col-auto">
-            <button
-              type="submit"
-              class="btn btn-primary"
-              aria-label="Envoyer"
-              :disabled="!message.trim() || chargment"
-            >
-              <i class="bi bi-send-fill"></i>
-            </button>
-          </div>
+        <div v-if="messages.length > 0" class="d-flex flex-column gap-3">
+          <Message v-for="(item, i) in messages" :key="i" :message="item" />
         </div>
-      </form>
+
+        <div v-else class="text-center text-secondary py-5">
+          <h2 class="h4 text-body">MediMind</h2>
+          <p class="mb-0">En quoi puis-je vous aider aujourd'hui ?</p>
+        </div>
+
+        <div v-if="chargement" class="d-flex align-items-center gap-2 text-secondary small mt-3">
+          <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+          <span role="status">MediMind réfléchit…</span>
+        </div>
+
+        <div v-if="erreur" class="alert alert-danger mt-3 mb-0" role="alert">{{ erreur }}</div>
+      </div>
     </div>
+
+    <!-- Barre de saisie -->
+    <div class="border-top bg-body-tertiary flex-shrink-0">
+      <div class="container py-3">
+        <form @submit.prevent="envoyerMessage">
+          <div class="row g-2 align-items-end">
+            <div class="col">
+              <label for="message" class="visually-hidden">Écrire un message</label>
+              <textarea
+                id="message"
+                v-model="message"
+                class="form-control"
+                rows="1"
+                placeholder="Écrivez votre message..."
+                @keydown="onKeydown"
+              ></textarea>
+            </div>
+            <div class="col-auto">
+              <button
+                type="submit"
+                class="btn btn-primary px-4"
+                :disabled="!message.trim() || chargement"
+              >
+                Envoyer
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
-<style scoped>
-.conversation {
-  padding-bottom: 100px;
-  padding-top: 100px;
-}
-</style>

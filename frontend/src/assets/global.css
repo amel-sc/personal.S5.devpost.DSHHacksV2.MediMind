@@ -1,0 +1,16 @@
+/* Une seule zone défile dans MediMind : celle des messages */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+body {
+  overflow: hidden;   /* pas de scrollbar de page */
+}
+
+#app {
+  display: block;     /* neutralise un éventuel display:grid du template */
+}
