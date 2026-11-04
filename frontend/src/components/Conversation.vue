@@ -73,6 +73,9 @@ async function envoyerMessage() {
       <div v-if="chargment" class="d-flex justify-content-start mt-3">
         <span class="placeholder-wave fg-3">Traitement des réponses pour vous aidez…</span>
       </div>
+
+      <!-- Repère pour le scroll automatique -->
+      <div ref="finConversation"></div>
   </div>
 
   <div class="fixed-bottom border-top">
@@ -106,9 +109,6 @@ async function envoyerMessage() {
         </div>
       </form>
     </div>
-
-    <!-- Repère pour le scroll automatique -->
-    <div ref="finConversation"></div>
   </div>
 </template>
 <style scoped>
