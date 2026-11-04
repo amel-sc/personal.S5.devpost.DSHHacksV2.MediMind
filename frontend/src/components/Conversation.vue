@@ -20,14 +20,14 @@ async function envoyerMessage() {
   if (!contenu || chargement.value) return;
 
   erreur.value = null;
-  messages.value.push({ sender: 'user', content: contenu });
+  messages.value.push({ role: 'user', content: contenu });
   message.value = '';
 
   chargement.value = true;
   await scrollToBottom();
 
   try {
-    const reponse = await sendMessage({ message: contenu, langue: 'fr' });
+    const reponse = await sendMessage({ message: contenu, historique: messages.value.map((m) => ({ role: m.role, content: m.content })), langue: 'fr' });
     messages.value.push(reponse);
   } catch (e) {
     erreur.value = "Une erreur s'est produite. Réessayez dans un instant.";
