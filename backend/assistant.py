@@ -10,7 +10,6 @@ MODELE = "qwen3:4b-instruct"
 SEUIL_DISTANCE = {"fr": 0.65, "en": 0.72}
 
 MAX_TOURS = 6          # 6 échanges = 12 messages maximum
-MOTS_COURT = 4         # en dessous, un message est considéré comme "court"
 
 client = chromadb.PersistentClient(path="./chroma_db")
 embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -75,7 +74,7 @@ Dans ce cas, termine ta réponse par la balise [ORIENTER].
 
 # SUIVI DE LA CONVERSATION
 - Tiens compte des messages précédents. Ne redemande pas ce que l'étudiant a déjà dit.
-- Si l'étudiant accepte ta proposition ("oui", "ok", "d'accord", "yes"),
+- Si l'étudiant accepte ta proposition par une simple réponse ("oui", "ok", "d'accord", "yes") ou une phrase adhérent ("Oui essayant ta proposition" ou autre),
   réalise-la tout de suite : détaille la première étape concrètement
   et demande-lui comment ça se passe. Ne lui redemande pas ce qu'il veut partager.
 - S'il refuse ("non", "pas maintenant"), respecte son choix et propose autre chose
@@ -186,7 +185,7 @@ CONSIGNE_LANGUE = {
 
 SANS_DOCUMENT = (
     "Aucun nouveau document. N'invente aucun conseil. "
-    "Si l'étudiant répond à ta dernière proposition (oui, ok, d'accord...), "
+    "Si l'étudiant répond à ta dernière proposition (oui, ok, d'accord...) ou par une phrase adhérent à ta proposition, "
     "fais ce que tu as proposé, en t'appuyant sur la conversation. "
     "Si le message est vague, pose une question ouverte."
 )
@@ -209,9 +208,6 @@ def dernier_message(historique, role):
         if m["role"] == role:
             return m["content"]
     return ""
-
-def est_court(texte):
-    return len(texte.split()) < MOTS_COURT
 
 def detecter_langue(texte, langue_precedente="fr"):
     # "oui", "ok", "yes" : trop court pour être fiable, on garde la langue de la conversation
@@ -272,10 +268,10 @@ def ask_medimind(question, historique=None, langue_precedente="fr"):
 
     # ② Recherche : un message court est complété par le contexte
     requete = question
-    if est_court(question) and historique:
+    if historique:
         requete = " ".join([
             dernier_message(historique, "user"),       # "J'ai des problèmes de concentration..."
-            dernier_message(historique, "assistant")[:300],
+            dernier_message(historique, "assistant")[:400],
             question,
         ])
 
