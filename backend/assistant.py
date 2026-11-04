@@ -334,15 +334,15 @@ def ask_medimind(question, historique=None, langue_precedente="fr"):
     return reponse, langue
 
 
-historique, langue = [], "fr"
+# historique, langue = [], "fr"
 
-while True:
-    question = input("\nÉtudiant : ").strip()
-    if question.lower() == "quit":
-        break
-    reponse, langue = ask_medimind(question, historique, langue)
-    print("\nMediMind :", reponse)
-    historique += [
-        {"role": "user", "content": question},
-        {"role": "assistant", "content": reponse},
-    ]
+# while True:
+#     question = input("\nÉtudiant : ").strip()
+#     if question.lower() == "quit":
+#         break
+#     reponse, langue = ask_medimind(question, historique, langue)
+#     print("\nMediMind :", reponse)
+#     historique += [
+#         {"role": "user", "content": question},
+#         {"role": "assistant", "content": reponse},
+#     ]

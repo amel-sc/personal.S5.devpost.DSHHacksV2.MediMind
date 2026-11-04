@@ -13,13 +13,14 @@ class Message(BaseModel):
 
 # Modèle représentant le JSON attendu
 class Request(BaseModel):
-    question: str
+    message: str
     historique: list[Message]
     langue: Literal["fr", "en"]
 
 @app.post("/api/message/send")
 def traitement_message(data: Request):
-    reponse, langue = ask_medimind(data.question, data.historique, data.langue)
+    # transformer l'objet pydantic en dictionnaire { }
+    reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
 
     return JSONResponse(
         status_code = 200,
