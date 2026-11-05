@@ -11,6 +11,7 @@ const conversation = defineModel('conversation', {
 const message = ref('');
 const erreur = ref(null);
 const chargement = ref(false);
+const chargementHistorique = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
 
@@ -25,7 +26,7 @@ watch(conversation, async (id) => {
   }
 
   // Conversation existante : on charge ses messages
-  chargement.value = true;
+  chargementHistorique.value = true;
   messages.value = [];
   try {
     const response = await getMessages(id); // à adapter à ton API
@@ -40,7 +41,7 @@ watch(conversation, async (id) => {
     erreur.value = "Impossible de charger la conversation.";
     console.error(e);
   } finally {
-    chargement.value = false;
+    chargementHistorique.value = false;
     await scrollToBottom();
   }
 });
@@ -70,7 +71,9 @@ async function envoyerMessage() {
     }
     // send message 
     const send_response = await sendMessage(data);
-    conversation.value = send_response.id_conversation;
+    if (conversation.value !== send_response.id_conversation) {
+      conversation.value = send_response.id_conversation;
+    }
     addMessage(send_response);
     await scrollToBottom();
     
@@ -110,7 +113,13 @@ function onKeydown(e) {
     <div ref="zoneMessages" class="flex-grow-1 overflow-auto">
       <div class="container py-4">
 
-        <div v-if="messages.length > 0" class="d-flex flex-column gap-3">
+        <div v-if="chargementHistorique" class="d-flex justify-content-center py-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Chargement…</span>
+          </div>
+        </div>
+
+        <div v-else-if="messages.length > 0" class="d-flex flex-column gap-3">
           <Message v-for="(item, i) in messages" :key="i" :message="item" />
         </div>
 
