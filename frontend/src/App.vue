@@ -1,13 +1,13 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import Conversation from './components/Conversation.vue'
 import { getConversations } from '@/services/api.js'
 
 const route = useRoute()
 const conversations = ref([])
 const erreur = ref(null)
 const chargement = ref(false)
+const drawer = ref(null)
 
 async function charger() {
   chargement.value = true
@@ -33,6 +33,10 @@ watch(conversationActive, (id) => {
   if (id !== null && !conversations.value.some((c) => c.id === id)) charger()
 })
 
+function closeDrawer() {
+  drawer.value?.close()
+}
+
 onMounted(charger)
 </script>
 
@@ -53,7 +57,7 @@ onMounted(charger)
     </header>
 
     <!-- Menu latéral gauche -->
-    <dialog class="drawer drawer-start" tabindex="-1" id="menuMediMind"
+    <dialog ref="drawer" class="drawer drawer-start" tabindex="-1" id="menuMediMind"
             aria-labelledby="menuTitre">
       <div class="drawer-header">
         <h5 class="drawer-title" id="menuTitre">MediMind</h5>
@@ -61,7 +65,7 @@ onMounted(charger)
       </div>
 
       <div class="drawer-body d-flex flex-column gap-2">
-        <RouterLink :to="{ name: 'conversation' }" class="btn-text theme-inverse item-conversation" data-bs-dismiss="drawer">
+        <RouterLink :to="{ name: 'conversation' }" class="btn-text theme-inverse item-conversation" @click="closeDrawer">
           <i class="bi bi-plus-lg" aria-hidden="true"></i>
           <span class="texte-tronque">Nouvelle conversation</span>
         </RouterLink>
@@ -95,7 +99,7 @@ onMounted(charger)
             class="btn-text theme-inverse item-conversation"
             :class="{ active: c.id === conversationActive }"
             :title="c.first_message"
-            data-bs-dismiss="drawer"
+            @click="closeDrawer"
           >
             <i class="bi bi-chat-left-text" aria-hidden="true"></i>
             <span class="texte-tronque">{{ c.first_message || 'Conversation sans titre' }}</span>

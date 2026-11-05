@@ -1,12 +1,16 @@
 <script setup>
-import { ref, nextTick, watch } from 'vue';
-import Message from './Message.vue';
+import { ref, nextTick, watch, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router'
+import Message from '@/components/Message.vue';
 import { sendMessage, traitementMessage, getMessages } from '@/services/api.js';
 
-const conversation = defineModel('conversation', {
-  type: [Number, null],
-  default: null
-})
+const route = useRoute()
+const router = useRouter()
+
+// Remplace defineModel : l'id vient de l'URL
+const conversation = computed(() =>
+  route.params.id ? Number(route.params.id) : null
+)
 
 const message = ref('');
 const erreur = ref(null);
@@ -44,7 +48,7 @@ watch(conversation, async (id) => {
     chargementHistorique.value = false;
     await scrollToBottom();
   }
-});
+}, { immediate: true });
 
 async function scrollToBottom() {
   await nextTick(); // attend que Vue ait affiché le nouveau message
@@ -72,7 +76,7 @@ async function envoyerMessage() {
     // send message 
     const send_response = await sendMessage(data);
     if (conversation.value !== send_response.id_conversation) {
-      conversation.value = send_response.id_conversation;
+      router.replace({ name: 'conversation', params: { id: send_response.id_conversation } })
     }
     addMessage(send_response);
     await scrollToBottom();
