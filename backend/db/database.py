@@ -14,7 +14,7 @@ def init_db() -> None:
     Path(DATABASE).parent.mkdir(parents=True, exist_ok=True)
     conn = get_connection()
     try:
-        conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        conn.executescript(Path(SCHEMA_PATH).read_text(encoding="utf-8"))
         conn.commit()
     finally:
         conn.close()
