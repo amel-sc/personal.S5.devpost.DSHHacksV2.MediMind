@@ -38,6 +38,16 @@ async function requete(methode, chemin, donnees) {
   return corps
 }
 
+// function to get all messages by conversatino
+export function getMessages(id) {
+  return requete('GET', `/message?id_conversation=${id}`,)
+}
+
+// function to get all conversation
+export function getConversations() {
+  return requete('GET', '/conversation')
+}
+
 // function to get response of message
 export function traitementMessage(donnees) {
   return requete('POST', '/message/traitement', donnees) 
