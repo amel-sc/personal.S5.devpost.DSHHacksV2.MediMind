@@ -25,15 +25,6 @@ def create_conversation_message(role: str, content: str):
 
     return id_conversation, id_message
 
-# function to insert conversation
-def create_conversation(first_message: str):
-    with closing(get_connection()) as conn, conn:
-        cur = conn.execute(
-            "INSERT INTO conversation (first_message) VALUES (?)",
-            (first_message,)
-        )
-        return cur.lastrowid
-
 # function to insert message
 def create_message(role: str, content: str, id_conversation: int):
     with closing(get_connection()) as conn, conn:

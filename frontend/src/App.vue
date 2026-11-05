@@ -26,12 +26,11 @@ import Conversation from './components/Conversation.vue';
             aria-labelledby="menuTitre">
       <div class="drawer-header">
         <h5 class="drawer-title" id="menuTitre">MediMind</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="drawer"
-                aria-label="Fermer"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="drawer" aria-label="Fermer"></button>
       </div>
 
       <div class="drawer-body d-flex flex-column gap-2">
-        <button type="button" class="btn-solid theme-primary"
+        <button type="button" class="btn-text theme-inverse"
                 data-bs-dismiss="drawer" @click="nouvelleConversation">
           + Nouvelle conversation
         </button>
