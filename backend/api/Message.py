@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import APIRouter
 from schemas.Message import Request
 from contextlib import closing
@@ -7,24 +8,38 @@ from db.database import get_connection
 
 router = APIRouter()
 
-# function to insert conversation
-def create_conversation(first_message: str):
-    with closing(get_connection()) as conn:
+# function to create conversation with message
+def create_conversation_message(role: str, content: str):
+    with closing(get_connection()) as conn, conn:
         cur = conn.execute(
             "INSERT INTO conversation (first_message) VALUES (?)",
-            (first_message)
+            (content)
         )
-        conn.commit()
-        return cur.lastrowid
+        id_conversation = cur.lastrowid
 
-# function to insert message
-def create_message(role: str, content:str, id_conversation: int):
-    with closing(get_connection()) as conn:
         cur = conn.execute(
             "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
             (role, content, id_conversation)
         )
-        conn.commit()
+
+    return id_conversation
+
+# function to insert conversation
+def create_conversation(first_message: str):
+    with closing(get_connection()) as conn, conn:
+        cur = conn.execute(
+            "INSERT INTO conversation (first_message) VALUES (?)",
+            (first_message)
+        )
+        return cur.lastrowid
+
+# function to insert message
+def create_message(role: str, content: str, id_conversation: int):
+    with closing(get_connection()) as conn, conn:
+        cur = conn.execute(
+            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
+            (role, content, id_conversation)
+        )
         return cur.lastrowid
 
 @router.post("/api/message")

@@ -11,3 +11,4 @@ class Request(BaseModel):
     message: str
     historique: list[Message]
     langue: Literal["fr", "en"]
+    id_conversation: int | None = None
