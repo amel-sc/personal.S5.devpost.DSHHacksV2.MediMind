@@ -12,7 +12,7 @@ router = APIRouter()
 def findAll():
     with closing(get_connection()) as conn:
         rows = conn.execute(
-            "SELECT id, date, first_message "
+            "SELECT id, date_creation, first_message "
             "FROM conversation ORDER BY date_creation DESC"
         ).fetchall()
 

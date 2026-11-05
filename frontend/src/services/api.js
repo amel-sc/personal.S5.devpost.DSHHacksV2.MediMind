@@ -38,6 +38,11 @@ async function requete(methode, chemin, donnees) {
   return corps
 }
 
+// function to get all of conversation
+export function getConversations() {
+  return requete('GET', '/conversation')
+}
+
 // function to get response of message
 export function traitementMessage(donnees) {
   return requete('POST', '/message/traitement', donnees) 
