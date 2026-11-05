@@ -7,6 +7,10 @@
 
 ## A faire
 - Journal de bord de l'humeur (Pour l'utilisateur, sans IA nécessaire)
+    - choisi son humeur (échelle de 1 à 5 : très bien, bien, bof, mal, très mal) : radio
+    - peut ajouter une note libre : textarea
+    - peut cocher des facteurs : checkbox
+- Afficher les statistiques des humeurs : courbe
 - Analyse des émotions par NLP (du message de l'utilisateur) et adapter la réponse de l'IA selon l'émotion
 - Avertissement clair dans l’interface : « MediMind n’est pas un service médical ni d’urgence ».
 - Limites de session et de contenu : évite que le bot encourage une dépendance (rappeler régulièrement qu’il complète, sans remplacer, l’aide humaine).
