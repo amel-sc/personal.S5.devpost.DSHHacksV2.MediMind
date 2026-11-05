@@ -3,8 +3,15 @@ import { ref, nextTick } from 'vue';
 import Message from './Message.vue';
 import { sendMessage, traitementMessage } from '@/services/api.js';
 
+defineProps({
+    conversation: {
+      type: [Number, null],
+      required: true,
+      default: null
+    }
+});
+
 const message = ref('');
-const conversation = ref(null);
 const erreur = ref(null);
 const chargement = ref(false);
 const messages = ref([]);
@@ -31,11 +38,11 @@ async function envoyerMessage() {
       message: contenu,
       historique: messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation })),
       langue: 'fr',
-      id_conversation: conversation.value
+      id_conversation: conversation
     }
     // send message 
     const send_response = await sendMessage(data);
-    conversation.value = send_response.id_conversation;
+    conversation = send_response.id_conversation;
     addMessage(send_response);
     
     // get response from medimind

@@ -107,7 +107,7 @@ onMounted(charger)
       </div>
     </dialog>
 
-    <Conversation ref="conversation" class="flex-grow-1" />
+    <Conversation :conversation="conversation" class="flex-grow-1" />
   </div>
 </template>
 
