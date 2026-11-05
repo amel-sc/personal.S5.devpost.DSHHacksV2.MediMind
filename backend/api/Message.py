@@ -7,11 +7,20 @@ from db.database import get_connection
 
 router = APIRouter()
 
-# function to insert messages
+# function to insert conversation
+def create_conversation(first_message: str):
+    with closing(get_connection()) as conn:
+            conn.execute(
+                "INSERT INTO conversation (first_message) VALUES (?)",
+                (first_message)
+            )
+            conn.commit()
+
+# function to insert message
 def create_message(message):
     with closing(get_connection()) as conn:
         conn.execute(
-            "INSERT INTO messages (role, content, id_conversation) VALUES (?, ?)",
+            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
             (message.role, message.content, message.id_conversation)
         )
         conn.commit()
