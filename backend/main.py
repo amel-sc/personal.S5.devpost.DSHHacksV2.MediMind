@@ -1,26 +1,12 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from fastapi.responses import JSONResponse
-from assistant import ask_medimind
+from api import Message
+from db.database import init_db
 
 app = FastAPI()
 
-# Modèle représentant le JSON attendu
-class MessageRequest(BaseModel):
-    message: str
-    langue: str
+# init database
+@app.on_event("startup")
+def startup():
+    init_db()
 
-@app.post("/message/send")
-def traitement_message(data: MessageRequest):
-    question = data.message
-    langue = data.langue
-
-    reponse = ask_medimind(question, langue)
-
-    return JSONResponse(
-        status_code = 200,
-        content = {
-            "sender": "medimind",
-            "content": reponse,
-        }
-    )
+app.include_router(Message.router)

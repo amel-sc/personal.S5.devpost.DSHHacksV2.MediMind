@@ -9,6 +9,8 @@ from lingua import Language, LanguageDetectorBuilder
 MODELE = "qwen3:4b-instruct"
 SEUIL_DISTANCE = {"fr": 0.65, "en": 0.72}
 
+MAX_TOURS = 6          # 6 échanges = 12 messages maximum
+
 client = chromadb.PersistentClient(path="./chroma_db")
 embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
@@ -69,6 +71,15 @@ médecin, psychologue) si :
 - la difficulté l'empêche de suivre ses cours ou de vivre normalement.
 Présente cela comme une démarche normale, pas comme un signe de gravité.
 Dans ce cas, termine ta réponse par la balise [ORIENTER].
+
+# SUIVI DE LA CONVERSATION
+- Tiens compte des messages précédents. Ne redemande pas ce que l'étudiant a déjà dit.
+- Si l'étudiant accepte ta proposition par une simple réponse ("oui", "ok", "d'accord", "yes") ou une phrase adhérent ("Oui essayant ta proposition" ou autre),
+  réalise-la tout de suite : détaille la première étape concrètement
+  et demande-lui comment ça se passe. Ne lui redemande pas ce qu'il veut partager.
+- S'il refuse ("non", "pas maintenant"), respecte son choix et propose autre chose
+  ou demande-lui ce dont il aurait besoin.
+- Ne te présente pas à nouveau et ne recommence pas la conversation à zéro.
 """
 
 CLASSIF_PROMPT = """
@@ -81,6 +92,8 @@ procrastination, concentration, argent, relations, orientation, écrans,
 s'il s'agit d'une salutation, ou s'il répond à une proposition de MediMind
 ("oui", "ok", "yes", "sure", "non merci").
 NON si c'est une demande d'information ou de service sans lien avec son bien-être.
+
+Si le message répond à une proposition de MediMind (voir "Dernier message de MediMind"), réponds OUI.
 
 Exemples :
 "Comment cuisiner du riz ?" -> NON
@@ -170,6 +183,32 @@ CONSIGNE_LANGUE = {
           "translate the ideas naturally, do not quote them in French.",
 }
 
+SANS_DOCUMENT = (
+    "Aucun nouveau document. N'invente aucun conseil. "
+    "Si l'étudiant répond à ta dernière proposition (oui, ok, d'accord...) ou par une phrase adhérent à ta proposition, "
+    "fais ce que tu as proposé, en t'appuyant sur la conversation. "
+    "Si le message est vague, pose une question ouverte."
+)
+
+def nettoyer_historique(historique, max_tours=MAX_TOURS):
+    """Garde seulement des messages valides et les N derniers échanges."""
+    if not historique:
+        return []
+    propre = [
+        {"role": m["role"], "content": m["content"]}
+        for m in historique
+        if m.get("role") in ("user", "assistant")
+        and isinstance(m.get("content"), str)
+        and m["content"].strip()
+    ]
+    return propre[-2 * max_tours:]
+
+def dernier_message(historique, role):
+    for m in reversed(historique):
+        if m["role"] == role:
+            return m["content"]
+    return ""
+
 def detecter_langue(texte, langue_precedente="fr"):
     # "oui", "ok", "yes" : trop court pour être fiable, on garde la langue de la conversation
     if len(texte.split()) < 3:
@@ -196,20 +235,26 @@ def detecter_physique(texte, langue):
     # Ici, seulement la langue détectée (voir explication ci-dessous)
     return contient(texte, MOTS_PHYSIQUES[langue])
 
-def est_dans_le_sujet(question):
+def est_dans_le_sujet(question, historique):
+    contexte = dernier_message(historique, "assistant")
+    contenu = (
+        f"Dernier message de MediMind : {contexte[:500]}\n\n"
+        f"Message de l'étudiant : {question}"
+        if contexte else question
+    )
     r = chat(
         model=MODELE,
         messages=[
             {"role": "system", "content": CLASSIF_PROMPT},
-            {"role": "user", "content": question},
+            {"role": "user", "content": contenu},
         ],
         options={"temperature": 0, "num_predict": 3},
     )
     return r.message.content.strip().upper().startswith("OUI")
 
+def ask_medimind(question, historique=None, langue_precedente="fr"):
 
-def ask_medimind(question, langue_precedente="fr"):
-
+    historique = nettoyer_historique(historique)
     langue = detecter_langue(question, langue_precedente) 
     T = TEXTES[langue]   
 
@@ -221,9 +266,18 @@ def ask_medimind(question, langue_precedente="fr"):
     if detecter_physique(question, langue):
         return T["physique"], langue
 
+    # ② Recherche : un message court est complété par le contexte
+    requete = question
+    if historique:
+        requete = " ".join([
+            dernier_message(historique, "user"),       # "J'ai des problèmes de concentration..."
+            dernier_message(historique, "assistant")[:400],
+            question,
+        ])
+
     # ② Recherche + filtre de distance
     results = collection.query(
-        query_texts=[question],
+        query_texts=[requete],
         n_results=3,
         where={"langue": langue}, 
         include=["documents", "metadatas", "distances"],
@@ -249,9 +303,7 @@ def ask_medimind(question, langue_precedente="fr"):
                 f"[Thème : {meta['source']}]\n{doc}" for doc, meta in pertinents
             )
     else:
-        contexte = ("Aucun document pertinent. N'invente aucun conseil. "
-                    "Si le message est vague, pose une question ouverte. "
-                    "Sinon, montre que tu as compris et propose d'en parler.")
+        contexte = SANS_DOCUMENT
 
     # Construit dans les deux cas
     user_content = f"""<documents>
@@ -269,22 +321,28 @@ def ask_medimind(question, langue_precedente="fr"):
         model=MODELE,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
+            *historique,
             {"role": "user", "content": user_content},
         ],
-        options={"temperature": 0.4, "num_predict": 300},
+        options={"temperature": 0.4, "num_predict": 400},
     )
 
     reponse = response.message.content
 
     if "[ORIENTER]" in reponse:
         reponse = reponse.replace("[ORIENTER]", "").strip() + T["ressources"]
-    return reponse
+    return reponse, langue
 
 
-# langue = "fr"
+# historique, langue = [], "fr"
 
 # while True:
-#     question = input("\nÉtudiant : ")
+#     question = input("\nÉtudiant : ").strip()
 #     if question.lower() == "quit":
 #         break
-#     print("\nMediMind :", ask_medimind(question, langue))
+#     reponse, langue = ask_medimind(question, historique, langue)
+#     print("\nMediMind :", reponse)
+#     historique += [
+#         {"role": "user", "content": question},
+#         {"role": "assistant", "content": reponse},
+#     ]
