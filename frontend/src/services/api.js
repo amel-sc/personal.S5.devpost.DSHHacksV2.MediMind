@@ -38,7 +38,12 @@ async function requete(methode, chemin, donnees) {
   return corps
 }
 
-// function to get all of conversation
+// function to get all messages by conversatino
+export function getMessages(id) {
+  return requete('GET', `/messages?id_conversation=${id}`,)
+}
+
+// function to get all conversation
 export function getConversations() {
   return requete('GET', '/conversation')
 }
