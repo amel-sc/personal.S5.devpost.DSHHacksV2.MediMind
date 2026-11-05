@@ -1,3 +1,4 @@
+import sqlite3
 from typing import Literal
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -5,6 +6,13 @@ from fastapi.responses import JSONResponse
 from assistant import ask_medimind
 
 app = FastAPI()
+
+DATABASE = "database/medimind.db"
+
+def get_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Modèle for message
 class Message(BaseModel):
