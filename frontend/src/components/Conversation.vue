@@ -1,21 +1,35 @@
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, watch } from 'vue';
 import Message from './Message.vue';
 import { sendMessage, traitementMessage } from '@/services/api.js';
 
-defineProps({
-    conversation: {
-      type: [Number, null],
-      required: true,
-      default: null
-    }
-});
+const conversation = defineModel('conversation', {
+  type: [Number, null],
+  default: null
+})
 
 const message = ref('');
 const erreur = ref(null);
 const chargement = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
+
+let idCreeIci = null;
+
+watch(conversation, async (id) => {
+  if (id === idCreeIci) return;
+
+  erreur.value = null;
+  message.value = '';
+
+  // Nouvelle conversation : on vide l'écran
+  if (id === null) {
+    messages.value = [];
+    return;
+  }
+
+  // Conversation existante : on charge ses messages
+});
 
 async function scrollToBottom() {
   await nextTick(); // attend que Vue ait affiché le nouveau message
@@ -38,11 +52,12 @@ async function envoyerMessage() {
       message: contenu,
       historique: messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation })),
       langue: 'fr',
-      id_conversation: conversation
+      id_conversation: conversation.value
     }
     // send message 
     const send_response = await sendMessage(data);
-    conversation = send_response.id_conversation;
+    idCreeIci = send_response.id_conversation;
+    conversation.value = send_response.id_conversation;
     addMessage(send_response);
     
     // get response from medimind

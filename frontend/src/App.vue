@@ -1,9 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import Conversation from './components/Conversation.vue'
 import { getConversations } from '@/services/api.js'
 
-const conversation = ref(null)       // référence au composant Conversation
 const conversations = ref([])
 const conversationActive = ref(null)
 const erreur = ref(null)
@@ -25,13 +24,16 @@ async function charger() {
 
 function nouvelleConversation() {
   conversationActive.value = null
-  conversation.value?.reinitialiser()
 }
 
 function ouvrirConversation(c) {
   conversationActive.value = c.id
-  conversation.value?.ouvrir?.(c.id)   // à exposer dans Conversation.vue (voir plus bas)
 }
+
+watch(conversationActive, (id) => {
+  // some vérifie si au moins un élément d'un tableau satisfait une condition
+  if (id !== null && !conversations.value.some((c) => c.id === id)) charger()
+})
 
 onMounted(charger)
 </script>
@@ -107,7 +109,7 @@ onMounted(charger)
       </div>
     </dialog>
 
-    <Conversation :conversation="conversation" class="flex-grow-1" />
+    <Conversation v-model:conversation="conversationActive" class="flex-grow-1" />
   </div>
 </template>
 
