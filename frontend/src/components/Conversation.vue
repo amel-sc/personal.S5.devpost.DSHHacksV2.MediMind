@@ -31,7 +31,7 @@ async function envoyerMessage() {
       message: contenu,
       historique: messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation })),
       langue: 'fr',
-      id_conversation: conversation
+      id_conversation: conversation.value
     }
     // send message 
     const send_response = await sendMessage(data);
