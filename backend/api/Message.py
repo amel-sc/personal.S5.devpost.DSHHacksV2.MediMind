@@ -10,20 +10,22 @@ router = APIRouter()
 # function to insert conversation
 def create_conversation(first_message: str):
     with closing(get_connection()) as conn:
-            conn.execute(
-                "INSERT INTO conversation (first_message) VALUES (?)",
-                (first_message)
-            )
-            conn.commit()
-
-# function to insert message
-def create_message(message):
-    with closing(get_connection()) as conn:
-        conn.execute(
-            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
-            (message.role, message.content, message.id_conversation)
+        cur = conn.execute(
+            "INSERT INTO conversation (first_message) VALUES (?)",
+            (first_message)
         )
         conn.commit()
+        return cur.lastrowid
+
+# function to insert message
+def create_message(role: str, content:str, id_conversation: int):
+    with closing(get_connection()) as conn:
+        cur = conn.execute(
+            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
+            (role, content, id_conversation)
+        )
+        conn.commit()
+        return cur.lastrowid
 
 @router.post("/api/message")
 def traitement_message(data: Request):
