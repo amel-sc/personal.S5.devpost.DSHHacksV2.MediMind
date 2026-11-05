@@ -1,9 +1,20 @@
 from fastapi import APIRouter
 from schemas.Message import Request
+from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
+from db.database import get_connection
 
 router = APIRouter()
+
+# function to insert messages
+def create_message(message):
+    with closing(get_connection()) as conn:
+        conn.execute(
+            "INSERT INTO messages (role, content, id_conversation) VALUES (?, ?)",
+            (message.role, message.content, message.id_conversation)
+        )
+        conn.commit()
 
 @router.post("/api/message")
 def traitement_message(data: Request):
