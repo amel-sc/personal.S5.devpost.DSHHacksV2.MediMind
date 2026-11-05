@@ -1,10 +1,11 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Conversation from './components/Conversation.vue'
 import { getConversations } from '@/services/api.js'
 
+const route = useRoute()
 const conversations = ref([])
-const conversationActive = ref(null)
 const erreur = ref(null)
 const chargement = ref(false)
 
@@ -22,13 +23,10 @@ async function charger() {
   }
 }
 
-function nouvelleConversation() {
-  conversationActive.value = null
-}
-
-function ouvrirConversation(c) {
-  conversationActive.value = c.id
-}
+// Conversation active déduite de l'URL
+const conversationActive = computed(() =>
+  route.params.id ? Number(route.params.id) : null
+)
 
 watch(conversationActive, (id) => {
   // some vérifie si au moins un élément d'un tableau satisfait une condition
@@ -63,11 +61,10 @@ onMounted(charger)
       </div>
 
       <div class="drawer-body d-flex flex-column gap-2">
-        <button type="button" class="btn-text theme-inverse item-conversation"
-                data-bs-dismiss="drawer" @click="nouvelleConversation">
+        <RouterLink :to="{ name: 'conversation' }" class="btn-text theme-inverse item-conversation" data-bs-dismiss="drawer">
           <i class="bi bi-plus-lg" aria-hidden="true"></i>
           <span class="texte-tronque">Nouvelle conversation</span>
-        </button>
+        </RouterLink>
 
         <hr class="my-1">
 
@@ -91,25 +88,25 @@ onMounted(charger)
 
         <!-- Liste des conversations -->
         <nav v-else class="d-flex flex-column gap-1 liste-conversations" aria-label="Conversations">
-          <button
+          <RouterLink
             v-for="c in conversations"
             :key="c.id"
-            type="button"
+            :to="{ name: 'conversation', params: { id: c.id } }"
             class="btn-text theme-inverse item-conversation"
             :class="{ active: c.id === conversationActive }"
-            :aria-current="c.id === conversationActive ? 'true' : null"
             :title="c.first_message"
             data-bs-dismiss="drawer"
-            @click="ouvrirConversation(c)"
           >
             <i class="bi bi-chat-left-text" aria-hidden="true"></i>
             <span class="texte-tronque">{{ c.first_message || 'Conversation sans titre' }}</span>
-          </button>
+          </RouterLink>
         </nav>
       </div>
     </dialog>
 
-    <Conversation v-model:conversation="conversationActive" class="flex-grow-1" />
+    <main class="flex-grow-1 d-flex flex-column overflow-hidden">
+      <RouterView />
+    </main>
   </div>
 </template>
 
