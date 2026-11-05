@@ -7,7 +7,7 @@ class Message(BaseModel):
     content: str
 
 # Modèle représentant le JSON attendu
-class Request(BaseModel):
+class RequestMessage(BaseModel):
     message: str
     historique: list[Message]
     langue: Literal["fr", "en"]

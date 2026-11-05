@@ -1,6 +1,6 @@
 import sqlite3
 from fastapi import APIRouter
-from schemas.Message import Request
+from schemas.Message import RequestMessage
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -13,7 +13,7 @@ def create_conversation_message(role: str, content: str):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
             "INSERT INTO conversation (first_message) VALUES (?)",
-            (content)
+            (content,)
         )
         id_conversation = cur.lastrowid
 
@@ -21,15 +21,16 @@ def create_conversation_message(role: str, content: str):
             "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
             (role, content, id_conversation)
         )
+        id_message = cur.lastrowid
 
-    return id_conversation
+    return id_conversation, id_message
 
 # function to insert conversation
 def create_conversation(first_message: str):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
             "INSERT INTO conversation (first_message) VALUES (?)",
-            (first_message)
+            (first_message,)
         )
         return cur.lastrowid
 
@@ -42,8 +43,38 @@ def create_message(role: str, content: str, id_conversation: int):
         )
         return cur.lastrowid
 
+# route to create new conversation 
 @router.post("/api/message")
-def traitement_message(data: Request):
+def send_message(data: RequestMessage):
+    # create new message with conversation
+    if data.id_conversation is None:
+        id_conversation, id_message = create_conversation_message('user', data.message)
+
+        return JSONResponse(
+            status_code = 200,
+            content = {
+                "id_message": id_message,
+                "id_conversation": id_conversation,
+                "role": "user",
+                "content": data.message
+            }
+        )
+
+    else:
+        id_message = create_message('user', data.message, data.id_conversation)
+
+        return JSONResponse(
+            status_code = 200,
+            content = {
+                "id_message": id_message,
+                "role": "user",
+                "content": data.message
+            }
+        )
+
+# route to send message and get response
+@router.post("/api/message/traitement")
+def traitement_message(data: RequestMessage):
     # transformer l'objet pydantic en dictionnaire { }
     reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
 
