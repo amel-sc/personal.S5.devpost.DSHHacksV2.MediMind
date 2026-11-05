@@ -20,13 +20,6 @@ CREATE TABLE IF NOT EXISTS humeur (
     val INTEGER,
     desce TEXT
 );
--- humeur data
-INSERT INTO humeur (val, desce) VALUES 
-(1, 'Très bien'),
-(2, 'Bien'),
-(3, 'Bof'),
-(4, 'Mal'),
-(5, 'Très mal');
 
 -- humeur_cause
 CREATE TABLE IF NOT EXISTS humeur_cause (
@@ -34,15 +27,6 @@ CREATE TABLE IF NOT EXISTS humeur_cause (
     val TEXT,
     desce TEXT
 );
--- humeur_cause data
-INSERT INTO humeur_cause (val, desce) VALUES
-('Sommeil', 'Sommeil'),
-('Stress', 'Stress'),
-('Famille', 'Famille'),
-('Études', 'Études'),
-('Amis', 'Amis'),
-('Santé', 'Santé'),
-('Couple', 'Couple');
 
 -- humeur_jours
 CREATE TABLE IF NOT EXISTS humeur (
