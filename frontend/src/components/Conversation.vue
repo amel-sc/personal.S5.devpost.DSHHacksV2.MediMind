@@ -1,9 +1,10 @@
 <script setup>
 import { ref, nextTick } from 'vue';
 import Message from './Message.vue';
-import { sendMessage } from '@/services/api.js';
+import { sendMessage, traitementMessage } from '@/services/api.js';
 
 const message = ref('');
+const conversation = ref(null);
 const erreur = ref(null);
 const chargement = ref(false);
 const messages = ref([]);
@@ -27,14 +28,33 @@ async function envoyerMessage() {
   await scrollToBottom();
 
   try {
-    const reponse = await sendMessage({ message: contenu, historique: messages.value.map((m) => ({ role: m.role, content: m.content })), langue: 'fr' });
-    messages.value.push(reponse);
+    const data = {
+      message: contenu,
+      historique: messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation })),
+      langue: 'fr',
+      conversation: conversation
+    }
+    // send message 
+    const send_response = await sendMessage(data);
+    conversation.value = send_response.id_conversation;
+    addMessage(send_response);
+    
+    // get response from medimind
+    data.conversation = send_response.conversation.value;
+    const traitement_response = await traitementMessage(data)
+    addMessage(traitement_response);
+
   } catch (e) {
     erreur.value = "Une erreur s'est produite. Réessayez dans un instant.";
   } finally {
     chargement.value = false;
     await scrollToBottom();
   }
+}
+
+// function to add new messages in messages
+function addMessage(data) {
+  messages.value.push({ id: data.id_message, role: data.role, content: data.content, id_conversation: data.id_conversation });
 }
 
 // Entrée = envoyer, Maj + Entrée = retour à la ligne

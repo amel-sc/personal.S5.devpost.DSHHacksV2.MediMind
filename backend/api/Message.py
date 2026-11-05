@@ -67,6 +67,7 @@ def send_message(data: RequestMessage):
             status_code = 200,
             content = {
                 "id_message": id_message,
+                "id_conversation": data.id_conversation,
                 "role": "user",
                 "content": data.message
             }
