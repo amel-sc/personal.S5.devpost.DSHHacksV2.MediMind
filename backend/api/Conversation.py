@@ -26,3 +26,15 @@ def create_conversation(first_message: str):
             (first_message,)
         )
         return cur.lastrowid
+
+# router to find all conversation
+@router.get("/api/conversation")
+def conversations():
+    conversations = findAll()
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "data": conversations
+        }
+    )
