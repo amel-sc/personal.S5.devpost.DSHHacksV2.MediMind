@@ -13,3 +13,51 @@ CREATE TABLE IF NOT EXISTS message (
     id_conversation INTEGER NOT NULL,
     FOREIGN KEY (id_conversation) REFERENCES conversation(id)
 );
+
+-- humeur 
+CREATE TABLE IF NOT EXISTS humeur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    val INTEGER,
+    desce TEXT
+);
+-- humeur data
+INSERT INTO humeur (val, desce) VALUES 
+(1, 'Très bien'),
+(2, 'Bien'),
+(3, 'Bof'),
+(4, 'Mal'),
+(5, 'Très mal');
+
+-- humeur_cause
+CREATE TABLE IF NOT EXISTS humeur_cause (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    val TEXT,
+    desce TEXT
+);
+-- humeur_cause data
+INSERT INTO humeur_cause (val, desce) VALUES
+('Sommeil', 'Sommeil'),
+('Stress', 'Stress'),
+('Famille', 'Famille'),
+('Études', 'Études'),
+('Amis', 'Amis'),
+('Santé', 'Santé'),
+('Couple', 'Couple');
+
+-- humeur_jours
+CREATE TABLE IF NOT EXISTS humeur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_humeur INT NOT NULL,
+    date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
+    note TEXT,
+    FOREIGN KEY (id_humeur) REFERENCES humeur(id)
+);
+
+-- humeur_jours_causes
+CREATE TABLE IF NOT EXISTS humeur_jours_causes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_humeur_jours INT NOT NULL,
+    id_humeur_cause INT NOT NULL,
+    FOREIGN KEY (id_humeur_jours) REFERENCES humeur_jours(id),
+    FOREIGN KEY (id_humeur_cause) REFERENCES humeur_cause(id)
+);

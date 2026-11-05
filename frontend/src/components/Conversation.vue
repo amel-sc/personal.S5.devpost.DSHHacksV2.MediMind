@@ -1,14 +1,50 @@
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, watch } from 'vue';
 import Message from './Message.vue';
-import { sendMessage, traitementMessage } from '@/services/api.js';
+import { sendMessage, traitementMessage, getMessages } from '@/services/api.js';
+
+const conversation = defineModel('conversation', {
+  type: [Number, null],
+  default: null
+})
 
 const message = ref('');
-const conversation = ref(null);
 const erreur = ref(null);
 const chargement = ref(false);
+const chargementHistorique = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
+
+watch(conversation, async (id) => {
+  erreur.value = null;
+  message.value = '';
+
+  // Nouvelle conversation : on vide l'écran
+  if (id === null) {
+    messages.value = [];
+    return;
+  }
+
+  // Conversation existante : on charge ses messages
+  chargementHistorique.value = true;
+  messages.value = [];
+  try {
+    const response = await getMessages(id); // à adapter à ton API
+    if (conversation.value !== id) return;  // l'utilisateur a changé entre-temps
+    messages.value = response.data.map((m) => ({
+      id: m.id ?? m.id_message,
+      role: m.role,
+      content: m.content,
+      id_conversation: m.id_conversation ?? id
+    }));
+  } catch (e) {
+    erreur.value = "Impossible de charger la conversation.";
+    console.error(e);
+  } finally {
+    chargementHistorique.value = false;
+    await scrollToBottom();
+  }
+});
 
 async function scrollToBottom() {
   await nextTick(); // attend que Vue ait affiché le nouveau message
@@ -35,8 +71,11 @@ async function envoyerMessage() {
     }
     // send message 
     const send_response = await sendMessage(data);
-    conversation.value = send_response.id_conversation;
+    if (conversation.value !== send_response.id_conversation) {
+      conversation.value = send_response.id_conversation;
+    }
     addMessage(send_response);
+    await scrollToBottom();
     
     // get response from medimind
     data.id_conversation = conversation.value;
@@ -74,7 +113,13 @@ function onKeydown(e) {
     <div ref="zoneMessages" class="flex-grow-1 overflow-auto">
       <div class="container py-4">
 
-        <div v-if="messages.length > 0" class="d-flex flex-column gap-3">
+        <div v-if="chargementHistorique" class="d-flex justify-content-center py-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Chargement…</span>
+          </div>
+        </div>
+
+        <div v-else-if="messages.length > 0" class="d-flex flex-column gap-3">
           <Message v-for="(item, i) in messages" :key="i" :message="item" />
         </div>
 
