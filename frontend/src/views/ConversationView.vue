@@ -19,7 +19,14 @@ const chargementHistorique = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
 
+let idCreeIci = null;
+
 watch(conversation, async (id) => {
+  if (id !== null && id === idCreeIci) {
+    idCreeIci = null;
+    return;
+  }
+
   erreur.value = null;
   message.value = '';
 
@@ -76,13 +83,15 @@ async function envoyerMessage() {
     // send message 
     const send_response = await sendMessage(data);
     if (conversation.value !== send_response.id_conversation) {
+      idCreeIci = send_response.id_conversation;
       router.replace({ name: 'conversation', params: { id: send_response.id_conversation } })
     }
     addMessage(send_response);
     await scrollToBottom();
     
     // get response from medimind
-    data.id_conversation = conversation.value;
+    data.id_conversation = send_response.id_conversation;
+    data.historique = messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation }));
     const traitement_response = await traitementMessage(data)
     addMessage(traitement_response);
 
