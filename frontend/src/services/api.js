@@ -40,5 +40,5 @@ async function requete(methode, chemin, donnees) {
 
 // function to send message to medimind
 export function sendMessage(donnees) {
-    return requete('POST', '/message/send', donnees)
+    return requete('POST', '/message', donnees)
 }
