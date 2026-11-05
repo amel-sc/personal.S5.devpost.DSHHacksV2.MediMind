@@ -1,7 +1,7 @@
 <script setup>
 import { ref, nextTick, watch } from 'vue';
 import Message from './Message.vue';
-import { sendMessage, traitementMessage } from '@/services/api.js';
+import { sendMessage, traitementMessage, getMessages } from '@/services/api.js';
 
 const conversation = defineModel('conversation', {
   type: [Number, null],
@@ -29,6 +29,24 @@ watch(conversation, async (id) => {
   }
 
   // Conversation existante : on charge ses messages
+  chargement.value = true;
+  messages.value = [];
+  try {
+    const response = await getMessages(id); // à adapter à ton API
+    if (conversation.value !== id) return;  // l'utilisateur a changé entre-temps
+    messages.value = response.data.map((m) => ({
+      id: m.id ?? m.id_message,
+      role: m.role,
+      content: m.content,
+      id_conversation: m.id_conversation ?? id
+    }));
+  } catch (e) {
+    erreur.value = "Impossible de charger la conversation.";
+    console.error(e);
+  } finally {
+    chargement.value = false;
+    await scrollToBottom();
+  }
 });
 
 async function scrollToBottom() {

@@ -13,7 +13,7 @@ def findByConversation(id_conversation: int):
     with closing(get_connection()) as conn:
         rows = conn.execute(
             "SELECT * "
-            "FROM message WHERE id_conversation = ?"
+            "FROM message WHERE id_conversation = ?",
             (id_conversation,)
         ).fetchall()
 
