@@ -14,11 +14,7 @@ const chargement = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
 
-let idCreeIci = null;
-
 watch(conversation, async (id) => {
-  if (id === idCreeIci) return;
-
   erreur.value = null;
   message.value = '';
 
@@ -74,9 +70,9 @@ async function envoyerMessage() {
     }
     // send message 
     const send_response = await sendMessage(data);
-    idCreeIci = send_response.id_conversation;
     conversation.value = send_response.id_conversation;
     addMessage(send_response);
+    await scrollToBottom();
     
     // get response from medimind
     data.id_conversation = conversation.value;
