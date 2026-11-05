@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from assistant import ask_medimind
+from backend.services.assistant import ask_medimind
 
 app = FastAPI()
 
@@ -17,17 +17,6 @@ def get_connection():
     conn.execute("PRAGMA foreign_keys = ON")
 
     return conn
-
-# Modèle for message
-class Message(BaseModel):
-    role: Literal["user", "assistant"]
-    content: str
-
-# Modèle représentant le JSON attendu
-class Request(BaseModel):
-    message: str
-    historique: list[Message]
-    langue: Literal["fr", "en"]
 
 @app.post("/api/message/send")
 def traitement_message(data: Request):
