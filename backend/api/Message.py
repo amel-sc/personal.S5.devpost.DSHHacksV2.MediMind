@@ -47,6 +47,15 @@ def create_message(role: str, content: str, id_conversation: int):
 
 # route to findAll message
 @router.get("/api/message")
+def messages(id_conversation: int):
+    messages = findByConversation(id_conversation)
+    
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "data": messages
+        }
+    )
 
 # route to create new conversation 
 @router.post("/api/message")
