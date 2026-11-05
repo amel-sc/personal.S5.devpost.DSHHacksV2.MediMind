@@ -18,7 +18,7 @@ def create_conversation_message(role: str, content: str):
         id_conversation = cur.lastrowid
 
         cur = conn.execute(
-            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
+            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?, ?)",
             (role, content, id_conversation)
         )
         id_message = cur.lastrowid
@@ -38,7 +38,7 @@ def create_conversation(first_message: str):
 def create_message(role: str, content: str, id_conversation: int):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
-            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?)",
+            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?, ?)",
             (role, content, id_conversation)
         )
         return cur.lastrowid

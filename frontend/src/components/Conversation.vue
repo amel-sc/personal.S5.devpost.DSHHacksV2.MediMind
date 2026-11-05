@@ -21,7 +21,6 @@ async function envoyerMessage() {
   if (!contenu || chargement.value) return;
 
   erreur.value = null;
-  messages.value.push({ role: 'user', content: contenu });
   message.value = '';
 
   chargement.value = true;
@@ -32,7 +31,7 @@ async function envoyerMessage() {
       message: contenu,
       historique: messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation })),
       langue: 'fr',
-      conversation: conversation
+      id_conversation: conversation
     }
     // send message 
     const send_response = await sendMessage(data);
@@ -40,12 +39,13 @@ async function envoyerMessage() {
     addMessage(send_response);
     
     // get response from medimind
-    data.conversation = send_response.conversation.value;
+    data.id_conversation = conversation.value;
     const traitement_response = await traitementMessage(data)
     addMessage(traitement_response);
 
   } catch (e) {
     erreur.value = "Une erreur s'est produite. Réessayez dans un instant.";
+    console.error(e);
   } finally {
     chargement.value = false;
     await scrollToBottom();
