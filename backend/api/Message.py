@@ -8,6 +8,17 @@ from db.database import get_connection
 
 router = APIRouter()
 
+# function to findAll message by conversation
+def findByConversation(id_conversation: int):
+    with closing(get_connection()) as conn:
+        rows = conn.execute(
+            "SELECT * "
+            "FROM message WHERE id_conversation = ?"
+            (id_conversation,)
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
 # function to create conversation with message
 def create_conversation_message(role: str, content: str):
     with closing(get_connection()) as conn, conn:
@@ -33,6 +44,9 @@ def create_message(role: str, content: str, id_conversation: int):
             (role, content, id_conversation)
         )
         return cur.lastrowid
+
+# route to findAll message
+@router.get("/api/message")
 
 # route to create new conversation 
 @router.post("/api/message")
