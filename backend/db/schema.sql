@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS message (
 -- humeur 
 CREATE TABLE IF NOT EXISTS humeur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    val INTEGER,
+    val INTEGER UNIQUE,
     desce TEXT
 );
 
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS humeur_cause (
 );
 
 -- humeur_jours
-CREATE TABLE IF NOT EXISTS humeur (
+CREATE TABLE IF NOT EXISTS humeur_jours (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_humeur INT NOT NULL,
     date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
