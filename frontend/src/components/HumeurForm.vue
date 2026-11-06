@@ -9,10 +9,12 @@ const props = defineProps({
 
 const humeur = ref(null);
 const note = ref('');
-const humeurCause = ref(null);
+const humeurCause = ref([]);
 
 function envoyer() {
-  console.log('Choix :', choix.value)
+  console.log('humeur :', humeur.value)
+  console.log('note :', note.value)
+  console.log('Humeur Causes:', humeurCause.value)
 }
 </script>
 <template>
@@ -37,14 +39,14 @@ function envoyer() {
             <label for="" class="form-label">Les causes de votre humeur</label>
             <div class="d-flex flex-wrap column-gap-4 row-gap-2">
                 <div v-for="o in humeurCauses" :key="o.val" class="form-field">
-                    <input :id="`cause-${o.id}`" v-model="humeurCause" class="check" :value="o.id" type="checkbox" required />
+                    <input :id="`cause-${o.id}`" v-model="humeurCause" class="check" :value="o.id" type="checkbox" />
                     <label :for="`cause-${o.id}`">{{ o.val }}</label>
                 </div>
             </div>
         </div>
 
-        <button type="submit" class="btn-solid theme-primary">
-        Valider
-        </button>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn-solid theme-primary">Valider</button>
+        </div>
     </form>
 </template>
