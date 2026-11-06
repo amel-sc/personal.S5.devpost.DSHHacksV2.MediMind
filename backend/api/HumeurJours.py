@@ -1,6 +1,6 @@
 import sqlite3
 from fastapi import APIRouter
-from schemas.Message import RequestMessage
+from schemas.HumeurJours import HumeurJours
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -25,3 +25,13 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
     return id_humeur_jours
 
 # function router to insert new humeur jours
+@router.post("/api/humeur/jours")
+def create_humeurJours(data: HumeurJours):
+    id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            id_humeur_jours: id_humeur_jours
+        }
+    )
