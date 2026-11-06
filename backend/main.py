@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api import Message, Conversation
+from api import Message, Conversation, Humeur, HumeurCause, HumeurJours
 from db.database import init_db
 
 app = FastAPI()
@@ -11,3 +11,6 @@ def startup():
 
 app.include_router(Message.router)
 app.include_router(Conversation.router)
+app.include_router(Humeur.router)
+app.include_router(HumeurCause.router)
+app.include_router(HumeurJours.router)
