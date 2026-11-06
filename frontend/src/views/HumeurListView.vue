@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { api } from '@/services/api';
+import { dateHeure } from '@/utils/format';
 
 const humeurJours = ref([]);
 const chargement = ref(false);
@@ -64,7 +65,7 @@ onMounted(charger)
                                 @keydown.enter="navigate"
                                 style="cursor: pointer;"
                             >
-                                <td>{{ humeurJour.date_creation }}</td>
+                                <td>{{ dateHeure(humeurJour.date_creation) }}</td>
                                 <td>{{ humeurJour.humeur_desce }}</td>
                             </tr>
                         </RouterLink>
