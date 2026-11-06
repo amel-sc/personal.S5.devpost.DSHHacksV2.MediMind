@@ -52,5 +52,8 @@ export const api = {
   },
   humeurCause: {
     lister: () => requete('GET', '/humeur/cause')
+  }, 
+  humeurJours: {
+    save: (donnees) => requete('POST', '/humeur/jours', donnees)
   }
 }
