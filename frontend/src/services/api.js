@@ -46,5 +46,8 @@ export const api = {
   },
   conversation: {
     lister: () => requete('GET', '/conversation')
+  },
+  humeur: {
+    lister: () => requete('GET', '/humeur')
   }
 }
