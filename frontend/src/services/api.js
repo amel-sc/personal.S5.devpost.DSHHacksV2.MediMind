@@ -55,6 +55,7 @@ export const api = {
   }, 
   humeurJours: {
     save: (donnees) => requete('POST', '/humeur/jours', donnees),
-    lister: () => requete('GET', '/humeur/jours')
+    lister: () => requete('GET', '/humeur/jours'),
+    find: (id) => requete('GET', `/humeur/jours/${id}`)
   }
 }
