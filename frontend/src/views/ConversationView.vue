@@ -1,12 +1,16 @@
 <script setup>
-import { ref, nextTick, watch } from 'vue';
-import Message from './Message.vue';
-import { sendMessage, traitementMessage, getMessages } from '@/services/api.js';
+import { ref, nextTick, watch, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router'
+import Message from '@/components/Message.vue';
+import { api } from '@/services/api';
 
-const conversation = defineModel('conversation', {
-  type: [Number, null],
-  default: null
-})
+const route = useRoute()
+const router = useRouter()
+
+// Remplace defineModel : l'id vient de l'URL
+const conversation = computed(() =>
+  route.params.id ? Number(route.params.id) : null
+)
 
 const message = ref('');
 const erreur = ref(null);
@@ -15,7 +19,14 @@ const chargementHistorique = ref(false);
 const messages = ref([]);
 const zoneMessages = ref(null);
 
+let idCreeIci = null;
+
 watch(conversation, async (id) => {
+  if (id !== null && id === idCreeIci) {
+    idCreeIci = null;
+    return;
+  }
+
   erreur.value = null;
   message.value = '';
 
@@ -29,7 +40,7 @@ watch(conversation, async (id) => {
   chargementHistorique.value = true;
   messages.value = [];
   try {
-    const response = await getMessages(id); // à adapter à ton API
+    const response = await api.message.lister(id); // à adapter à ton API
     if (conversation.value !== id) return;  // l'utilisateur a changé entre-temps
     messages.value = response.data.map((m) => ({
       id: m.id ?? m.id_message,
@@ -44,7 +55,7 @@ watch(conversation, async (id) => {
     chargementHistorique.value = false;
     await scrollToBottom();
   }
-});
+}, { immediate: true });
 
 async function scrollToBottom() {
   await nextTick(); // attend que Vue ait affiché le nouveau message
@@ -70,16 +81,18 @@ async function envoyerMessage() {
       id_conversation: conversation.value
     }
     // send message 
-    const send_response = await sendMessage(data);
+    const send_response = await api.message.send(data);
     if (conversation.value !== send_response.id_conversation) {
-      conversation.value = send_response.id_conversation;
+      idCreeIci = send_response.id_conversation;
+      router.replace({ name: 'conversation', params: { id: send_response.id_conversation } })
     }
     addMessage(send_response);
     await scrollToBottom();
     
     // get response from medimind
-    data.id_conversation = conversation.value;
-    const traitement_response = await traitementMessage(data)
+    data.id_conversation = send_response.id_conversation;
+    data.historique = messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation }));
+    const traitement_response = await api.message.traitement(data)
     addMessage(traitement_response);
 
   } catch (e) {

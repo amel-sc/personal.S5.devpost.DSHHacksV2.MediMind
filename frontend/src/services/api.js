@@ -38,22 +38,24 @@ async function requete(methode, chemin, donnees) {
   return corps
 }
 
-// function to get all messages by conversatino
-export function getMessages(id) {
-  return requete('GET', `/message?id_conversation=${id}`,)
-}
-
-// function to get all conversation
-export function getConversations() {
-  return requete('GET', '/conversation')
-}
-
-// function to get response of message
-export function traitementMessage(donnees) {
-  return requete('POST', '/message/traitement', donnees) 
-}
-
-// function to send message to medimind
-export function sendMessage(donnees) {
-  return requete('POST', '/message', donnees)
+export const api = {
+  message: {
+    lister: (id) => requete('GET', `/message?id_conversation=${id}`),
+    traitement: (donnees) => requete('POST', '/message/traitement', donnees),
+    send: (donnees) => requete('POST', '/message', donnees)
+  },
+  conversation: {
+    lister: () => requete('GET', '/conversation')
+  },
+  humeur: {
+    lister: () => requete('GET', '/humeur')
+  },
+  humeurCause: {
+    lister: () => requete('GET', '/humeur/cause')
+  }, 
+  humeurJours: {
+    save: (donnees) => requete('POST', '/humeur/jours', donnees),
+    lister: () => requete('GET', '/humeur/jours'),
+    find: (id) => requete('GET', `/humeur/jours/${id}`)
+  }
 }

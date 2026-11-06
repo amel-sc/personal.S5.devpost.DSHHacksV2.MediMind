@@ -1,18 +1,19 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import Conversation from './components/Conversation.vue'
-import { getConversations } from '@/services/api.js'
+import { onMounted, ref, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { api } from './services/api'
 
+const route = useRoute()
 const conversations = ref([])
-const conversationActive = ref(null)
 const erreur = ref(null)
 const chargement = ref(false)
+const drawer = ref(null)
 
 async function charger() {
   chargement.value = true
   erreur.value = null
   try {
-    const response = await getConversations()
+    const response = await api.conversation.lister();
     conversations.value = response.data
   } catch (e) {
     erreur.value = "Une erreur s'est produite. Réessayez dans un instant."
@@ -22,18 +23,19 @@ async function charger() {
   }
 }
 
-function nouvelleConversation() {
-  conversationActive.value = null
-}
-
-function ouvrirConversation(c) {
-  conversationActive.value = c.id
-}
+// Conversation active déduite de l'URL
+const conversationActive = computed(() =>
+  route.params.id ? Number(route.params.id) : null
+)
 
 watch(conversationActive, (id) => {
   // some vérifie si au moins un élément d'un tableau satisfait une condition
   if (id !== null && !conversations.value.some((c) => c.id === id)) charger()
 })
+
+function closeDrawer() {
+  drawer.value?.close()
+}
 
 onMounted(charger)
 </script>
@@ -55,7 +57,7 @@ onMounted(charger)
     </header>
 
     <!-- Menu latéral gauche -->
-    <dialog class="drawer drawer-start" tabindex="-1" id="menuMediMind"
+    <dialog ref="drawer" class="drawer drawer-start" tabindex="-1" id="menuMediMind"
             aria-labelledby="menuTitre">
       <div class="drawer-header">
         <h5 class="drawer-title" id="menuTitre">MediMind</h5>
@@ -63,11 +65,14 @@ onMounted(charger)
       </div>
 
       <div class="drawer-body d-flex flex-column gap-2">
-        <button type="button" class="btn-text theme-inverse item-conversation"
-                data-bs-dismiss="drawer" @click="nouvelleConversation">
+        <RouterLink :to="{ name: 'conversation' }" class="btn-text theme-inverse item-conversation" @click="closeDrawer">
           <i class="bi bi-plus-lg" aria-hidden="true"></i>
           <span class="texte-tronque">Nouvelle conversation</span>
-        </button>
+        </RouterLink>
+        <RouterLink :to="{ name: 'humeurList' }" class="btn-text theme-inverse item-conversation" @click="closeDrawer">
+          <i class="bi bi-journal-text" aria-hidden="true"></i>
+          <span class="texte-tronque">Humeur</span>
+        </RouterLink>
 
         <hr class="my-1">
 
@@ -91,25 +96,25 @@ onMounted(charger)
 
         <!-- Liste des conversations -->
         <nav v-else class="d-flex flex-column gap-1 liste-conversations" aria-label="Conversations">
-          <button
+          <RouterLink
             v-for="c in conversations"
             :key="c.id"
-            type="button"
+            :to="{ name: 'conversation', params: { id: c.id } }"
             class="btn-text theme-inverse item-conversation"
             :class="{ active: c.id === conversationActive }"
-            :aria-current="c.id === conversationActive ? 'true' : null"
             :title="c.first_message"
-            data-bs-dismiss="drawer"
-            @click="ouvrirConversation(c)"
+            @click="closeDrawer"
           >
             <i class="bi bi-chat-left-text" aria-hidden="true"></i>
             <span class="texte-tronque">{{ c.first_message || 'Conversation sans titre' }}</span>
-          </button>
+          </RouterLink>
         </nav>
       </div>
     </dialog>
 
-    <Conversation v-model:conversation="conversationActive" class="flex-grow-1" />
+    <main class="flex-grow-1 d-flex flex-column overflow-hidden">
+      <RouterView />
+    </main>
   </div>
 </template>
 

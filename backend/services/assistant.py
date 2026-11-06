@@ -294,7 +294,7 @@ def ask_medimind(question, historique=None, langue_precedente="fr"):
     ]
 
     # ③ Cas douteux : aucun document pertinent
-    if not pertinents and not est_dans_le_sujet(question):
+    if not pertinents and not est_dans_le_sujet(question, historique):
         return T["hors_sujet"], langue
 
     # ④ Construction du contexte
