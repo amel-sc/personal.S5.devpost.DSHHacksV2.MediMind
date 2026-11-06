@@ -45,3 +45,10 @@ CREATE TABLE IF NOT EXISTS humeur_jours_causes (
     FOREIGN KEY (id_humeur_jours) REFERENCES humeur_jours(id),
     FOREIGN KEY (id_humeur_cause) REFERENCES humeur_cause(id)
 );
+
+-- humeur_jours_status
+CREATE TABLE IF NOT EXISTS humeur_jours_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    val INTEGER,
+    desce TEXT
+);
