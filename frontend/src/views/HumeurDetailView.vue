@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { api } from '@/services/api';    
 import { onMounted } from 'vue';
+import HumeurDetail from '@/components/HumeurDetail.vue';
 const props = defineProps({ id: { type: String, required: true } })
 
 const humeurJours = ref(null);
@@ -28,7 +29,11 @@ async function charger() {
 onMounted(charger)
 </script>
 <template>
-    <div class="container">
+    <div class="container mt-3">
+        <RouterLink to="/humeur/list" type="button" class="theme-primary btn-solid btn-styled">
+            <i class="bi bi-arrow-left"></i>
+            Retour à la liste
+        </RouterLink>
         <h3>Humeur {{ humeurJours ? humeurJours.date_creation : '-' }}</h3>
         
         <div v-if="chargement" class="d-flex justify-content-center py-5">
@@ -38,15 +43,7 @@ onMounted(charger)
         </div>
 
         <div v-else-if="humeurJours">
-            <p>Votre humeur ce jour : {{ humeurJours.humeur_desce }}</p>
-            <p>Votre note ce jour : </p>
-            <p>{{ humeurJours.note }}</p>
-            <p>Les causes de votre humeur : </p>
-            <ul>
-                <li v-for="humeurJoursCause in humeurJoursCauses">
-                    {{ humeurJoursCause.id_humeur_cause }}
-                </li>
-            </ul>
+            <HumeurDetail :humeur-jours="humeurJours" :humeur-jours-causes="humeurJoursCauses" />
         </div>
 
         <div v-if="erreur" class="alert alert-danger mt-3 mb-3" role="alert">{{ erreur }}</div>
