@@ -8,6 +8,23 @@ from db.database import get_connection
 
 router = APIRouter()
 
+# function to find humeur_jours by id
+def findById(id: int):
+    with closing(get_connection()) as conn, conn:
+        row = conn.execute(
+            "SELECT * FROM humeur_jours"
+            "WHERE id = ?",
+            (id)
+        ).fetchone()
+
+        row_causes = conn.execute(
+            "SELECT * FROM humeur_jours_causes"
+            "WHERE id_humeur_jours = ?",
+            (id)
+        ).fetchall()
+
+    return (dict(row), [dict(row_cause) for row_cause in row_causes])
+
 # function to insert new humeur jours
 def create(id_humeur: int, note: str, humeur_causes: list[int]):
     with closing(get_connection()) as conn, conn:
