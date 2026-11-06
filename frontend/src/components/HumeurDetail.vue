@@ -18,7 +18,7 @@ defineProps({
     <p>Les causes de votre humeur : </p>
     <ul>
         <li v-for="humeurJoursCause in humeurJoursCauses">
-            {{ humeurJoursCause.id_humeur_cause }}
+            {{ humeurJoursCause.cause_val }}
         </li>
     </ul>
 </template>
