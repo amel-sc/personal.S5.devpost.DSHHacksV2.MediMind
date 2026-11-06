@@ -1,11 +1,10 @@
 import sqlite3
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from schemas.HumeurJours import HumeurJours
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
-from pathlib import Path
 
 router = APIRouter()
 

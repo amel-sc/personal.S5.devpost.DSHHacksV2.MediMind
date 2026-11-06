@@ -44,10 +44,24 @@ onMounted(charger)
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="humeurJour in humeurJours" :key="humeurJour.id">
-                            <td>{{ humeurJour.date_creation }}</td>
-                            <td>{{ humeurJour.humeur_desce }}</td>
-                        </tr>
+                        <RouterLink
+                            v-for="humeurJour in humeurJours"
+                            :key="humeurJour.id"
+                            :to="`/humeur/${humeurJour.id}`"
+                            custom
+                            v-slot="{ navigate }"
+                            >
+                            <tr
+                                role="link"
+                                tabindex="0"
+                                @click="navigate"
+                                @keydown.enter="navigate"
+                                style="cursor: pointer;"
+                            >
+                                <td>{{ humeurJour.date_creation }}</td>
+                                <td>{{ humeurJour.humeur_desce }}</td>
+                            </tr>
+                        </RouterLink>
                     </tbody>
                 </table>
             </div>
