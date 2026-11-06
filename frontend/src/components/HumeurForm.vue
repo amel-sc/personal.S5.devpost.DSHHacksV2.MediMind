@@ -14,6 +14,7 @@ function envoyer() {
 }
 </script>
 <template>
+    <h4>Ajouter votre humeur d'aujourd'hui</h4>
     <form @submit.prevent="envoyer">
         <div class="form-field mb-3">
             <label for="" class="form-label">Votre humeur</label>
