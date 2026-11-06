@@ -41,14 +41,12 @@ onMounted(charger)
                         <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Humeur</th>
-                            <th scope="col">Operation</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="humeurJour in humeurJours" :key="humeurJour.id">
                             <td>{{ humeurJour.date_creation }}</td>
-                            <td>{{ humeurJour.id_humeur }}</td>
-                            <td>-</td>
+                            <td>{{ humeurJour.humeur_desce }}</td>
                         </tr>
                     </tbody>
                 </table>

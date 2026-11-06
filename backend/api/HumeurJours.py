@@ -28,12 +28,15 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
 def findAll():
     with closing(get_connection()) as conn:
         rows = conn.execute(
-            "SELECT * "
-            "FROM humeur_jours ORDER BY date_creation DESC"
+            "SELECT hj.id, hj.note, hj.date_creation, "
+            "       h.val   AS humeur_val, "
+            "       h.desce AS humeur_desce "
+            "FROM humeur_jours hj "
+            "LEFT JOIN humeur h ON h.id = hj.id_humeur "
+            "ORDER BY hj.date_creation DESC"
         ).fetchall()
-
         return [dict(row) for row in rows]
-
+    
 # function router to find All humeur jours
 @router.get("/api/humeur/jours")
 def humeurJours():
