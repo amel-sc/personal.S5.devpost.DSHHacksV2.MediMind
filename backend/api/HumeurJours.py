@@ -5,6 +5,7 @@ from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
+from pathlib import Path
 
 router = APIRouter()
 
@@ -63,6 +64,19 @@ def humeurJours():
         status_code = 200,
         content = {
             "data": humeurJours
+        }
+    )
+
+# function router to get humeur jours by id
+@router.get("/api/humeur/jours/{id_humeur_jours}")
+def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
+    humeur_jours, humeur_jours_causes = findById(id_humeur_jours)
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "humeurs_jours": humeur_jours,
+            "humeur_jours_causes": humeur_jours_causes
         }
     )
 
