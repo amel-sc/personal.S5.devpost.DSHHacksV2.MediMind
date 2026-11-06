@@ -52,3 +52,6 @@ CREATE TABLE IF NOT EXISTS humeur_jours_status (
     val INTEGER,
     desce TEXT
 );
+
+-- add status in humeur_jours
+ALTER TABLE humeur_jours ADD COLUMN id_humeur_jours_status INT REFERENCES humeur_jours_status(id)
