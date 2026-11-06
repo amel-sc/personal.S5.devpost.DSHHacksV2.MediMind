@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getConversations } from '@/services/api.js'
+import { api } from './services/api'
 
 const route = useRoute()
 const conversations = ref([])
@@ -13,7 +13,7 @@ async function charger() {
   chargement.value = true
   erreur.value = null
   try {
-    const response = await getConversations()
+    const response = await api.conversation.lister();
     conversations.value = response.data
   } catch (e) {
     erreur.value = "Une erreur s'est produite. Réessayez dans un instant."

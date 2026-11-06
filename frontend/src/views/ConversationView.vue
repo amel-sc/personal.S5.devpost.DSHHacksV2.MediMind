@@ -2,7 +2,7 @@
 import { ref, nextTick, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
 import Message from '@/components/Message.vue';
-import { sendMessage, traitementMessage, getMessages } from '@/services/api.js';
+import { api } from '@/services/api';
 
 const route = useRoute()
 const router = useRouter()
@@ -40,7 +40,7 @@ watch(conversation, async (id) => {
   chargementHistorique.value = true;
   messages.value = [];
   try {
-    const response = await getMessages(id); // à adapter à ton API
+    const response = await api.message.lister(id); // à adapter à ton API
     if (conversation.value !== id) return;  // l'utilisateur a changé entre-temps
     messages.value = response.data.map((m) => ({
       id: m.id ?? m.id_message,
@@ -81,7 +81,7 @@ async function envoyerMessage() {
       id_conversation: conversation.value
     }
     // send message 
-    const send_response = await sendMessage(data);
+    const send_response = await api.message.send(data);
     if (conversation.value !== send_response.id_conversation) {
       idCreeIci = send_response.id_conversation;
       router.replace({ name: 'conversation', params: { id: send_response.id_conversation } })
@@ -92,7 +92,7 @@ async function envoyerMessage() {
     // get response from medimind
     data.id_conversation = send_response.id_conversation;
     data.historique = messages.value.map((m) => ({ id: m.id, role: m.role, content: m.content, id_conversation: m.id_conversation }));
-    const traitement_response = await traitementMessage(data)
+    const traitement_response = await api.message.traitement(data)
     addMessage(traitement_response);
 
   } catch (e) {
