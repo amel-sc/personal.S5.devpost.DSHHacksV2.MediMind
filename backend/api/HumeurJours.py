@@ -24,6 +24,16 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
 
     return id_humeur_jours
 
+# function to findAll humeur jours 
+def findAll():
+    with closing(get_connection()) as conn:
+        rows = conn.execute(
+            "SELECT * "
+            "FROM humeur_jours ORDER BY date_creation DESC"
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
 # function router to insert new humeur jours
 @router.post("/api/humeur/jours")
 def create_humeurJours(data: HumeurJours):
