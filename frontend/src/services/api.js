@@ -49,5 +49,8 @@ export const api = {
   },
   humeur: {
     lister: () => requete('GET', '/humeur')
+  },
+  humeurCause: {
+    lister: () => requete('GET', '/humeur/cause')
   }
 }
