@@ -3,15 +3,21 @@ import { onMounted, ref } from 'vue';
 import { api } from '@/services/api';
 
 const humeurJours = ref([]);
-const chargment = ref(false);
+const chargement = ref(false);
 const erreur = ref(null)
 
-function charger() {
+async function charger() {
+    chargement.value = true;
+
     try {
-        
+        const response = await api.humeurJours.lister();
+        humeurJours.value = response.data;
 
     } catch (error) {
-        
+        erreur = e;
+        console.error(e);
+    } finally {
+        chargement.value = false;
     }
 }
 
@@ -21,24 +27,38 @@ onMounted(charger)
 <template>
     <div class="container">
         <h3>Humeur</h3>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col">Humeur</th>
-                        <th scope="col">Cause</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <div v-if="chargement" class="d-flex justify-content-center py-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Chargement…</span>
+          </div>
         </div>
+
+        <div v-else-if="humeurJours.length > 0" class="d-flex flex-column gap-3">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Humeur</th>
+                            <th scope="col">Operation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="humeurJour in humeurJours" :key="humeurJour.id">
+                            <td>{{ humeurJour.date_creation }}</td>
+                            <td>{{ humeurJour.id_humeur }}</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div v-else class="text-center text-secondary py-5">
+          <p class="mb-0">Aucun humeur trouvé</p>
+        </div>
+
+        <div v-if="erreur" class="alert alert-danger mt-3 mb-3" role="alert">{{ erreur }}</div>
     </div>
 </template>
