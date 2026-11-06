@@ -15,3 +15,8 @@ INSERT INTO humeur_cause (val, desce) VALUES
 ('Amis', 'Amis'),
 ('Santé', 'Santé'),
 ('Couple', 'Couple');
+
+-- humeur_jours_status data
+INSERT INTO humeur_jours_status (val, desce) VALUES
+(1, 'Du jours'),
+(2, 'Autre');
