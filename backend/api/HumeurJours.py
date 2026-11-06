@@ -34,6 +34,18 @@ def findAll():
 
         return [dict(row) for row in rows]
 
+# function router to find All humeur jours
+@router.get("/api/humeur/jours")
+def humeurJours():
+    humeurJours = findAll()
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "data": humeurJours
+        }
+    )
+
 # function router to insert new humeur jours
 @router.post("/api/humeur/jours")
 def create_humeurJours(data: HumeurJours):
