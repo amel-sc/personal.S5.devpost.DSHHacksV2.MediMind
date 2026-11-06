@@ -1,12 +1,15 @@
 <script setup>
 import { ref } from 'vue'
 import { api } from '@/services/api';
+import { useRouter } from 'vue-router'
 
 // Liste des choix : ajoutez-en autant que vous voulez, ils passeront à la ligne tout seuls
 const props = defineProps({
   humeurs: { type: Array, required: true },
   humeurCauses : { type: Array, required: true }
 })
+
+const router = useRouter();
 
 const humeur = ref(null);
 const note = ref('');
@@ -22,7 +25,7 @@ async function envoyer() {
         }
 
         const response = await api.humeurJours.save(data)
-        console.log(response.id_humeur_jours)
+        router.replace(`/humeur/${response.id_humeur_jours}`)
     } catch (e) {
         erreur.value = e;
         console.error(e);
