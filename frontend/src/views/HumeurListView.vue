@@ -25,9 +25,15 @@ onMounted(charger)
 </script>
 
 <template>
-    <div class="container">
-        <h3>Humeur</h3>
-
+    <div class="container mt-3">
+        <div class="d-flex align-items-center justify-content-between">
+            <h3>Humeur</h3>
+            <RouterLink to="/humeur/new" type="button" class="theme-primary btn-solid btn-styled">
+                <i class="bi bi-plus"></i>
+                Nouvelle humeur
+            </RouterLink>
+        </div>
+        
         <div v-if="chargement" class="d-flex justify-content-center py-5">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Chargement…</span>
