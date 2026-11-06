@@ -12,12 +12,12 @@ router = APIRouter()
 def create(id_humeur: int, note: str, humeur_causes: list[int]):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
-            "INSERT INTO humeur_jours (id_humeur, note) VALUES (?, ?)",
+            "INSERT INTO humeur_jours (id_humeur, note) VALUES ((SELECT id FROM humeur WHERE val = ?), ?)",
             (id_humeur, note)
         )
         id_humeur_jours = cur.lastrowid
 
-        cur = conn.execute(
+        cur = conn.executemany(
             "INSERT INTO humeur_jours_causes (id_humeur_jours, id_humeur_cause) VALUES (?, ?)",
             [(id_humeur_jours, id_humeur_cause) for id_humeur_cause in humeur_causes]
         )
@@ -32,6 +32,6 @@ def create_humeurJours(data: HumeurJours):
     return JSONResponse(
         status_code = 200,
         content = {
-            id_humeur_jours: id_humeur_jours
+            "id_humeur_jours": id_humeur_jours
         }
     )

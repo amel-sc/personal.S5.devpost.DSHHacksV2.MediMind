@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { api } from '@/services/api';
 
 // Liste des choix : ajoutez-en autant que vous voulez, ils passeront à la ligne tout seuls
 const props = defineProps({
@@ -10,14 +11,27 @@ const props = defineProps({
 const humeur = ref(null);
 const note = ref('');
 const humeurCause = ref([]);
+const erreur = ref(null)
 
-function envoyer() {
-  console.log('humeur :', humeur.value)
-  console.log('note :', note.value)
-  console.log('Humeur Causes:', humeurCause.value)
+async function envoyer() {
+    try {
+        const data = {
+            id_humeur: humeur.value,
+            note: note.value,
+            id_humeur_causes: humeurCause.value
+        }
+
+        const response = await api.humeurJours.save(data)
+        console.log(response.id_humeur_jours)
+    } catch (e) {
+        erreur.value = e;
+        console.error(e);
+    }
 }
+
 </script>
 <template>
+    <div v-if="erreur" class="alert alert-danger mt-3 mb-0" role="alert">{{ erreur }}</div>
     <h4>Ajouter votre humeur d'aujourd'hui</h4>
     <form @submit.prevent="envoyer">
         <div class="form-field mb-3">
