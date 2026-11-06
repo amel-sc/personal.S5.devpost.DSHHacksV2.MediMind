@@ -69,7 +69,7 @@ onMounted(charger)
           <i class="bi bi-plus-lg" aria-hidden="true"></i>
           <span class="texte-tronque">Nouvelle conversation</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'humeur' }" class="btn-text theme-inverse item-conversation" @click="closeDrawer">
+        <RouterLink :to="{ name: 'humeurList' }" class="btn-text theme-inverse item-conversation" @click="closeDrawer">
           <i class="bi bi-journal-text" aria-hidden="true"></i>
           <span class="texte-tronque">Humeur</span>
         </RouterLink>
