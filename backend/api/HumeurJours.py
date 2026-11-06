@@ -12,15 +12,19 @@ router = APIRouter()
 def findById(id: int):
     with closing(get_connection()) as conn, conn:
         row = conn.execute(
-            "SELECT * FROM humeur_jours"
-            "WHERE id = ?",
-            (id)
+            "SELECT hj.id, hj.note, hj.date_creation, "
+            "       h.val   AS humeur_val, "
+            "       h.desce AS humeur_desce "
+            "FROM humeur_jours hj "
+            "LEFT JOIN humeur h ON h.id = hj.id_humeur "
+            "WHERE hj.id = ?",
+            (id,)
         ).fetchone()
 
         row_causes = conn.execute(
-            "SELECT * FROM humeur_jours_causes"
+            "SELECT * FROM humeur_jours_causes "
             "WHERE id_humeur_jours = ?",
-            (id)
+            (id,)
         ).fetchall()
 
     return (dict(row), [dict(row_cause) for row_cause in row_causes])
@@ -74,7 +78,7 @@ def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
     return JSONResponse(
         status_code = 200,
         content = {
-            "humeurs_jours": humeur_jours,
+            "humeur_jours": humeur_jours,
             "humeur_jours_causes": humeur_jours_causes
         }
     )

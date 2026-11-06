@@ -13,8 +13,8 @@ async function charger() {
         const response = await api.humeurJours.lister();
         humeurJours.value = response.data;
 
-    } catch (error) {
-        erreur = e;
+    } catch (e) {
+        erreur.value = e;
         console.error(e);
     } finally {
         chargement.value = false;
