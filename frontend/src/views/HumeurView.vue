@@ -1,5 +1,9 @@
+<script setup>
+import HumeurForm from '@/components/HumeurForm.vue';
+</script>
 <template>
     <div class="container">
-        <h4>Humeur</h4>
+        <h3>Humeur</h3>
+        <HumeurForm />
     </div>
 </template>
