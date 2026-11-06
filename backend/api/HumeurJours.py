@@ -23,3 +23,5 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
         )
 
     return id_humeur_jours
+
+# function router to insert new humeur jours
