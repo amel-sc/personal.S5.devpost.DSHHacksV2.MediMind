@@ -5,7 +5,7 @@ defineProps({
         required: true
     },
     humeurJoursCauses: {
-        type: Object,
+        type: Array,
         required: true
     },
 })
@@ -17,7 +17,7 @@ defineProps({
     <p>{{ humeurJours.note }}</p>
     <p>Les causes de votre humeur : </p>
     <ul>
-        <li v-for="humeurJoursCause in humeurJoursCauses">
+        <li v-for="humeurJoursCause in humeurJoursCauses" :key="humeurJoursCause.id">
             {{ humeurJoursCause.cause_val }}
         </li>
     </ul>

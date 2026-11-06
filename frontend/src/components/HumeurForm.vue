@@ -11,12 +11,15 @@ const props = defineProps({
 
 const router = useRouter();
 
+const envoi = ref(false);
 const humeur = ref(null);
 const note = ref('');
 const humeurCause = ref([]);
 const erreur = ref(null)
 
 async function envoyer() {
+    envoi.value = true;
+
     try {
         const data = {
             id_humeur: humeur.value,
@@ -29,6 +32,8 @@ async function envoyer() {
     } catch (e) {
         erreur.value = e;
         console.error(e);
+    } finally {
+        envoi.value = false
     }
 }
 
@@ -62,7 +67,7 @@ async function envoyer() {
             </div>
         </div>
 
-        <div class="d-grid gap-2">
+        <div class="d-grid gap-2" :disabled="envoi">
             <button type="submit" class="btn-solid theme-primary">Valider</button>
         </div>
     </form>

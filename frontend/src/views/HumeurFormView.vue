@@ -34,6 +34,13 @@ onMounted(charger);
             Retour à la liste
         </RouterLink>
         <h3>Humeur</h3>
-        <HumeurForm :humeurs="humeurs" :humeur-causes="humeurCauses" />
+
+        <div v-if="chargement" class="d-flex justify-content-center py-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Chargement…</span>
+          </div>
+        </div>
+
+        <HumeurForm v-else :humeurs="humeurs" :humeur-causes="humeurCauses" />
     </div>
 </template>
