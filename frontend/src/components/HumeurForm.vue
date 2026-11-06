@@ -6,7 +6,8 @@ const props = defineProps({
   humeurs: { type: Array, required: true },
 })
 
-const humeur = ref(null) 
+const humeur = ref(null);
+const note = ref('');
 
 function envoyer() {
   console.log('Choix :', choix.value)
@@ -22,6 +23,11 @@ function envoyer() {
                     <label :for="`theme-${o.val}`">{{ o.desce }}</label>
                 </div>
             </div>
+        </div>
+
+        <div class="form-field mb-3">
+            <label for="note" class="form-label">Note de votre humeur</label>
+            <textarea v-model="note" class="form-control" id="note" rows="4"></textarea>
         </div>
 
         <button type="submit" class="btn-solid theme-primary">
