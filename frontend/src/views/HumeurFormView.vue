@@ -28,7 +28,11 @@ async function charger() {
 onMounted(charger);
 </script>
 <template>
-    <div class="container">
+    <div class="container mt-3">
+        <RouterLink to="/humeur/list" type="button" class="theme-primary btn-solid btn-styled">
+            <i class="bi bi-arrow-left"></i>
+            Retour à la liste
+        </RouterLink>
         <h3>Humeur</h3>
         <HumeurForm :humeurs="humeurs" :humeur-causes="humeurCauses" />
     </div>
