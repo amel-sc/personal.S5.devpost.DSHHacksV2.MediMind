@@ -22,6 +22,8 @@ def findByDateJour():
             (date_jour, date_jour_plus1)
         ).fetchone()
 
+    if row is None:          # ⬅️ test AVANT dict()
+        return None
     return dict(row)
 
 # function to find humeur_jours by id
@@ -62,6 +64,12 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
         )
 
         # query to update humeur du jours to autre if exist
+        humeurJours = findByDateJour()
+        if humeurJours is not None:
+            cur = conn.execute(
+                "UPDATE humeur_jours SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) WHERE id = ?",
+                (humeurJours.id,)
+            )
 
     return id_humeur_jours
 
