@@ -35,7 +35,7 @@ def findById(id: int):
 def create(id_humeur: int, note: str, humeur_causes: list[int]):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
-            "INSERT INTO humeur_jours (id_humeur, note) VALUES ((SELECT id FROM humeur WHERE val = ?), ?)",
+            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status) VALUES ((SELECT id FROM humeur WHERE val = ?), ?, (SELECT id FROM humeur_jours_status WHERE val = 1))",
             (id_humeur, note)
         )
         id_humeur_jours = cur.lastrowid
