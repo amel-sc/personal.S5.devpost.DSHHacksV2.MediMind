@@ -146,13 +146,13 @@ onMounted(charger)
       <section aria-labelledby="titre-historique" :aria-busy="chargement">
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
           <h2 id="titre-historique" class="h5 mb-0">Historique</h2>
-          <div>
-            <label for="filtre-periode" class="form-label small mb-1">Période</label>
+          <div class="filtre-periode">
+            <label for="filtre-periode" class="small">Période</label>
             <select id="filtre-periode" v-model="periode" class="form-select">
-              <option value="7">7 derniers jours</option>
-              <option value="30">30 derniers jours</option>
-              <option value="90">3 derniers mois</option>
-              <option value="tout">Tout</option>
+                <option value="7">7 derniers jours</option>
+                <option value="30">30 derniers jours</option>
+                <option value="90">3 derniers mois</option>
+                <option value="tout">Tout</option>
             </select>
           </div>
         </div>
@@ -222,29 +222,31 @@ onMounted(charger)
             <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
               <li v-for="h in groupe.items" :key="h.id">
                 <RouterLink
-                  :to="`/humeur/${h.id}`"
-                  class="card carte-humeur"
-                  :class="{ inactive: !estActive(h) }"
+                    :to="`/humeur/${h.id}`"
+                    class="card carte-humeur"
+                    :class="{ inactive: !estActive(h) }"
                 >
-                  <div class="card-body d-flex align-items-center gap-3 py-2">
-                    <span class="fs-3" aria-hidden="true">{{ niveauHumeur(h.humeur_val).emoji }}</span>
-                    <div class="flex-grow-1 min-w-0">
-                      <p class="fw-semibold mb-0 text-truncate">
-                        {{ h.humeur_desce ?? 'Humeur non renseignée' }}
-                      </p>
-                      <p v-if="h.note" class="small mb-0 text-truncate">{{ h.note }}</p>
-                      <time :datetime="h.date_creation" class="small opacity-75">
-                        {{ dateHeure(h.date_creation) }}
-                      </time>
+                    <div class="card-body py-2">
+                        <div class="ligne-humeur">
+                            <span class="fs-3" aria-hidden="true">{{ niveauHumeur(h.humeur_val).emoji }}</span>
+                            <div class="flex-grow-1 min-w-0">
+                                <p class="fw-semibold mb-0 text-truncate">
+                                    {{ h.humeur_desce ?? 'Humeur non renseignée' }}
+                                </p>
+                                <p v-if="h.note" class="small mb-0 text-truncate">{{ h.note }}</p>
+                                <time :datetime="h.date_creation" class="small opacity-75">
+                                    {{ dateHeure(h.date_creation) }}
+                                </time>
+                            </div>
+                            <span
+                                v-if="!estActive(h) && h.status_desce"
+                                class="badge badge-outline theme-secondary flex-shrink-0"
+                            >
+                                {{ h.status_desce }}
+                            </span>
+                            <i class="bi bi-chevron-right opacity-50 flex-shrink-0" aria-hidden="true"></i>
+                        </div>
                     </div>
-                    <span
-                      v-if="!estActive(h) && h.status_desce"
-                      class="badge badge-outline theme-secondary"
-                    >
-                      {{ h.status_desce }}
-                    </span>
-                    <i class="bi bi-chevron-right opacity-50" aria-hidden="true"></i>
-                  </div>
                 </RouterLink>
               </li>
             </ul>
@@ -276,6 +278,19 @@ onMounted(charger)
   color: inherit;
   text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ligne-humeur {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: start;
+}
+.filtre-periode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 .carte-humeur.inactive {
   opacity: 0.7;
