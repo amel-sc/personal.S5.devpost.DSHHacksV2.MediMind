@@ -196,3 +196,134 @@ onBeforeRouteLeave(() => {
     </div>
   </form>
 </template>
+<style scoped>
+/* Input invisible mais toujours focusable au clavier */
+.option {
+  position: relative;
+}
+.input-cache {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* --- Sélecteur d'humeur --- */
+.choix-humeur {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+}
+.carte-choix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  height: 100%;
+  padding: 0.75rem 0.25rem;
+  border: 2px solid var(--border-color, rgba(127, 127, 127, 0.35));
+  border-radius: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.carte-choix .emoji {
+  font-size: 2rem;
+  line-height: 1;
+  filter: grayscale(0.6);
+  opacity: 0.8;
+  transition: transform 0.15s, filter 0.15s, opacity 0.15s;
+}
+.carte-choix:hover {
+  background-color: rgba(127, 127, 127, 0.08);
+}
+input:checked + .carte-choix {
+  border-color: currentColor;
+  background-color: rgba(127, 127, 127, 0.15);
+  font-weight: 600;
+}
+input:checked + .carte-choix .emoji {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.15);
+}
+.choix-humeur.invalide .carte-choix {
+  border-style: dashed;
+}
+
+/* --- Puces des causes --- */
+.choix-causes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem; /* cible tactile confortable */
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--border-color, rgba(127, 127, 127, 0.35));
+  border-radius: 999px;
+  cursor: pointer;
+}
+.puce:hover {
+  background-color: rgba(127, 127, 127, 0.08);
+}
+.puce .icone-check {
+  display: none;
+}
+input:checked + .puce {
+  border-color: currentColor;
+  background-color: rgba(127, 127, 127, 0.2);
+  font-weight: 600;
+}
+input:checked + .puce .icone-check {
+  display: inline; /* l'état ne dépend pas que de la couleur */
+}
+
+/* Focus clavier visible */
+input:focus-visible + .carte-choix,
+input:focus-visible + .puce {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* --- Divers --- */
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.message-erreur {
+  color: light-dark(#b02a37, #f1aeb5); /* lisible en clair et en sombre */
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+@media (max-width: 36rem) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+  .actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carte-choix,
+  .carte-choix .emoji {
+    transition: none;
+  }
+  input:checked + .carte-choix .emoji {
+    transform: none;
+  }
+}
+</style>
+
