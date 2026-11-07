@@ -89,6 +89,18 @@ def findAll():
             "ORDER BY hj.date_creation DESC"
         ).fetchall()
         return [dict(row) for row in rows]
+
+# function router to find humeur jours today
+@router.get("/api/humeur/jours/today")
+def humeurJoursToday():
+    humeurToday = findByDateJour()
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "data": humeurToday
+        }
+    )
     
 # function router to find All humeur jours
 @router.get("/api/humeur/jours")
