@@ -1,3 +1,8 @@
+:root {
+  --mm-fond: light-dark(#f4f6f9, #121417);
+  --mm-surface: light-dark(#ffffff, #1b1e23);
+}
+
 /* Une seule zone défile dans MediMind : celle des messages */
 html, body, #app {
   margin: 0;
@@ -9,8 +14,26 @@ html, body, #app {
 
 body {
   overflow: hidden;   /* pas de scrollbar de page */
+  background-color: var(--mm-fond);
 }
 
 #app {
   display: block;     /* neutralise un éventuel display:grid du template */
 }
+
+.entete-app {
+  background-color: var(--mm-surface);
+}
+.card:not(.card-subtle) {
+  background-color: var(--mm-surface);
+}
+
+.carte-humeur {
+  border-inline-start: 4px solid var(--couleur-niveau, transparent);
+}
+.niveau-1 { --couleur-niveau: light-dark(#2f9e6e, #63d3a3); } /* Très bien */
+.niveau-2 { --couleur-niveau: light-dark(#7cb342, #a5d66f); } /* Bien */
+.niveau-3 { --couleur-niveau: light-dark(#e0a800, #ffd54f); } /* Bof */
+.niveau-4 { --couleur-niveau: light-dark(#5c7cfa, #91a7ff); } /* Mal */
+.niveau-5 { --couleur-niveau: light-dark(#7950f2, #b197fc); } /* Très mal */
+

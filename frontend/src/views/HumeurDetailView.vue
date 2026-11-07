@@ -214,4 +214,7 @@ watchEffect(() => {
     justify-content: center;
   }
 }
+.entete-app {
+  background-color: var(--mm-surface);
+}
 </style>

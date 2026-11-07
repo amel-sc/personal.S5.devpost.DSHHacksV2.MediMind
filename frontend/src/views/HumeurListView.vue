@@ -224,11 +224,11 @@ onMounted(charger)
                 <RouterLink
                     :to="`/humeur/${h.id}`"
                     class="card carte-humeur"
-                    :class="{ inactive: !estActive(h) }"
+                    :class="[`niveau-${h.humeur_val}`, { inactive: !estActive(h) }]"
                 >
                     <div class="card-body py-2">
                         <div class="ligne-humeur">
-                            <span class="fs-3" aria-hidden="true">{{ niveauHumeur(h.humeur_val).emoji }}</span>
+                            <span class="emoji-liste" aria-hidden="true">{{ niveauHumeur(h.humeur_val).emoji }}</span>
                             <div class="flex-grow-1 min-w-0">
                                 <p class="fw-semibold mb-0 text-truncate">
                                     {{ h.humeur_desce ?? 'Humeur non renseignée' }}
@@ -294,6 +294,11 @@ onMounted(charger)
 }
 .carte-humeur.inactive {
   opacity: 0.7;
+}
+.emoji-liste {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .carte-humeur:hover {
   transform: translateY(-1px);
