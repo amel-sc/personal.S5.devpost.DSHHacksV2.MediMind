@@ -177,14 +177,20 @@ def create_humeurJours(data: HumeurJours):
         id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
 
         return JSONResponse(
-            status_code = 200,
+            status_code = 201,
             content = {
                 "id_humeur_jours": id_humeur_jours
             }
         )
+    
     except HumeurInconnue:
         return JSONResponse(status_code=422, content={
             "message": "Humeur invalide.",
             "errors": {"id_humeur": "Cette humeur n'existe pas."}
+        })
+    except CauseInconnue:
+        return JSONResponse(status_code=422, content={
+            "message": "Certaines informations ne sont pas valides.",
+            "errors": {"id_humeur_causes": "Une des causes choisies n'existe pas."},
         })
  
