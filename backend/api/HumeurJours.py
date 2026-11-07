@@ -5,8 +5,24 @@ from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
+
+# function to find humeur actif du jour (humeur_jours_status.val = 1, date_creation = now)
+def findByDateJour():
+    date_jour = datetime.now(timezone.utc).date()
+    date_jour_plus1 = date_jour + timedelta(days=1)
+
+    with closing(get_connection()) as conn, conn:
+        row = conn.execute(
+            "SELECT * FROM humeur_jours "
+            "WHERE date_creation >= ? AND date_creation < ? "
+            "LIMIT = 1",
+            (date_jour, date_jour_plus1)
+        ).fetchone()
+
+    return dict(row)
 
 # function to find humeur_jours by id
 def findById(id: int):
@@ -44,6 +60,8 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
             "INSERT INTO humeur_jours_causes (id_humeur_jours, id_humeur_cause) VALUES (?, ?)",
             [(id_humeur_jours, id_humeur_cause) for id_humeur_cause in humeur_causes]
         )
+
+        # query to update humeur du jours to autre if exist
 
     return id_humeur_jours
 
