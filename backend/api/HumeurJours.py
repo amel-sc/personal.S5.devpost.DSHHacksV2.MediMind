@@ -162,11 +162,18 @@ def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
 # function router to insert new humeur jours
 @router.post("/api/humeur/jours")
 def create_humeurJours(data: HumeurJours):
-    id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
+    try:
+        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
 
-    return JSONResponse(
-        status_code = 200,
-        content = {
-            "id_humeur_jours": id_humeur_jours
-        }
-    )
+        return JSONResponse(
+            status_code = 200,
+            content = {
+                "id_humeur_jours": id_humeur_jours
+            }
+        )
+    except HumeurInconnue:
+        return JSONResponse(status_code=422, content={
+            "message": "Humeur invalide.",
+            "errors": {"id_humeur": "Cette humeur n'existe pas."}
+        })
+ 
