@@ -78,11 +78,14 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
 def findAll():
     with closing(get_connection()) as conn:
         rows = conn.execute(
-            "SELECT hj.id, hj.note, hj.date_creation, "
+            "SELECT hj.id, hj.note, hj.date_creation, hj.id_humeur, hj.id_humeur_jours_status "
             "       h.val   AS humeur_val, "
             "       h.desce AS humeur_desce "
+            "       hjs.val AS status_val "
+            "       hjs.desce AS status_desce "
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
+            "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status"
             "ORDER BY hj.date_creation DESC"
         ).fetchall()
         return [dict(row) for row in rows]
