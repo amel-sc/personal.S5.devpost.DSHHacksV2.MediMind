@@ -17,8 +17,9 @@ def findByDateJour():
     with closing(get_connection()) as conn, conn:
         row = conn.execute(
             "SELECT * FROM humeur_jours "
-            "WHERE date_creation >= ? AND date_creation < ? "
-            "LIMIT = 1",
+            "WHERE (date_creation >= ? AND date_creation < ?) "
+            "AND id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "LIMIT 1",
             (date_jour, date_jour_plus1)
         ).fetchone()
 
@@ -68,7 +69,7 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
         if humeurJours is not None:
             cur = conn.execute(
                 "UPDATE humeur_jours SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) WHERE id = ?",
-                (humeurJours.id,)
+                (humeurJours['id'],)
             )
 
     return id_humeur_jours
