@@ -48,6 +48,7 @@ onMounted(charger)
                         <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Humeur</th>
+                            <th scope="col">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,6 +68,10 @@ onMounted(charger)
                             >
                                 <td>{{ dateHeure(humeurJour.date_creation) }}</td>
                                 <td>{{ humeurJour.humeur_desce }}</td>
+                                <td>
+                                    <span v-if="humeurJour.status_val == 1" class="badge theme-primary">{{ humeurJour.status_desce }}</span>
+                                    <span v-else>-</span>
+                                </td>
                             </tr>
                         </RouterLink>
                     </tbody>
