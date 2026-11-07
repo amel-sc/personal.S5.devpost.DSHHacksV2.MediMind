@@ -45,29 +45,37 @@ def findByDateJour():
     return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to find humeur_jours by id
+
+
+# function to find humeur_jours by id
 def findById(id: int):
-    with closing(get_connection()) as conn, conn:
+    with closing(get_connection()) as conn:  # lecture seule : pas besoin de transaction
         row = conn.execute(
             "SELECT hj.id, hj.note, hj.date_creation, "
-            "       h.val   AS humeur_val, "
-            "       h.desce AS humeur_desce "
+            "       h.val     AS humeur_val, "
+            "       h.desce   AS humeur_desce, "
+            "       hjs.val   AS status_val, "
+            "       hjs.desce AS status_desce "
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
+            "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
             "WHERE hj.id = ?",
             (id,)
         ).fetchone()
+
+        if row is None:
+            return (None, [])
 
         row_causes = conn.execute(
             "SELECT hjc.id AS id, hc.id AS cause_id, hc.val AS cause_val, hc.desce AS cause_desce "
             "FROM humeur_jours_causes hjc "
             "LEFT JOIN humeur_cause hc ON hc.id = hjc.id_humeur_cause "
-            "WHERE id_humeur_jours = ?",
+            "WHERE hjc.id_humeur_jours = ? "
+            "ORDER BY hc.id",
             (id,)
         ).fetchall()
 
-    if row is None:          
-        return (None, None)
-    return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
+    return (dict(row), [dict(r) for r in row_causes])
 
 # function to insert new humeur jours
 def create(val_humeur: int, note: str, humeur_causes: list[int]):
