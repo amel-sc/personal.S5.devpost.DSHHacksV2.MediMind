@@ -43,7 +43,7 @@ onMounted(charger)
         </div>
         
         <div v-if="humeurToday">
-            <HumeurDetail :humeur-jours="humeurToday.humeur_jours" :humeur-jours-causes="null" />
+            <HumeurDetail :humeur-jours="humeurToday.humeur_jours" :humeur-jours-causes="humeurToday.humeur_jours_causes" />
         </div>
 
         <div v-if="chargement" class="d-flex justify-content-center py-5">
