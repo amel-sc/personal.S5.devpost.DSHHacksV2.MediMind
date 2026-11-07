@@ -148,7 +148,7 @@ onMounted(charger)
           <h2 id="titre-historique" class="h5 mb-0">Historique</h2>
           <div class="filtre-periode">
             <label for="filtre-periode" class="small">Période</label>
-            <select id="filtre-periode" v-model="periode" class="form-select">
+            <select id="filtre-periode" v-model="periode" class="form-control">
                 <option value="7">7 derniers jours</option>
                 <option value="30">30 derniers jours</option>
                 <option value="90">3 derniers mois</option>

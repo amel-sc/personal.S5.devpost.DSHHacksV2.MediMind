@@ -58,7 +58,7 @@ def findById(id: int):
         ).fetchone()
 
         row_causes = conn.execute(
-            "SELECT hjc.id, hc.id, hc.val AS cause_val, hc.desce AS cause_desce "
+            "SELECT hjc.id AS id, hc.id AS cause_id, hc.val AS cause_val, hc.desce AS cause_desce "
             "FROM humeur_jours_causes hjc "
             "LEFT JOIN humeur_cause hc ON hc.id = hjc.id_humeur_cause "
             "WHERE id_humeur_jours = ?",
