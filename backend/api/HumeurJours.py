@@ -1,6 +1,6 @@
 import sqlite3
 from fastapi import APIRouter, Path
-from schemas.HumeurJours import HumeurJours
+from schemas.HumeurJours import HumeurJours, HumeurInconnue
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -70,26 +70,38 @@ def findById(id: int):
     return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to insert new humeur jours
-def create(id_humeur: int, note: str, humeur_causes: list[int]):
+def create(val_humeur: int, note: str, humeur_causes: list[int]):
+    date_jour = datetime.now(timezone.utc).date()
+    date_jour_plus1 = date_jour + timedelta(days=1)
+
     with closing(get_connection()) as conn, conn:
+        row = conn.execute("SELECT id FROM humeur WHERE val = ?", (val_humeur,)).fetchone()
+        if row is None:
+            raise HumeurInconnue(val_humeur)
+        id_humeur = row["id"]
+
+        # 1. L'humeur active du jour passe en "Autre" (val = 2)
+        conn.execute(
+            "UPDATE humeur_jours "
+            "SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) "
+            "WHERE id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "AND date_creation >= ? AND date_creation < ?",
+            (date_jour, date_jour_plus1),
+        )
+
+        # 2. Insertion de la nouvelle humeur active
         cur = conn.execute(
-            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status) VALUES ((SELECT id FROM humeur WHERE val = ?), ?, (SELECT id FROM humeur_jours_status WHERE val = 1))",
-            (id_humeur, note)
+            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status) "
+            "VALUES (?, ?, (SELECT id FROM humeur_jours_status WHERE val = 1))",
+            (id_humeur, note),
         )
         id_humeur_jours = cur.lastrowid
 
-        cur = conn.executemany(
+        # 3. Causes (set() retire les doublons)
+        conn.executemany(
             "INSERT INTO humeur_jours_causes (id_humeur_jours, id_humeur_cause) VALUES (?, ?)",
-            [(id_humeur_jours, id_humeur_cause) for id_humeur_cause in humeur_causes]
+            [(id_humeur_jours, c) for c in set(humeur_causes)],
         )
-
-        # query to update humeur du jours to autre if exist
-        humeurJours, humeurJoursCauses = findByDateJour()
-        if humeurJours is not None:
-            cur = conn.execute(
-                "UPDATE humeur_jours SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) WHERE id = ?",
-                (humeurJours['id'],)
-            )
 
     return id_humeur_jours
 
