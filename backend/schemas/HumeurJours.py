@@ -12,3 +12,7 @@ class HumeurJours(BaseModel):
 # Humeur Inconnue
 class HumeurInconnue(Exception):
     pass
+
+# Cause Inconnue
+class CauseInconnue(Exception):
+    pass

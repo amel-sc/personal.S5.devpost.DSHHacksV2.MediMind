@@ -1,6 +1,6 @@
 import sqlite3
 from fastapi import APIRouter, Path
-from schemas.HumeurJours import HumeurJours, HumeurInconnue
+from schemas.HumeurJours import HumeurJours, HumeurInconnue, CauseInconnue
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -79,6 +79,17 @@ def create(val_humeur: int, note: str, humeur_causes: list[int]):
         if row is None:
             raise HumeurInconnue(val_humeur)
         id_humeur = row["id"]
+
+        # vérifier l'existence de la cause de l'humeur
+        if humeur_causes:
+            # Le f-string ne contient que des "?" : les valeurs restent paramétrées (pas d'injection SQL)
+            marqueurs = ",".join("?" * len(humeur_causes))
+            nb = conn.execute(
+                f"SELECT COUNT(*) FROM humeur_cause WHERE id IN ({marqueurs})",
+                humeur_causes,
+            ).fetchone()[0]
+            if nb != len(humeur_causes):
+                raise CauseInconnue()
 
         # 1. L'humeur active du jour passe en "Autre" (val = 2)
         conn.execute(
