@@ -11,3 +11,9 @@
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
+<script>
+  try {
+    const t = localStorage.getItem('medimind-theme')
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-bs-theme', t)
+  } catch (e) {}
+</script>

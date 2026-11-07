@@ -28,13 +28,22 @@ CREATE TABLE IF NOT EXISTS humeur_cause (
     desce TEXT
 );
 
+-- humeur_jours_status
+CREATE TABLE IF NOT EXISTS humeur_jours_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    val INTEGER,
+    desce TEXT
+);
+
 -- humeur_jours
 CREATE TABLE IF NOT EXISTS humeur_jours (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_humeur INT NOT NULL,
     date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
     note TEXT,
-    FOREIGN KEY (id_humeur) REFERENCES humeur(id)
+    id_humeur_jours_status INT,
+    FOREIGN KEY (id_humeur) REFERENCES humeur(id),
+    FOREIGN KEY (id_humeur_jours_status) REFERENCES humeur_jours_status(id)
 );
 
 -- humeur_jours_causes

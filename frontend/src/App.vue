@@ -2,6 +2,7 @@
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from './services/api'
+import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
 
 const route = useRoute()
 const conversations = ref([])
@@ -42,7 +43,7 @@ onMounted(charger)
 
 <template>
   <div class="position-fixed top-0 bottom-0 start-0 end-0 d-flex flex-column">
-    <header class="d-flex align-items-center gap-3 px-3 py-2 border-bottom flex-shrink-0">
+    <header class="entete-app d-flex align-items-center gap-3 px-3 py-2 border-bottom flex-shrink-0">
       <button
         class="btn-text theme-inverse"
         type="button"
@@ -54,6 +55,7 @@ onMounted(charger)
         <i class="bi bi-list icone-menu" aria-hidden="true"></i>
       </button>
       <span class="fs-5 fw-semibold">MediMind</span>
+      <ThemeSelecteur class="ms-auto" style="margin-inline-start: auto" />
     </header>
 
     <!-- Menu latéral gauche -->
