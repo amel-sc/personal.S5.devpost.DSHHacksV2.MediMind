@@ -16,16 +16,33 @@ def findByDateJour():
 
     with closing(get_connection()) as conn, conn:
         row = conn.execute(
-            "SELECT * FROM humeur_jours "
-            "WHERE (date_creation >= ? AND date_creation < ?) "
-            "AND id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "SELECT hj.id, hj.note, hj.date_creation, hj.id_humeur AS humeur_id, hj.id_humeur_jours_status AS status_id, "
+            "       h.val   AS humeur_val, "
+            "       h.desce AS humeur_desce, "
+            "       hjs.val AS status_val, "
+            "       hjs.desce AS status_desce "
+            "FROM humeur_jours hj "
+            "LEFT JOIN humeur h ON h.id = hj.id_humeur "
+            "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
+            "WHERE (hj.date_creation >= ? AND hj.date_creation < ?) "
+            "AND hj.id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
             "LIMIT 1",
             (date_jour, date_jour_plus1)
         ).fetchone()
 
-    if row is None:          # ⬅️ test AVANT dict()
-        return None
-    return dict(row)
+        if row is not None:
+            temp = dict(row)
+            row_causes = conn.execute(
+                "SELECT hjc.id, hc.id, hc.val AS cause_val, hc.desce AS cause_desce "
+                "FROM humeur_jours_causes hjc "
+                "LEFT JOIN humeur_cause hc ON hc.id = hjc.id_humeur_cause "
+                "WHERE id_humeur_jours = ?",
+                (temp['id'],)
+            ).fetchall()
+
+    if row is None:          
+        return (None, None)
+    return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to find humeur_jours by id
 def findById(id: int):
@@ -48,7 +65,9 @@ def findById(id: int):
             (id,)
         ).fetchall()
 
-    return (dict(row), [dict(row_cause) for row_cause in row_causes])
+    if row is None:          
+        return (None, None)
+    return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to insert new humeur jours
 def create(id_humeur: int, note: str, humeur_causes: list[int]):
@@ -65,7 +84,7 @@ def create(id_humeur: int, note: str, humeur_causes: list[int]):
         )
 
         # query to update humeur du jours to autre if exist
-        humeurJours = findByDateJour()
+        humeurJours, humeurJoursCauses = findByDateJour()
         if humeurJours is not None:
             cur = conn.execute(
                 "UPDATE humeur_jours SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) WHERE id = ?",
@@ -93,12 +112,13 @@ def findAll():
 # function router to find humeur jours today
 @router.get("/api/humeur/jours/today")
 def humeurJoursToday():
-    humeurToday = findByDateJour()
+    humeurToday, humeurTodayCauses = findByDateJour()
 
     return JSONResponse(
         status_code = 200,
         content = {
-            "data": humeurToday
+            "humeur_jours": humeurToday,
+            "humeur_jours_causes": humeurTodayCauses
         }
     )
     

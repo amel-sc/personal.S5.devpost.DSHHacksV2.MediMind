@@ -2,7 +2,9 @@
 import { onMounted, ref } from 'vue';
 import { api } from '@/services/api';
 import { dateHeure } from '@/utils/format';
+import HumeurDetail from '@/components/HumeurDetail.vue';
 
+const humeurToday = ref(null);
 const humeurJours = ref([]);
 const chargement = ref(false);
 const erreur = ref(null)
@@ -11,8 +13,13 @@ async function charger() {
     chargement.value = true;
 
     try {
+        // find All humeur
         const response = await api.humeurJours.lister();
         humeurJours.value = response.data;
+
+        // find humeur du jours
+        const response_humeurToday = await api.humeurJours.today();
+        humeurToday.value = response_humeurToday;
 
     } catch (e) {
         erreur.value = e;
@@ -35,6 +42,10 @@ onMounted(charger)
             </RouterLink>
         </div>
         
+        <div v-if="humeurToday">
+            <HumeurDetail :humeur-jours="humeurToday.humeur_jours" :humeur-jours-causes="null" />
+        </div>
+
         <div v-if="chargement" class="d-flex justify-content-center py-5">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Chargement…</span>
@@ -48,7 +59,6 @@ onMounted(charger)
                         <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Humeur</th>
-                            <th scope="col">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,10 +78,6 @@ onMounted(charger)
                             >
                                 <td>{{ dateHeure(humeurJour.date_creation) }}</td>
                                 <td>{{ humeurJour.humeur_desce }}</td>
-                                <td>
-                                    <span v-if="humeurJour.status_val == 1" class="badge theme-primary">{{ humeurJour.status_desce }}</span>
-                                    <span v-else>-</span>
-                                </td>
                             </tr>
                         </RouterLink>
                     </tbody>

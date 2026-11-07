@@ -1,11 +1,11 @@
 <script setup>
 defineProps({
     humeurJours: {
-        type: Object,
+        type: [Object, null],
         required: true
     },
     humeurJoursCauses: {
-        type: Array,
+        type: [Array, null],
         required: true
     },
 })
@@ -16,7 +16,8 @@ defineProps({
     <p>Votre note ce jour : </p>
     <p>{{ humeurJours.note }}</p>
     <p>Les causes de votre humeur : </p>
-    <ul>
+    <p v-if="!humeurJoursCauses">Aucune cause à votre humeur de ce jour</p>
+    <ul v-else>
         <li v-for="humeurJoursCause in humeurJoursCauses" :key="humeurJoursCause.id">
             {{ humeurJoursCause.cause_val }}
         </li>
