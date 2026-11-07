@@ -43,9 +43,11 @@ onMounted(charger)
         </div>
         
         <div v-if="humeurToday">
+            <h4>Votre humeur d'aujourd'hui</h4>
             <HumeurDetail :humeur-jours="humeurToday.humeur_jours" :humeur-jours-causes="humeurToday.humeur_jours_causes" />
         </div>
 
+        <h4>La liste de vos humeurs</h4>
         <div v-if="chargement" class="d-flex justify-content-center py-5">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Chargement…</span>
