@@ -309,8 +309,8 @@ onMounted(charger)
               <li v-for="h in groupe.items" :key="h.id">
                 <RouterLink
                   :to="{ name: 'humeurDetail', params: { id: h.id } }"
-                  class="card carte-humeur"
-                  :class="[`niveau-${h.humeur_val}`, { remplacee: !estActive(h) }]"
+                  class="card carte-historique"
+                  :class="{ remplacee: !estActive(h) }"
                 >
                   <div class="ligne-humeur">
                     <span class="emoji-liste" aria-hidden="true">{{ niveauHumeur(h.humeur_val).emoji }}</span>
@@ -516,14 +516,15 @@ onMounted(charger)
   padding: 0;
   list-style: none;
 }
-.carte-humeur {
+.carte-historique {
   color: inherit;
   text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.carte-humeur.remplacee {
+.carte-historique.remplacee {
   border-style: dashed;
 }
+
 .ligne-humeur {
   display: flex;
   align-items: center;
@@ -579,4 +580,5 @@ onMounted(charger)
     transform: none;
   }
 }
+
 </style>

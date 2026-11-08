@@ -379,7 +379,7 @@ watchPostEffect(() => {
 
           <div v-if="erreur" class="alert theme-danger encadre-erreur" role="alert">
             <p class="texte-erreur">{{ texteErreur }}</p>
-            <button
+            <!-- <button
               v-if="erreur.action"
               type="button"
               class="btn-outline theme-danger btn-styled"
@@ -387,7 +387,7 @@ watchPostEffect(() => {
               @click="erreur.action()"
             >
               {{ t('commun.reessayer') }}
-            </button>
+            </button> -->
           </div>
         </div>
       </div>
@@ -541,15 +541,26 @@ watchPostEffect(() => {
 }
 
 /* --- Erreur --- */
+/* --- Erreur --- */
+/* .alert est déjà flex dans Bootstrap 6 : on règle l'alignement nous-mêmes */
 .encadre-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
   margin-top: 1rem;
 }
 .texte-erreur {
+  flex: 1 1 16rem; /* prend la place disponible, passe au-dessus du bouton si l'écran est étroit */
+  min-width: 0;
   margin: 0;
 }
 .encadre-erreur button {
-  margin-top: 0.5rem;
+  flex-shrink: 0;
+  margin: 0;
 }
+
 
 /* --- Barre de saisie --- */
 .barre-saisie {
