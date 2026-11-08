@@ -65,14 +65,14 @@ def create_conversation_message(role: str, content: str):
     return id_conversation, id_message
 
 # function to insert message
-def create_message(role: str, content: str, id_conversation: int):
+def create_message(role: str, content: str, id_conversation: int, alerte: int):
     with closing(get_connection()) as conn, conn:
 
         verifyConversationById(conn, id_conversation)
 
         cur = conn.execute(
-            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?, ?)",
-            (role, content, id_conversation)
+            "INSERT INTO message (role, content, id_conversation, alerte) VALUES (?, ?, ?, ?)",
+            (role, content, id_conversation, alerte)
         )
         return cur.lastrowid
 
@@ -103,12 +103,13 @@ def send_message(data: RequestMessage):
                 "id_message": id_message,
                 "id_conversation": id_conversation,
                 "role": "user",
-                "content": data.message
+                "content": data.message,
+                "alerte": 0
             }
         )
 
     else:
-        id_message = create_message('user', data.message, data.id_conversation)
+        id_message = create_message('user', data.message, data.id_conversation, 0)
 
         return JSONResponse(
             status_code = 200,
@@ -116,7 +117,8 @@ def send_message(data: RequestMessage):
                 "id_message": id_message,
                 "id_conversation": data.id_conversation,
                 "role": "user",
-                "content": data.message
+                "content": data.message,
+                "alerte": 0
             }
         )
 
@@ -145,7 +147,7 @@ def traitement_message(data: RequestMessage):
             },
         )
     # insert response in base
-    id_message = create_message('assistant', resultat["reponse"], data.id_conversation)
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, resultat["alerte"])
 
     return JSONResponse(
         status_code = 200,
