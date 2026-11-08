@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS message (
     role TEXT NOT NULL CHECK (role IN ('assistant', 'user')),
     content TEXT NOT NULL,
     id_conversation INTEGER NOT NULL,
+    alerte INTEGER NOT NULL DEFAULT 0 CHECK (alerte IN (0, 1)),
     FOREIGN KEY (id_conversation) REFERENCES conversation(id)
 );
 
