@@ -6,16 +6,27 @@ import HumeurDetailView from '@/views/HumeurDetailView.vue'
 import HumeurFormView from '@/views/HumeurFormView.vue'
 
 const routes = [
-    { path: '/', redirect: { name: 'conversation' } },
-    // :id? = optionnel, donc /conversation = nouvelle conversation
-    { path: '/conversation/:id?', name: 'conversation', component: ConversationView },
-    { path: '/humeur/list', name: 'humeurList', component: HumeurListView },
-    { path: '/humeur/:id', name: 'humeurDetail', component: HumeurDetailView, props: true },
-    { path: '/humeur/new', name: 'humeurCreate', component: HumeurFormView }
+  { path: '/', redirect: { name: 'conversation' } },
+  {
+    path: '/conversation/:id([1-9]\\d*)?',
+    name: 'conversation',
+    component: ConversationView,
+    meta: { titre: 'Conversation' },
+  },
+  { path: '/humeur/list', name: 'humeurList', component: HumeurListView, meta: { titre: "Journal d'humeur" } },
+  { path: '/humeur/new', name: 'humeurCreate', component: HumeurFormView, meta: { titre: 'Nouvelle humeur' } },
+  {
+    path: '/humeur/:id([1-9]\\d*)',
+    name: 'humeurDetail',
+    component: HumeurDetailView,
+    props: true,
+    meta: { titre: "Détail de l'humeur" },
+  },
+  { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView, meta: { titre: 'Page introuvable' } },
 ]
 
-export default createRouter({
-  // Mode « history » : de vraies URL (/formations/3), sans # dans l'adresse
-  history: createWebHistory(),
-  routes
+const router = createRouter({ history: createWebHistory(), routes })
+
+router.afterEach((to) => {
+  document.title = to.meta.titre ? `${to.meta.titre} · MediMind` : 'MediMind'
 })
