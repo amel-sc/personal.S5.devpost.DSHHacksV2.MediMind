@@ -12,6 +12,9 @@ import {
   reponseEnCours,
 } from '@/stores/reponsesEnCours'
 import NumeroAide from '@/components/NumeroAide.vue'
+import AideUrgence from '@/components/AideUrgence.vue'
+
+const alerte = ref(null)
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -155,6 +158,7 @@ async function suivreReponse(idConv, promesse) {
 
     const etaitEnBas = enBas.value
     messages.value.push(msg)
+    if (reponse.alerte) alerte.value = reponse.alerte
     annonce.value = t('conversation.arepondu', { contenu: reponse.content })
     if (etaitEnBas) await defiler()
     focusChamp()
@@ -190,6 +194,7 @@ async function chargerHistorique(id) {
   messages.value = []
   envoiEnCours.value = false
   enBas.value = true
+  alerte.value = null
 
   if (id == null) {
     chargementHistorique.value = false
@@ -376,6 +381,8 @@ watchPostEffect(() => {
               <Message :message="{ role: 'assistant', content: '' }" en-cours />
             </li>
           </ol>
+
+          <AideUrgence v-if="alerte" class="alerte-chat" />
 
           <div v-if="erreur" class="alert theme-danger encadre-erreur" role="alert">
             <p class="texte-erreur">{{ texteErreur }}</p>
@@ -661,5 +668,8 @@ watchPostEffect(() => {
 .bouton-bas:focus-visible {
   outline: 3px solid var(--mm-accent);
   outline-offset: 2px;
+}
+.alerte-chat {
+  margin-top: 1rem;
 }
 </style>
