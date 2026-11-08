@@ -1,14 +1,27 @@
 <script setup>
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
+import { estNonLue, nombreNonLues, reponseEnCours } from '@/stores/reponsesEnCours'
 
 const route = useRoute()
 const conversations = ref([])
 const erreur = ref(null)
 const chargement = ref(false)
 const drawer = ref(null)
+
+// Message lu par les lecteurs d'écran quand une réponse arrive dans une autre conversation
+const annonceMenu = ref('')
+watch(nombreNonLues, (n, avant) => {
+  if (n > avant) annonceMenu.value = 'MediMind a répondu dans une autre conversation.'
+})
+
+const libelleMenu = computed(() =>
+  nombreNonLues.value > 0
+    ? `Ouvrir le menu (${nombreNonLues.value} nouvelle${nombreNonLues.value > 1 ? 's' : ''} réponse${nombreNonLues.value > 1 ? 's' : ''})`
+    : 'Ouvrir le menu'
+)
 
 async function charger() {
   chargement.value = true
