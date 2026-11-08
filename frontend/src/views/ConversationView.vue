@@ -90,6 +90,7 @@ function versMessage(m, idConversation = null) {
     id,
     role: m.role,
     content: m.content,
+    alerte: m.alerte ?? null,
     id_conversation: m.id_conversation ?? idConversation,
   }
 }
@@ -209,6 +210,7 @@ async function chargerHistorique(id) {
     const corps = await api.message.lister(id)
     if (!estIci(jeton)) return
     messages.value = (corps.data ?? []).map((m) => versMessage(m, id))
+    alerte.value = messages.value.findLast((m) => m.alerte)?.alerte ?? null
     chargementHistorique.value = false
 
     const attente = reponseAvant ?? promesseReponse(id)
