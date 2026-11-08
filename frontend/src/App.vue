@@ -314,14 +314,16 @@ onMounted(charger)
   text-overflow: ellipsis;
 }
 /* Lien actif : fond, gras ET barre d'accent (pas seulement une nuance) */
-.item-menu.actif {
-  font-weight: 600;
-  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
-  box-shadow: inset 3px 0 0 var(--mm-accent);
+/* Survol et lien actif : exactement le même aspect */
+.item-menu:is(:hover, .actif) {
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+  box-shadow: none;
 }
-.item-menu.actif i {
-  color: var(--mm-accent);
+.item-menu:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: -3px;
 }
+
 .bouton-menu {
   position: relative;
 }
