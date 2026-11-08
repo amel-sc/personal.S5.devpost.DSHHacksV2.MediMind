@@ -97,17 +97,20 @@ def send_message(data: RequestMessage):
         )
 
     else:
-        id_message = create_message('user', data.message, data.id_conversation)
+        try:
+            id_message = create_message('user', data.message, data.id_conversation)
 
-        return JSONResponse(
-            status_code = 200,
-            content = {
-                "id_message": id_message,
-                "id_conversation": data.id_conversation,
-                "role": "user",
-                "content": data.message
-            }
-        )
+            return JSONResponse(
+                status_code = 200,
+                content = {
+                    "id_message": id_message,
+                    "id_conversation": data.id_conversation,
+                    "role": "user",
+                    "content": data.message
+                }
+            )
+        except ConversationInconnue:
+            raise HTTPException(status_code=404, detail="Cette conversation n'existe pas.")
 
 # route to send message and get response
 @router.post("/api/message/traitement")
@@ -116,13 +119,16 @@ def traitement_message(data: RequestMessage):
     reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
 
     # insert response in base
-    id_message = create_message('assistant', reponse, data.id_conversation)
+    try:
+        id_message = create_message('assistant', reponse, data.id_conversation)
 
-    return JSONResponse(
-        status_code = 200,
-        content = {
-            "id_message": id_message,
-            "role": "assistant",
-            "content": reponse,
-        }
-    )
+        return JSONResponse(
+            status_code = 200,
+            content = {
+                "id_message": id_message,
+                "role": "assistant",
+                "content": reponse,
+            }
+        )
+    except ConversationInconnue:
+        raise HTTPException(status_code=404, detail="Cette conversation n'existe pas.")
