@@ -123,6 +123,27 @@ export default {
             causesInvalides: "Une des causes choisies n'est plus disponible. Retire-la ou recharge la page.",
         },
     },
+    page: {
+        titre: 'Humeur du {date}',
+        chargement: "Chargement de l'humeur…",
+        aujourdhui: "Aujourd'hui",
+        ressenti: 'Ton ressenti',
+        remplacee: "Cette saisie a été remplacée par une autre le même jour. Elle n'est pas comptée dans tes statistiques.",
+        parler: 'En parler avec MediMind',
+        soutien: {
+            label: 'Soutien',
+            texte: 'Si ce moment est encore difficile, tu peux en parler à quelqu\'un. En cas de détresse, le {numero} répond gratuitement, 24 h/24.',
+        },
+        enregistree: {
+            nouvelle: 'Ton humeur est enregistrée.',
+            maj: 'Ton humeur du jour a été mise à jour.',
+        },
+        introuvable: {
+            titre: 'Humeur introuvable',
+            texte: "Cette entrée n'existe pas ou a été supprimée.",
+            action: 'Voir mon journal',
+        },
+    },
   },
   erreurs: {
     reseau: 'Connexion impossible. Vérifie ta connexion internet.',

@@ -122,6 +122,27 @@ export default {
             causesInvalides: 'One of the selected causes is no longer available. Remove it or reload the page.',
         },
     },
+    page: {
+        titre: 'Mood on {date}',
+        chargement: 'Loading the mood…',
+        aujourdhui: 'Today',
+        ressenti: 'How you felt',
+        remplacee: "This entry was replaced by another one on the same day. It isn't counted in your statistics.",
+        parler: 'Talk about it with MediMind',
+        soutien: {
+            label: 'Support',
+            texte: "If this moment is still hard, you can talk to someone about it. If you're in distress, {numero} answers for free, 24/7.",
+        },
+        enregistree: {
+            nouvelle: 'Your mood has been saved.',
+            maj: "Today's mood has been updated.",
+        },
+        introuvable: {
+            titre: 'Mood not found',
+            texte: "This entry doesn't exist or has been deleted.",
+            action: 'See my journal',
+        },
+    },
   },
   erreurs: {
     reseau: 'Unable to connect. Please check your internet connection.',
