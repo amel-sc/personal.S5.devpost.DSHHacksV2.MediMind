@@ -53,6 +53,9 @@ def create_conversation_message(role: str, content: str):
 # function to insert message
 def create_message(role: str, content: str, id_conversation: int):
     with closing(get_connection()) as conn, conn:
+
+        verifyConversationById(conn, id_conversation)
+
         cur = conn.execute(
             "INSERT INTO message (role, content, id_conversation) VALUES (?, ?, ?)",
             (role, content, id_conversation)
