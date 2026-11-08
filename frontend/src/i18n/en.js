@@ -59,7 +59,16 @@ export default {
   commun: { reessayer: 'Try again', chargement: 'Loading…' },
   humeur: {
     niveaux: { 1: 'Very good', 2: 'Good', 3: 'Neutral', 4: 'Bad', 5: 'Very bad' },
-    causes: { etudes: 'Studies', sommeil: 'Sleep', relations: 'Relationships', autre: 'Other' },
+    causes: {
+        sommeil: 'Sleep',
+        stress: 'Stress',
+        famille: 'Family',
+        etudes: 'Studies',
+        amis: 'Friends',
+        sante: 'Health',
+        couple: 'Relationship',
+        autre: 'Other',
+    },
     detail: {
         titre: 'Your mood',
         titreAujourdhui: 'Your mood today',
