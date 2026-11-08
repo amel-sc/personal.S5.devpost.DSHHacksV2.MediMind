@@ -134,7 +134,6 @@ async function effacerBrouillon() {
   await nextTick()
   focusHumeur()
 }
-
 /* ---------- Validation et erreurs ---------- */
 const envoi = ref(false)
 const tentative = ref(false)
