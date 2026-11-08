@@ -227,4 +227,5 @@ export default {
     journal: "Mon journal d'humeur",
     retour: 'Revenir à la page précédente',
   },
+  modele_indisponible: "MediMind est momentanément indisponible. Réessaie dans un instant. Si tu te sens en danger, les numéros d'aide sont affichés en bas de l'écran.",
 }

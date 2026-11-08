@@ -227,4 +227,5 @@ export default {
     journal: 'My mood journal',
     retour: 'Go back to the previous page',
   },
+  modele_indisponible: "MediMind is temporarily unavailable. Try again in a moment. If you feel in danger, help numbers are shown at the bottom of the screen.",
 }
