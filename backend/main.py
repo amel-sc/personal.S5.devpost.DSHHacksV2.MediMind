@@ -25,7 +25,11 @@ async def erreur_http(request: Request, exc: StarletteHTTPException):
 async def conversation_inconnue(request: Request, exc: ConversationInconnue):
     return JSONResponse(
         status_code=404,
-        content={"message": "Cette conversation n'existe pas.", "errors": {}},
+        content={
+            "code": "conversation_inconnue",
+            "message": "Cette conversation n'existe pas.", 
+            "errors": {}
+        },
     )
 
 app.include_router(Message.router)
