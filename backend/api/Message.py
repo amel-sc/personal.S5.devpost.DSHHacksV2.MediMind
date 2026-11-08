@@ -8,9 +8,13 @@ from db.database import get_connection
 
 router = APIRouter()
 
+# function to verify if conversation exist by id
+def verifyConversationById(id_conversation: int):
+    with closing(get_connection()) as conn, conn:
+
 # function to findAll message by conversation
 def findByConversation(id_conversation: int):
-    with closing(get_connection()) as conn:
+    with closing(get_connection()) as conn, conn:
         rows = conn.execute(
             "SELECT * "
             "FROM message WHERE id_conversation = ? ORDER BY id",

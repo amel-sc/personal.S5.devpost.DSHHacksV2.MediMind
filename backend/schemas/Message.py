@@ -12,3 +12,7 @@ class RequestMessage(BaseModel):
     historique: list[Message]
     langue: Literal["fr", "en"]
     id_conversation: int | None = None
+
+# Converation Inconnue
+class ConversationInconnue(Exception):
+    pass
