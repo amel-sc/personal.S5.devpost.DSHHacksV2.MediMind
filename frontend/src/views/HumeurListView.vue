@@ -6,6 +6,7 @@ import { api, ApiError } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
 import { niveauHumeur, estDifficile, estActive, versDate } from '@/utils/humeur'
 import HumeurDetail from '@/components/HumeurDetail.vue'
+import NumeroAide from '@/components/NumeroAide.vue'
 
 const { t, te, locale } = useI18n()
 const route = useRoute()
@@ -163,7 +164,7 @@ onMounted(charger)
         <p class="sous-titre">{{ t('journal.sousTitre') }}</p>
       </header>
 
-      <p class="visually-hidden" aria-live="polite">{{ annonce }}</p>
+      <p class="masque-visuellement" aria-live="polite">{{ annonce }}</p>
 
       <!-- Soutien -->
       <aside v-if="humeursBassesRecentes" class="alert theme-info soutien" :aria-label="t('journal.soutien.label')">
@@ -173,10 +174,11 @@ onMounted(charger)
           <RouterLink :to="{ name: 'conversation' }" class="btn-outline theme-primary btn-styled">
             <i class="bi bi-chat-heart" aria-hidden="true"></i> {{ t('journal.soutien.parler') }}
           </RouterLink>
-          <a href="tel:3114" class="btn-outline theme-primary btn-styled">
-            <i class="bi bi-telephone" aria-hidden="true"></i> {{ t('journal.soutien.appeler') }}
-          </a>
         </div>
+        <i18n-t keypath="aide.pied" tag="p" class="aide-soutien">
+          <template #ecoute><NumeroAide type="ecoute" details /></template>
+          <template #urgence><NumeroAide type="urgence" /></template>
+        </i18n-t>
       </aside>
 
       <!-- Aujourd'hui -->
@@ -184,8 +186,8 @@ onMounted(charger)
         <h2 id="titre-aujourdhui" class="titre-section">{{ t('journal.aujourdhui') }}</h2>
 
         <div v-if="etatToday === 'chargement'" class="carte-jour centre">
-          <div class="spinner-border spinner-sm" role="status">
-            <span class="visually-hidden">{{ t('commun.chargement') }}</span>
+          <div class="mm-spinner spinner-sm" role="status">
+            <span class="masque-visuellement">{{ t('commun.chargement') }}</span>
           </div>
         </div>
 
@@ -249,8 +251,8 @@ onMounted(charger)
 
         <!-- Chargement -->
         <div v-if="chargement" class="centre bloc-centre">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">{{ t('journal.chargement') }}</span>
+          <div class="mm-spinner" role="status">
+            <span class="masque-visuellement">{{ t('journal.chargement') }}</span>
           </div>
         </div>
 
@@ -395,6 +397,15 @@ onMounted(charger)
 }
 .soutien-texte {
   margin: 0 0 0.75rem;
+}
+.aide-soutien {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.aide-soutien :deep(a) {
+  color: inherit;
+  font-weight: 600;
 }
 
 /* --- Aujourd'hui --- */

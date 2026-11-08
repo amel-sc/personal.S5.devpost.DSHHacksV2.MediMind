@@ -11,6 +11,7 @@ import {
   promesseReponse,
   reponseEnCours,
 } from '@/stores/reponsesEnCours'
+import NumeroAide from '@/components/NumeroAide.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -315,11 +316,11 @@ watchPostEffect(() => {
 
 <template>
   <div class="vue-conversation">
-    <h1 class="visually-hidden">
+    <h1 class="masque-visuellement">
       {{ conversation ? t('conversation.titre') : t('conversation.titreNouvelle') }}
     </h1>
 
-    <p class="visually-hidden" aria-live="polite">{{ annonceLecteur }}</p>
+    <p class="masque-visuellement" aria-live="polite">{{ annonceLecteur }}</p>
 
     <!-- Conversation introuvable -->
     <section v-if="introuvable" class="etat-vide" aria-labelledby="titre-introuvable">
@@ -330,8 +331,8 @@ watchPostEffect(() => {
       <RouterLink :to="{ name: 'conversation' }" class="btn-solid theme-primary btn-styled">
         {{ t('conversation.introuvable.nouvelle') }}
       </RouterLink>
-      <i18n-t keypath="aide.besoin" tag="p">
-        <template #n3114><a href="tel:3114">3114</a></template>
+      <i18n-t keypath="aide.besoin" tag="p" class="aide">
+        <template #ecoute><NumeroAide type="ecoute" details /></template>
       </i18n-t>
     </section>
 
@@ -339,8 +340,8 @@ watchPostEffect(() => {
       <div ref="zoneMessages" class="zone-messages" @scroll.passive="surDefilement">
         <div class="fil" :aria-busy="chargementHistorique">
           <div v-if="chargementHistorique" class="centre">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">{{ t('conversation.chargement') }}</span>
+            <div class="mm-spinner" role="status">
+              <span class="masque-visuellement">{{ t('conversation.chargement') }}</span>
             </div>
           </div>
 
@@ -400,12 +401,12 @@ watchPostEffect(() => {
           @click="defiler()"
         >
           <i class="bi bi-arrow-down" aria-hidden="true"></i>
-          <span class="visually-hidden">{{ t('conversation.revenirBas') }}</span>
+          <span class="masque-visuellement">{{ t('conversation.revenirBas') }}</span>
         </button>
 
         <form class="fil" @submit.prevent="envoyerMessage()">
           <div class="compositeur">
-            <label for="message" class="visually-hidden">{{ t('conversation.label') }}</label>
+            <label for="message" class="masque-visuellement">{{ t('conversation.label') }}</label>
             <textarea
               id="message"
               ref="champ"
@@ -423,14 +424,14 @@ watchPostEffect(() => {
               :disabled="!message.trim() || occupe || chargementHistorique"
             >
               <i class="bi bi-send-fill" aria-hidden="true"></i>
-              <span class="visually-hidden">{{ t('conversation.envoyer') }}</span>
+              <span class="masque-visuellement">{{ t('conversation.envoyer') }}</span>
             </button>
           </div>
 
           <p id="aide-saisie" class="aide raccourci">{{ t('conversation.raccourci') }}</p>
-          <i18n-t keypath="aide.urgence" tag="p" class="aide">
-            <template #n3114><a href="tel:3114">3114</a></template>
-            <template #n112><a href="tel:112">112</a></template>
+          <i18n-t keypath="aide.pied" tag="p" class="aide">
+            <template #ecoute><NumeroAide type="ecoute" /></template>
+            <template #urgence><NumeroAide type="urgence" /></template>
           </i18n-t>
         </form>
       </div>
@@ -617,9 +618,13 @@ watchPostEffect(() => {
   text-align: center;
   opacity: 0.75;
 }
-.aide a {
+.aide :deep(a) {
   color: inherit;
   font-weight: 600;
+}
+/* Deux lignes d'aide qui se suivent : moins d'espace entre elles */
+.aide + .aide {
+  margin-top: 0.25rem;
 }
 @media (hover: none) {
   .raccourci {

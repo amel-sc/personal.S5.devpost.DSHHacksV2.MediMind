@@ -5,6 +5,7 @@ import { api, ApiError } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
 import { versDate, estActive, estDifficile } from '@/utils/humeur'
 import HumeurDetail from '@/components/HumeurDetail.vue'
+import AideUrgence from '@/components/AideUrgence.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -210,9 +211,10 @@ watchEffect(() => {
 
         <aside v-if="difficile" class="alert theme-info encart-ligne" :aria-label="t('humeur.page.soutien.label')">
           <i class="bi bi-heart" aria-hidden="true"></i>
-          <i18n-t keypath="humeur.page.soutien.texte" tag="p" class="sans-marge">
-            <template #numero><a href="tel:3114">3114</a></template>
-          </i18n-t>
+          <div class="encart-contenu">
+            <p class="sans-marge">{{ t('humeur.page.soutien.texte') }}</p>
+            <AideUrgence />
+          </div>
         </aside>
 
         <div class="actions">
@@ -320,6 +322,7 @@ watchEffect(() => {
   outline: 3px solid currentColor;
   outline-offset: 2px;
 }
+.encart-contenu { display: flex; flex-direction: column; gap: 0.5rem; }
 
 /* --- Actions --- */
 .actions {

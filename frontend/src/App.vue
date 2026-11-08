@@ -6,6 +6,7 @@ import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
 import LangueSelecteur from '@/components/LangueSelecteur.vue'
 import { estNonLue, nombreNonLues, reponseEnCours } from '@/stores/reponsesEnCours'
+import PaysSelecteur from './components/PaysSelecteur.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -199,6 +200,9 @@ onMounted(charger)
           </RouterLink>
         </nav>
       </div>
+      <div class="pied-menu">
+        <PaysSelecteur />
+      </div>
     </dialog>
 
     <main class="contenu">
@@ -343,5 +347,10 @@ onMounted(charger)
   .pastille {
     background-color: Highlight;
   }
+}
+.pied-menu {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--mm-bordure);
 }
 </style>
