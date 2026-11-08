@@ -16,7 +16,7 @@ def find12LastMessageByConversation(id_conversation: int):
 
         rows = conn.execute(
             "SELECT * "
-            "FROM message WHERE id_conversation = ? ORDER BY date_creation DESC",
+            "FROM message WHERE id_conversation = ? ORDER BY id DESC",
             (id_conversation,)
         ).fetchall()
 
@@ -147,7 +147,8 @@ def traitement_message(data: RequestMessage):
             },
         )
     # insert response in base
-    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, resultat["alerte"])
+    alerte = 1 if resultat["alerte"] is not None else 0
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte)
 
     return JSONResponse(
         status_code = 200,
@@ -156,7 +157,7 @@ def traitement_message(data: RequestMessage):
             "role": "assistant",
             "content": resultat["reponse"],
             "id_conversation": data.id_conversation,
-            "alerte": resultat["alerte"],
+            "alerte": alerte,
             "orienter": resultat["orienter"],
         }
     )
