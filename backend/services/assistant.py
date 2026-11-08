@@ -472,12 +472,8 @@ def analyser(question, historique) -> Analyse:
         f"Dernier message de MediMind : {contexte}\n\nMessage de l'étudiant : {question}"
         if contexte else f"Message de l'étudiant : {question}"
     )
-    r = _chat(
-        MODELE_ANALYSE,
-
-
-$$
-{"role": "system", "content": ANALYSE_PROMPT},
+    r = _chat(MODELE_ANALYSE, [
+            {"role": "system", "content": ANALYSE_PROMPT},
             {"role": "user", "content": contenu},
         ],
         {"temperature": 0, "num_predict": 120},
@@ -517,8 +513,7 @@ def rechercher(requete, langue):
             (doc, meta)
             for doc, meta, dist in zip(r["documents"][0], r["metadatas"][0], r["distances"][0])
             if dist < SEUIL_DISTANCE[langue_doc]
-$$
-
+        ]
 
         if docs:
             return docs, langue_doc
@@ -588,13 +583,7 @@ def generer(system, historique, contenu, *, num_predict=450, temperature=0.4):
 # Contrôle de la sortie
 # ============================================================
 RE_THINK = re.compile(r"<think>.*?</think>", re.S)
-RE_ORIENTER = re.compile(r"
-
-$$
-\s*orienter\s*
-$$
-
-\.?", re.I)
+RE_ORIENTER = re.compile(r"\x5b\s*orienter\s*\x5d", re.IGNORECASE)
 RE_TELEPHONE = re.compile(r"(?:\+?\d[ .-]?){8,}")
 RE_NUMERO_COURT = re.compile(r"\b\d{2,5}\b")
 RE_APPEL = re.compile(r"\b(appel\w*|compos\w*|numero|joindre|call\w*|dial\w*|number|hotline)\b")
