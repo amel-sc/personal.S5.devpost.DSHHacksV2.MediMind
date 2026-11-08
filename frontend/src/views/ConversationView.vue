@@ -1,9 +1,15 @@
 <script setup>
-import { computed, inject, nextTick, ref, watch, watchPostEffect } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, ref, watch, watchPostEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Message from '@/components/Message.vue'
 import { api, ApiError } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
+import {
+  demanderReponse,
+  marquerLue,
+  promesseReponse,
+  reponseEnCours,
+} from '@/stores/reponsesEnCours'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,12 +20,18 @@ const conversation = computed(() => (route.params.id ? Number(route.params.id) :
 // ---------- État ----------
 const message = ref('')
 const messages = ref([])
-const erreur = ref(null) // { texte, action? } — action est une FONCTION
-const chargement = ref(false) // envoi + réponse de MediMind
+const erreur = ref(null) // { texte, action? } — action est une fonction
+const envoiEnCours = ref(false) // enregistrement du message de l'utilisateur
 const chargementHistorique = ref(false)
 const introuvable = ref(false)
-const annonce = ref('') // texte lu par les lecteurs d'écran
+const annonce = ref('')
 const enBas = ref(true)
+
+// L'attente de réponse dépend de la conversation AFFICHÉE, pas d'un booléen global
+const reponseAttendue = computed(
+  () => conversation.value !== null && reponseEnCours(conversation.value)
+)
+const occupe = computed(() => envoiEnCours.value || reponseAttendue.value)
 
 const zoneMessages = ref(null)
 const champ = ref(null)
@@ -38,7 +50,16 @@ const suggestions = [
 
 let idCreeIci = null
 let compteur = 0
-let dernierChargement = 0
+let dernierChargement = 0 // augmente à chaque changement réel de conversation
+let monte = true
+onBeforeUnmount(() => {
+  monte = false
+})
+
+// L'utilisateur regarde-t-il toujours ce qu'il regardait au moment du jeton ?
+function estIci(jeton) {
+  return monte && jeton === dernierChargement
+}
 
 // ---------- Utilitaires ----------
 function versMessage(m, idConversation = null) {
@@ -76,7 +97,7 @@ function surDefilement() {
 }
 
 async function focusChamp() {
-  if (!pointeurPrecis) return // sur mobile, on n'ouvre pas le clavier tout seul
+  if (!pointeurPrecis) return
   await nextTick()
   champ.value?.focus()
 }
@@ -94,17 +115,64 @@ watch(message, () => nextTick(ajusterHauteur))
 async function afficherIntrouvable() {
   introuvable.value = true
   erreur.value = null
-  chargement.value = false
+  envoiEnCours.value = false
   await nextTick()
   titreIntrouvable.value?.focus()
 }
 
+// ---------- Réponse de MediMind ----------
+function lancerReponse(base) {
+  const promesse = demanderReponse(base.id_conversation, () => api.message.traitement(base))
+  suivreReponse(base.id_conversation, promesse)
+}
+
+// Affiche la réponse SEULEMENT si l'utilisateur regarde encore cette conversation
+async function suivreReponse(idConv, promesse) {
+  try {
+    const reponse = await promesse
+    if (!monte || conversation.value !== idConv || chargementHistorique.value) return
+    // Sinon : la réponse est en base, il la verra en revenant
+
+    marquerLue(idConv)
+    const msg = versMessage(reponse, idConv)
+    if (messages.value.some((m) => m.id === msg.id)) return // déjà là (chargée avec l'historique)
+
+    const etaitEnBas = enBas.value
+    messages.value.push(msg)
+    annonce.value = `MediMind a répondu : ${reponse.content}`
+    if (etaitEnBas) await defiler()
+    focusChamp()
+  } catch (e) {
+    if (!monte || conversation.value !== idConv) return
+    console.error(e)
+    if (estIntrouvable(e)) return afficherIntrouvable()
+    erreur.value = {
+      texte: `MediMind n'a pas pu répondre. ${messageErreur(e)}`,
+      action: () => relancer(idConv),
+    }
+  }
+}
+
+// Redemande une réponse au dernier message de l'utilisateur
+function relancer(idConv) {
+  const dernier = messages.value.at(-1)
+  if (!dernier || dernier.role !== 'user') return
+  erreur.value = null
+  lancerReponse({
+    message: dernier.content,
+    historique: historique().slice(0, -1), // tout sauf ce dernier message
+    langue: 'fr',
+    id_conversation: idConv,
+  })
+}
+
 // ---------- Chargement d'une conversation ----------
 async function chargerHistorique(id) {
-  const jeton = ++dernierChargement // annule les chargements précédents encore en cours
+  const jeton = ++dernierChargement
   introuvable.value = false
   erreur.value = null
   messages.value = []
+  envoiEnCours.value = false // l'envoi éventuel concernait l'ancienne conversation
   enBas.value = true
 
   if (id == null) {
@@ -113,14 +181,29 @@ async function chargerHistorique(id) {
     return
   }
 
+  marquerLue(id)
+  // Capturée AVANT la requête : si la réponse arrive pendant le chargement, on ne la rate pas
+  const reponseAvant = promesseReponse(id)
   chargementHistorique.value = true
   try {
-    const corps = await api.message.lister(id) // { data: [...] }
-    if (jeton !== dernierChargement) return
+    const corps = await api.message.lister(id)
+    if (!estIci(jeton)) return
     messages.value = (corps.data ?? []).map((m) => versMessage(m, id))
+    chargementHistorique.value = false
+
+    const attente = reponseAvant ?? promesseReponse(id)
+    if (attente) {
+      suivreReponse(id, attente) // une réponse est en route : l'indicateur s'affiche
+    } else if (messages.value.at(-1)?.role === 'user') {
+      // Dernier message sans réponse (erreur pendant qu'il était ailleurs, rechargement…)
+      erreur.value = {
+        texte: "MediMind n'a pas répondu à ton dernier message.",
+        action: () => relancer(id),
+      }
+    }
     await defiler(false)
   } catch (e) {
-    if (jeton !== dernierChargement) return
+    if (!estIci(jeton)) return
     console.error(e)
     if (estIntrouvable(e)) return afficherIntrouvable()
     erreur.value = {
@@ -139,7 +222,6 @@ watch(
       idCreeIci = null // conversation créée ici : les messages sont déjà affichés
       return
     }
-    // On garde le brouillon seulement quand on quitte l'écran « introuvable »
     if (!introuvable.value) message.value = ''
     annonce.value = ''
     chargerHistorique(id)
@@ -150,29 +232,32 @@ watch(
 // ---------- Envoi ----------
 async function envoyerMessage(texte = message.value) {
   const contenu = texte.trim()
-  if (!contenu || chargement.value || chargementHistorique.value) return
+  if (!contenu || occupe.value || chargementHistorique.value) return
 
   erreur.value = null
   annonce.value = ''
+  const jeton = dernierChargement
   const idDepart = conversation.value
-  const data = { message: contenu, historique: historique(), langue: 'fr', id_conversation: idDepart }
+  // Historique capturé MAINTENANT, sans le nouveau message : il ne change plus ensuite
+  const base = { message: contenu, historique: historique(), langue: 'fr', id_conversation: idDepart }
 
   // 1. Affichage immédiat
   const cleTemp = `tmp-${++compteur}`
   messages.value.push({ cle: cleTemp, role: 'user', content: contenu, enAttente: true })
   message.value = ''
-  chargement.value = true
+  envoiEnCours.value = true
   await defiler()
 
   // 2. Enregistrement
   let envoye
   try {
-    envoye = await api.message.send(data)
+    envoye = await api.message.send(base)
   } catch (e) {
     console.error(e)
+    if (!estIci(jeton)) return // il est ailleurs : rien à afficher
+    envoiEnCours.value = false
     messages.value = messages.value.filter((m) => m.cle !== cleTemp)
-    message.value = contenu // on rend le texte à l'utilisateur
-    chargement.value = false
+    message.value = contenu
     if (estIntrouvable(e)) return afficherIntrouvable()
     erreur.value = {
       texte: `Ton message n'a pas été envoyé (il a été remis dans la zone de saisie). ${messageErreur(e)}`,
@@ -181,53 +266,24 @@ async function envoyerMessage(texte = message.value) {
     return
   }
 
-  // L'utilisateur a changé de conversation entre-temps
-  if (conversation.value !== idDepart) {
-    chargement.value = false
-    return
-  }
+  const idConv = envoye.id_conversation
 
-  const i = messages.value.findIndex((m) => m.cle === cleTemp)
-  if (i !== -1) messages.value[i] = versMessage(envoye)
-
-  // Nouvelle conversation créée : on met l'URL à jour sans recharger
-  if (idDepart === null) {
-    idCreeIci = envoye.id_conversation
-    await router.replace({ name: 'conversation', params: { id: envoye.id_conversation } })
-    rafraichirConversations()
-  }
-
-  // 3. Réponse de MediMind
-  await obtenirReponse({ ...data, id_conversation: envoye.id_conversation })
-}
-
-async function obtenirReponse(base) {
-  const idConv = base.id_conversation
-  chargement.value = true
-  erreur.value = null
-  try {
-    const reponse = await api.message.traitement({ ...base, historique: historique() })
-    if (conversation.value !== idConv) return
-
-    const etaitEnBas = enBas.value
-    messages.value.push(versMessage(reponse, idConv))
-    annonce.value = `MediMind a répondu : ${reponse.content}`
-    if (etaitEnBas) await defiler()
-  } catch (e) {
-    if (conversation.value !== idConv) return
-    console.error(e)
-    if (estIntrouvable(e)) return afficherIntrouvable()
-    erreur.value = {
-      texte: `MediMind n'a pas pu répondre. ${messageErreur(e)}`,
-      action: () => obtenirReponse(base),
+  if (estIci(jeton)) {
+    const i = messages.value.findIndex((m) => m.cle === cleTemp)
+    if (i !== -1) messages.value[i] = versMessage(envoye)
+    // On ne change l'URL QUE s'il est toujours sur cet écran (sinon on le ramènerait de force)
+    if (idDepart === null) {
+      idCreeIci = idConv
+      await router.replace({ name: 'conversation', params: { id: idConv } })
     }
-  } finally {
-    chargement.value = false
-    if (!introuvable.value) focusChamp()
   }
+  if (idDepart === null) rafraichirConversations()
+
+  // 3. Réponse demandée MÊME s'il est parti : elle sera en base à son retour
+  lancerReponse({ ...base, id_conversation: idConv })
+  if (estIci(jeton)) envoiEnCours.value = false
 }
 
-// Entrée = envoyer, Maj + Entrée = retour à la ligne
 function onKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
     e.preventDefault()
@@ -235,9 +291,8 @@ function onKeydown(e) {
   }
 }
 
-const annonceLecteur = computed(() => (chargement.value ? 'MediMind écrit…' : annonce.value))
+const annonceLecteur = computed(() => (occupe.value ? 'MediMind écrit…' : annonce.value))
 
-// « post » : s'exécute après le afterEach du router, donc c'est ce titre qui gagne
 watchPostEffect(() => {
   if (introuvable.value) document.title = 'Conversation introuvable · MediMind'
   else if (conversation.value) document.title = 'Conversation · MediMind'
@@ -246,16 +301,13 @@ watchPostEffect(() => {
 </script>
 
 <template>
-  <!-- UNE seule racine (compatible <Transition> et héritage d'attributs) -->
   <div class="vue-conversation">
     <h1 class="visually-hidden">
       {{ conversation ? 'Conversation avec MediMind' : 'Nouvelle conversation avec MediMind' }}
     </h1>
 
-    <!-- Toujours présente, quel que soit l'état -->
     <p class="visually-hidden" aria-live="polite">{{ annonceLecteur }}</p>
 
-    <!-- Conversation introuvable -->
     <section v-if="introuvable" class="etat-vide" aria-labelledby="titre-introuvable">
       <h2 id="titre-introuvable" ref="titreIntrouvable" tabindex="-1">Conversation introuvable</h2>
       <p>
@@ -289,7 +341,7 @@ watchPostEffect(() => {
                 <button
                   type="button"
                   class="suggestion"
-                  :disabled="chargement"
+                  :disabled="occupe"
                   @click="envoyerMessage(s.texte)"
                 >
                   <i class="bi" :class="s.icone" aria-hidden="true"></i>
@@ -303,7 +355,8 @@ watchPostEffect(() => {
             <li v-for="m in messages" :key="m.cle">
               <Message :message="m" />
             </li>
-            <li v-if="chargement" aria-hidden="true">
+            <!-- Uniquement si CETTE conversation attend une réponse -->
+            <li v-if="occupe" aria-hidden="true">
               <Message :message="{ role: 'assistant', content: '' }" en-cours />
             </li>
           </ol>
@@ -314,7 +367,7 @@ watchPostEffect(() => {
               v-if="erreur.action"
               type="button"
               class="btn-outline theme-danger btn-styled"
-              :disabled="chargement || chargementHistorique"
+              :disabled="occupe || chargementHistorique"
               @click="erreur.action()"
             >
               Réessayer
@@ -352,7 +405,7 @@ watchPostEffect(() => {
               type="submit"
               class="bouton-envoyer"
               title="Envoyer"
-              :disabled="!message.trim() || chargement || chargementHistorique"
+              :disabled="!message.trim() || occupe || chargementHistorique"
             >
               <i class="bi bi-send-fill" aria-hidden="true"></i>
               <span class="visually-hidden">Envoyer</span>
@@ -372,213 +425,3 @@ watchPostEffect(() => {
     </template>
   </div>
 </template>
-
-<style scoped>
-.vue-conversation {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-.zone-messages {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.fil {
-  width: 100%;
-  max-width: 48rem;
-  margin-inline: auto;
-  padding: 1.5rem 1rem;
-}
-.centre {
-  display: flex;
-  justify-content: center;
-  padding-block: 3rem;
-}
-
-/* --- Accueil --- */
-.accueil {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding-block: 3rem 1rem;
-}
-.logo {
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  margin-bottom: 1rem;
-  border-radius: 1rem;
-  font-size: 1.75rem;
-  color: var(--mm-accent);
-  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
-}
-.titre-accueil {
-  margin: 0 0 0.25rem;
-  font-size: 1.5rem;
-}
-.texte-accueil {
-  margin: 0 0 1.5rem;
-  opacity: 0.75;
-}
-.suggestions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.5rem;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.suggestion {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  height: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--mm-bordure);
-  border-radius: 0.75rem;
-  background-color: var(--mm-surface);
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-.suggestion i {
-  color: var(--mm-accent);
-}
-.suggestion:hover {
-  border-color: var(--mm-accent);
-}
-.suggestion:focus-visible {
-  outline: 3px solid var(--mm-accent);
-  outline-offset: 2px;
-}
-.suggestion:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* --- Messages --- */
-.liste-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* --- Erreur --- */
-.encadre-erreur {
-  margin-top: 1rem;
-}
-.texte-erreur {
-  margin: 0;
-}
-.encadre-erreur button {
-  margin-top: 0.5rem;
-}
-
-/* --- Barre de saisie --- */
-.barre-saisie {
-  position: relative;
-  flex-shrink: 0;
-  border-top: 1px solid var(--mm-bordure);
-  background-color: var(--mm-surface);
-}
-.barre-saisie .fil {
-  padding-block: 0.75rem;
-}
-.compositeur {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  padding: 0.375rem 0.375rem 0.375rem 1rem;
-  border: 1px solid var(--mm-bordure);
-  border-radius: 1.5rem;
-  background-color: var(--mm-fond);
-}
-.compositeur:focus-within {
-  border-color: var(--mm-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mm-accent) 30%, transparent);
-}
-@media (forced-colors: active) {
-  .compositeur:focus-within {
-    outline: 2px solid Highlight;
-  }
-}
-.champ-message {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.5rem 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: 1.5;
-  resize: none;
-  overflow-y: hidden;
-}
-.bouton-envoyer {
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 0;
-  border-radius: 50%;
-  background-color: var(--mm-accent);
-  color: light-dark(#ffffff, #0b1a2e);
-  cursor: pointer;
-}
-.bouton-envoyer:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-.bouton-envoyer:focus-visible {
-  outline: 3px solid var(--mm-accent);
-  outline-offset: 2px;
-}
-.aide {
-  margin: 0.5rem 0 0;
-  font-size: 0.8125rem;
-  text-align: center;
-  opacity: 0.75;
-}
-.aide a {
-  color: inherit;
-  font-weight: 600;
-}
-@media (hover: none) {
-  .raccourci {
-    display: none;
-  }
-}
-.bouton-bas {
-  position: absolute;
-  bottom: calc(100% + 0.75rem);
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--mm-bordure);
-  border-radius: 50%;
-  background-color: var(--mm-surface);
-  color: inherit;
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-}
-.bouton-bas:focus-visible {
-  outline: 3px solid var(--mm-accent);
-  outline-offset: 2px;
-}
-</style>
