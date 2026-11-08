@@ -8,14 +8,24 @@ import NotFoundView from '@/views/NotFoundView.vue'
 const routes = [
   { path: '/', redirect: { name: 'conversation' } },
   { path: '/conversation/:id([1-9]\\d*)?', name: 'conversation', component: ConversationView },
-  { path: '/humeur/list', name: 'humeurList', component: HumeurListView, meta: { titre: "Journal d'humeur" } },
-  { path: '/humeur/new', name: 'humeurCreate', component: HumeurFormView, meta: { titre: 'Nouvelle humeur' } },
+  {
+    path: '/humeur/list',
+    name: 'humeurList',
+    component: HumeurListView,
+    meta: { titre: "Journal d'humeur", section: 'humeur' },
+  },
+  {
+    path: '/humeur/new',
+    name: 'humeurCreate',
+    component: HumeurFormView,
+    meta: { titre: 'Nouvelle humeur', section: 'humeur' },
+  },
   {
     path: '/humeur/:id([1-9]\\d*)',
     name: 'humeurDetail',
     component: HumeurDetailView,
     props: true,
-    meta: { titre: "Détail de l'humeur" },
+    meta: { titre: "Détail de l'humeur", section: 'humeur' },
   },
   { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView, meta: { titre: 'Page introuvable' } },
 ]
