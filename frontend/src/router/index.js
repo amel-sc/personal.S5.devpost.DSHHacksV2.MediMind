@@ -27,7 +27,7 @@ const routes = [
     name: 'humeurDetail',
     component: HumeurDetailView,
     props: true,
-    meta: { titre: "Détail de l'humeur", section: 'humeur' },
+    meta: { section: 'humeur' },
   },
   { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView, meta: { titre: 'Page introuvable' } },
 ]

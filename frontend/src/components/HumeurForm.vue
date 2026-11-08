@@ -218,8 +218,15 @@ async function envoyer() {
     enregistre.value = true
     supprimerBrouillon()
     await router.replace(
-      reponse?.id_humeur_jours ? `/humeur/${reponse.id_humeur_jours}` : '/humeur/list',
+      reponse?.id_humeur_jours
+        ? {
+            path: `/humeur/${reponse.id_humeur_jours}`,
+            // Passé dans l'historique du navigateur, pas dans l'URL
+            state: { enregistree: props.initiale ? 'maj' : 'nouvelle' },
+          }
+        : '/humeur/list',
     )
+
   } catch (e) {
     console.error(e)
     erreurGlobale.value = e

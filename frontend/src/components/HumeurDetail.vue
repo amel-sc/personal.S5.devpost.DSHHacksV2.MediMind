@@ -11,6 +11,7 @@ import {
 } from '../utils/humeur'
 
 const props = defineProps({
+  afficherMeta: { type: Boolean, default: true },
   humeurJours: { type: Object, default: null },
   humeurJoursCauses: { type: Array, default: () => [] },
   // Remplace le titre calculé (« Ton humeur aujourd'hui » / « Ton humeur du … »)
@@ -126,7 +127,7 @@ const texteDate = computed(() => {
         {{ titreAffiche }}
       </component>
 
-      <p v-if="texteDate || remplacee" class="detail-meta">
+      <p v-if="afficherMeta && (texteDate || remplacee)" class="detail-meta">
         <time v-if="date" :datetime="date.toISOString()">{{ texteDate }}</time>
         <span v-if="remplacee" class="badge badge-outline theme-secondary badge-remplacee">
           {{ t('journal.remplacee') }}
