@@ -57,9 +57,29 @@ export default {
     },
   },
   aide: {
-    urgence: 'MediMind does not replace a health professional. In an emergency in France: {n3114} (suicide prevention, 24/7) or {n112}.',
-    besoin: 'Need to talk to someone right now? {n3114}, free, 24/7 (France).',
-  },
+    ecoute: 'Suicidal thoughts or severe distress: {ecoute}.',
+    urgence: 'Immediate danger: {urgence}.',
+    besoin: 'Need to talk to someone right now? {ecoute}',
+    pied: 'Distress: {ecoute} · Emergency: {urgence}',
+    pour: 'Numbers for: {pays}',
+    changer: 'Change country',
+},
+    urgences: {
+        gratuit: 'free',
+        h24: '24/7',
+        langue: 'in {langue}',
+        public: { etudiants: 'for students', jeunes: 'for young people' },
+        annuaire: 'find a helpline in your country',
+        nouvelOnglet: '(opens in a new tab)',
+        urgenceLocale: 'your local emergency number',
+    },
+    pays: {
+        label: 'Country for help numbers',
+        auto: 'Automatic ({pays})',
+        autre: 'Other country',
+        aide: 'Only used to show the right numbers. Nothing is sent.',
+    },
+
   commun: { reessayer: 'Try again', chargement: 'Loading…' },
   humeur: {
     niveaux: { 1: 'Very good', 2: 'Good', 3: 'Neutral', 4: 'Bad', 5: 'Very bad' },
