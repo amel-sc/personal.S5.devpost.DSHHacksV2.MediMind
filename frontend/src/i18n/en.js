@@ -60,6 +60,18 @@ export default {
   humeur: {
     niveaux: { 1: 'Very good', 2: 'Good', 3: 'Neutral', 4: 'Bad', 5: 'Very bad' },
     causes: { etudes: 'Studies', sommeil: 'Sleep', relations: 'Relationships', autre: 'Other' },
+    detail: {
+        titre: 'Your mood',
+        titreAujourdhui: 'Your mood today',
+        titreDate: 'Your mood on {date}',
+        noteeA: 'Logged at {heure}',
+        noteeAujourdhui: 'Logged today at {heure}',
+        noteeLe: 'Logged on {date} at {heure}',
+        echelle: '(level {n} of {total}, from {min} to {max})',
+        note: 'Your note',
+        causes: 'What influenced your mood',
+        aucuneCause: 'No cause recorded.',
+    },
   },
   erreurs: {
     reseau: 'Unable to connect. Please check your internet connection.',
