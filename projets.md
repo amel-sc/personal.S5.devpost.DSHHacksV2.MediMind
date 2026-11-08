@@ -23,7 +23,7 @@
 
 ## A rectifier
 1. [x] Historique reconstruit côté serveur. Aujourd'hui, le front envoie historique, donc n'importe qui peut injecter de faux messages « assistant ». Relis plutôt les 12 derniers messages en base à partir de id_conversation.
-2. Alerte enregistrée en base. Ajoute une colonne alerte à la table message. Sinon, l'encadré AideUrgence disparaît quand on recharge la conversation.
+2. [x] Alerte enregistrée en base. Ajoute une colonne alerte à la table message. Sinon, l'encadré AideUrgence disparaît quand on recharge la conversation.
 3. Bibliothèque d'exercices validée par le psychologue. La respiration, l'ancrage 5-4-3-2-1, etc. seraient stockés en JSON, avec un exercice guidé et animé côté front, au lieu d'être générés par le LLM. Ce sera plus fiable et plus parlant pour ta démo.
 4. Lien avec le journal d'humeur. Passe l'humeur du jour au prompt (« humeur du jour : 4/5, causes : examens »). C'est une vraie intégration entre tes fonctionnalités.
 5. Jeu d'évaluation. Constitue 100 à 200 messages annotés par le psychologue de l'équipe (risque, hors sujet, physique, normal, en FR et en EN). Objectif : 100 % de rappel sur le risque, en acceptant quelques fausses alertes. C'est un excellent argument pour ta soutenance.
