@@ -8,6 +8,20 @@ from db.database import get_connection
 
 router = APIRouter()
 
+# function to get last twelve conversation by id
+def find12LastMessageByConversation(id_conversation: int):
+    with closing(get_connection()) as conn, conn:
+
+        verifyConversationById(conn, id_conversation)
+
+        rows = conn.execute(
+            "SELECT * "
+            "FROM message WHERE id_conversation = ? ORDER BY date_creation DESC",
+            (id_conversation,)
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
 # function to verify if conversation exist by id
 def verifyConversationById(conn, id_conversation: int):
     row = conn.execute(
