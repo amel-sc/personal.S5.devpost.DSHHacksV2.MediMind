@@ -2,7 +2,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException
 from schemas.Message import RequestMessage, ConversationInconnue
 from contextlib import closing
-from services.assistant import ask_medimind
+from services.assistant import ask_medimind, ModeleIndisponible
 from fastapi.responses import JSONResponse
 from db.database import get_connection
 
@@ -115,17 +115,30 @@ def traitement_message(data: RequestMessage):
     # Vérification AVANT l'appel au LLM : on ne paie pas une réponse pour rien
     with closing(get_connection()) as conn:
         verifyConversationById(conn, data.id_conversation)
-    
-    reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
 
+    # try except for asking medimind
+    try:
+        resultat = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
+    except ModeleIndisponible:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "modele_indisponible",
+                "message": "Modèle indisponible.", 
+                "errors": {}
+            },
+        )
     # insert response in base
-    id_message = create_message('assistant', reponse, data.id_conversation)
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation)
 
     return JSONResponse(
         status_code = 200,
         content = {
             "id_message": id_message,
             "role": "assistant",
-            "content": reponse,
+            "content": resultat["reponse"],
+            "id_conversation": data.id_conversation,
+            "alerte": resultat["alerte"],
+            "orienter": resultat["orienter"],
         }
     )
