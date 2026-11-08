@@ -1,6 +1,8 @@
 :root {
   --mm-fond: light-dark(#f4f6f9, #121417);
   --mm-surface: light-dark(#ffffff, #1b1e23);
+  --mm-accent: light-dark(#0b5ed7, #6ea8fe);
+  --mm-bordure: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.12));
 }
 
 /* Une seule zone défile dans MediMind : celle des messages */
