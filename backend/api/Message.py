@@ -22,6 +22,9 @@ def verifyConversationById(conn, id_conversation: int):
 # function to findAll message by conversation
 def findByConversation(id_conversation: int):
     with closing(get_connection()) as conn, conn:
+
+        verifyConversationById(conn, id_conversation)
+
         rows = conn.execute(
             "SELECT * "
             "FROM message WHERE id_conversation = ? ORDER BY id",
