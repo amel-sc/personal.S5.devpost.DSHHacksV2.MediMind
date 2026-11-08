@@ -61,6 +61,18 @@ export default {
   humeur: {
     niveaux: { 1: 'Très bien', 2: 'Bien', 3: 'Neutre', 4: 'Mal', 5: 'Très mal' },
     causes: { etudes: 'Études', sommeil: 'Sommeil', relations: 'Relations', autre: 'Autre' },
+    detail: {
+        titre: 'Ton humeur',
+        titreAujourdhui: "Ton humeur aujourd'hui",
+        titreDate: 'Ton humeur du {date}',
+        noteeA: 'Notée à {heure}',
+        noteeAujourdhui: "Notée aujourd'hui à {heure}",
+        noteeLe: 'Notée le {date} à {heure}',
+        echelle: '(niveau {n} sur {total}, de {min} à {max})',
+        note: 'Ta note',
+        causes: 'Ce qui a influencé ton humeur',
+        aucuneCause: 'Aucune cause renseignée.',
+    },
   },
   erreurs: {
     reseau: 'Connexion impossible. Vérifie ta connexion internet.',
