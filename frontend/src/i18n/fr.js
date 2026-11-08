@@ -1,0 +1,61 @@
+export default {
+  pages: {
+    conversation: 'Conversation',
+    nouvelleConversation: 'Nouvelle conversation',
+    conversationIntrouvable: 'Conversation introuvable',
+    journal: "Journal d'humeur",
+    nouvelleHumeur: 'Nouvelle humeur',
+    detailHumeur: "Détail de l'humeur",
+    introuvable: 'Page introuvable',
+  },
+  menu: {
+    // 3 formes : 0 | 1 | plusieurs, utilisées avec t('menu.ouvrir', n)
+    ouvrir: 'Ouvrir le menu | Ouvrir le menu (1 nouvelle réponse) | Ouvrir le menu ({n} nouvelles réponses)',
+    fermer: 'Fermer le menu',
+    principal: 'Navigation principale',
+    mesConversations: 'Mes conversations',
+    aucune: "Aucune conversation pour l'instant.",
+    sansTitre: 'Conversation sans titre',
+    enCours: ', MediMind est en train de répondre',
+    nonLue: ', nouvelle réponse',
+    reponseAilleurs: 'MediMind a répondu dans une autre conversation.',
+  },
+  langue: { choisir: 'Langue' },
+  conversation: {
+    bonjour: 'Bonjour, je suis MediMind',
+    intro: 'Un espace pour parler de ce que tu ressens, sans jugement. Par quoi veux-tu commencer ?',
+    suggestions: {
+      respiration: 'Propose-moi un exercice de respiration',
+      stress: 'Je me sens stressé·e en ce moment',
+      sommeil: "J'ai du mal à dormir",
+      examen: "Comment gérer l'anxiété avant un examen ?",
+    },
+    placeholder: 'Écris ton message…',
+    label: 'Ton message à MediMind',
+    envoyer: 'Envoyer',
+    raccourci: 'Entrée pour envoyer · Maj + Entrée pour aller à la ligne',
+    ecrit: 'MediMind écrit…',
+    arepondu: 'MediMind a répondu : {contenu}',
+    pasRepondu: "MediMind n'a pas répondu à ton dernier message.",
+  },
+  aide: {
+    // {n3114} et {n112} sont remplacés par des liens (voir <i18n-t> plus bas)
+    urgence: "MediMind ne remplace pas un professionnel de santé. En cas d'urgence : {n3114} (prévention du suicide, 24h/24) ou {n112}.",
+  },
+  commun: { reessayer: 'Réessayer', chargement: 'Chargement…' },
+  humeur: {
+    niveaux: { 1: 'Très bien', 2: 'Bien', 3: 'Neutre', 4: 'Mal', 5: 'Très mal' },
+    causes: { etudes: 'Études', sommeil: 'Sommeil', relations: 'Relations', autre: 'Autre' },
+  },
+  erreurs: {
+    reseau: 'Connexion impossible. Vérifie ta connexion internet.',
+    serveur: 'Une erreur est survenue de notre côté. Réessaie dans un instant.',
+    validation: 'Certaines informations ne sont pas valides.',
+    inconnue: "Une erreur inattendue s'est produite.",
+    codes: {
+      conversation_inconnue: "Cette conversation n'existe pas.",
+      humeur_inconnue: "Cette humeur n'existe pas.",
+      cause_inconnue: "Une des causes choisies n'existe pas.",
+    },
+  },
+}
