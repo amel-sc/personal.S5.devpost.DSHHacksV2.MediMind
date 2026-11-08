@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
 import { niveauHumeur, estDifficile, libelleHumeur, libelleCause } from '@/utils/humeur'
+import NumeroAide from './NumeroAide.vue'
 
 const props = defineProps({
   humeurs: { type: Array, required: true },      // table humeur : { id, val, desce }
@@ -312,7 +313,7 @@ async function envoyer() {
             </template>
           </i18n-t>
           <i18n-t keypath="humeur.form.soutien.urgence" tag="li">
-            <template #numero><a href="tel:3114">3114</a></template>
+            <template #numero><NumeroAide type="ecoute" details /></template>
           </i18n-t>
         </ul>
         <p class="sans-marge petit">{{ t('humeur.form.soutien.conserve') }}</p>
