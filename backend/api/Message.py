@@ -132,7 +132,9 @@ def traitement_message(data: RequestMessage):
 
     # try except for asking medimind
     try:
-        resultat = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
+        # get conversation in base for historique
+        historique = find12LastMessageByConversation(data.id_conversation)
+        resultat = ask_medimind(data.message, historique, data.langue)
     except ModeleIndisponible:
         return JSONResponse(
             status_code=503,
