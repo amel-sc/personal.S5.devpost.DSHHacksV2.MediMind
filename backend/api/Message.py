@@ -13,8 +13,8 @@ def verifyConversationById(conn, id_conversation: int):
     row = conn.execute(
         "SELECT * FROM conversation "
         "WHERE id = ?",
-        (id_conversation)
-    )
+        (id_conversation,)
+    ).fetchone() 
 
     if row is None:
         raise ConversationInconnue()
@@ -66,18 +66,15 @@ def create_message(role: str, content: str, id_conversation: int):
 @router.get("/api/message")
 def messages(id_conversation: int):
 
-    try:
-        messages = findByConversation(id_conversation)
+    messages = findByConversation(id_conversation)
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "data": messages
+        }
+    )
     
-        return JSONResponse(
-            status_code = 200,
-            content = {
-                "data": messages
-            }
-        )
-    
-    except ConversationInconnue:
-        raise HTTPException(status_code=404, detail="Cette conversation n'existe pas.")
 
 # route to create new conversation 
 @router.post("/api/message")
@@ -97,38 +94,38 @@ def send_message(data: RequestMessage):
         )
 
     else:
-        try:
-            id_message = create_message('user', data.message, data.id_conversation)
-
-            return JSONResponse(
-                status_code = 200,
-                content = {
-                    "id_message": id_message,
-                    "id_conversation": data.id_conversation,
-                    "role": "user",
-                    "content": data.message
-                }
-            )
-        except ConversationInconnue:
-            raise HTTPException(status_code=404, detail="Cette conversation n'existe pas.")
-
-# route to send message and get response
-@router.post("/api/message/traitement")
-def traitement_message(data: RequestMessage):
-    # transformer l'objet pydantic en dictionnaire { }
-    reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
-
-    # insert response in base
-    try:
-        id_message = create_message('assistant', reponse, data.id_conversation)
+        id_message = create_message('user', data.message, data.id_conversation)
 
         return JSONResponse(
             status_code = 200,
             content = {
                 "id_message": id_message,
-                "role": "assistant",
-                "content": reponse,
+                "id_conversation": data.id_conversation,
+                "role": "user",
+                "content": data.message
             }
         )
-    except ConversationInconnue:
-        raise HTTPException(status_code=404, detail="Cette conversation n'existe pas.")
+
+# route to send message and get response
+@router.post("/api/message/traitement")
+def traitement_message(data: RequestMessage):
+    if data.id_conversation is None:
+        raise HTTPException(status_code=422, detail="L'identifiant de conversation est requis.")
+
+    # Vérification AVANT l'appel au LLM : on ne paie pas une réponse pour rien
+    with closing(get_connection()) as conn:
+        verifyConversationById(conn, data.id_conversation)
+    
+    reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
+
+    # insert response in base
+    id_message = create_message('assistant', reponse, data.id_conversation)
+
+    return JSONResponse(
+        status_code = 200,
+        content = {
+            "id_message": id_message,
+            "role": "assistant",
+            "content": reponse,
+        }
+    )

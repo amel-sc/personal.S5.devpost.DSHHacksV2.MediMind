@@ -39,3 +39,29 @@ body {
 .niveau-4 { --couleur-niveau: light-dark(#5c7cfa, #91a7ff); } /* Mal */
 .niveau-5 { --couleur-niveau: light-dark(#7950f2, #b197fc); } /* Très mal */
 
+.etat-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-inline-size: 36rem;
+  margin: auto;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.etat-vide :is(h1, h2) {
+  margin: 0;
+}
+
+/* Focus posé par script sur un titre, qui n'est pas un élément interactif */
+.etat-vide [tabindex="-1"]:focus {
+  outline: none;
+}
+
+.etat-vide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, computed } from 'vue'
+import { onMounted, ref, watch, computed, provide } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from './services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
@@ -29,10 +29,7 @@ const conversationActive = computed(() =>
   route.params.id ? Number(route.params.id) : null
 )
 
-watch(conversationActive, (id) => {
-  // some vérifie si au moins un élément d'un tableau satisfait une condition
-  if (id !== null && !conversations.value.some((c) => c.id === id)) charger()
-})
+provide('rafraichirConversations', chargerConversations)
 
 function closeDrawer() {
   drawer.value?.close()
