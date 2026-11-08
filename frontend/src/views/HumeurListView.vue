@@ -193,6 +193,8 @@ onMounted(charger)
           <HumeurDetail
             :humeur-jours="today.humeur_jours"
             :humeur-jours-causes="today.humeur_jours_causes"
+            :niveau-titre="3" 
+            titre-masque
           />
           <RouterLink :to="{ name: 'humeurCreate' }" class="btn-outline theme-primary btn-styled lien-maj">
             <i class="bi bi-pencil" aria-hidden="true"></i> {{ t('journal.mettreAJour') }}
