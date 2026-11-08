@@ -4,6 +4,8 @@ import HumeurListView from '@/views/HumeurListView.vue'
 import HumeurDetailView from '@/views/HumeurDetailView.vue'
 import HumeurFormView from '@/views/HumeurFormView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
+import { i18n } from '@/i18n'
+import { watch } from 'vue'
 
 const routes = [
   { path: '/', redirect: { name: 'conversation' } },
@@ -35,9 +37,14 @@ const router = createRouter({
   routes,
 })
 
+function mettreTitre(route) {
+  if (route.meta.titre) document.title = `${i18n.global.t(route.meta.titre)} · MediMind`
+}
+
 // La route conversation n'a pas de meta.titre : c'est la vue qui gère son titre
-router.afterEach((to) => {
-  if (to.meta.titre) document.title = `${to.meta.titre} · MediMind`
-})
+router.afterEach(mettreTitre)
+
+// Le titre change aussi quand on change de langue, sans naviguer
+watch(i18n.global.locale, () => mettreTitre(router.currentRoute.value))
 
 export default router

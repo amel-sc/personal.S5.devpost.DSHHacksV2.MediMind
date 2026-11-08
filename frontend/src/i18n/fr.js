@@ -22,6 +22,8 @@ export default {
   },
   langue: { choisir: 'Langue' },
   conversation: {
+    titre: 'Conversation avec MediMind',
+    titreNouvelle: 'Nouvelle conversation avec MediMind',
     bonjour: 'Bonjour, je suis MediMind',
     intro: 'Un espace pour parler de ce que tu ressens, sans jugement. Par quoi veux-tu commencer ?',
     suggestions: {
@@ -30,17 +32,30 @@ export default {
       sommeil: "J'ai du mal à dormir",
       examen: "Comment gérer l'anxiété avant un examen ?",
     },
-    placeholder: 'Écris ton message…',
+    chargement: 'Chargement de la conversation…',
+    listeMessages: 'Messages de la conversation',
+    revenirBas: 'Revenir aux derniers messages',
     label: 'Ton message à MediMind',
+    placeholder: 'Écris ton message…',
     envoyer: 'Envoyer',
     raccourci: 'Entrée pour envoyer · Maj + Entrée pour aller à la ligne',
     ecrit: 'MediMind écrit…',
     arepondu: 'MediMind a répondu : {contenu}',
-    pasRepondu: "MediMind n'a pas répondu à ton dernier message.",
+    introuvable: {
+      titre: 'Conversation introuvable',
+      texte: "Ce lien ne correspond à aucune conversation : l'adresse est peut-être incorrecte, ou la conversation n'existe plus. Tes autres conversations sont toujours dans le menu.",
+      nouvelle: 'Nouvelle conversation',
+    },
+    erreurs: {
+      envoi: "Ton message n'a pas été envoyé (il a été remis dans la zone de saisie).",
+      reponse: "MediMind n'a pas pu répondre.",
+      pasRepondu: "MediMind n'a pas répondu à ton dernier message.",
+      chargement: 'Impossible de charger la conversation.',
+    },
   },
   aide: {
-    // {n3114} et {n112} sont remplacés par des liens (voir <i18n-t> plus bas)
     urgence: "MediMind ne remplace pas un professionnel de santé. En cas d'urgence : {n3114} (prévention du suicide, 24h/24) ou {n112}.",
+    besoin: "Besoin de parler à quelqu'un maintenant ? {n3114}, gratuit, 24 h/24.",
   },
   commun: { reessayer: 'Réessayer', chargement: 'Chargement…' },
   humeur: {

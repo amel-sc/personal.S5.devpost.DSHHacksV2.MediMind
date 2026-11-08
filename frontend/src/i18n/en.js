@@ -21,6 +21,8 @@ export default {
   },
   langue: { choisir: 'Language' },
   conversation: {
+    titre: 'Conversation with MediMind',
+    titreNouvelle: 'New conversation with MediMind',
     bonjour: "Hi, I'm MediMind",
     intro: 'A space to talk about how you feel, without judgement. Where would you like to start?',
     suggestions: {
@@ -29,16 +31,30 @@ export default {
       sommeil: "I'm having trouble sleeping",
       examen: 'How can I manage exam anxiety?',
     },
-    placeholder: 'Write your message…',
+    chargement: 'Loading conversation…',
+    listeMessages: 'Conversation messages',
+    revenirBas: 'Jump to latest messages',
     label: 'Your message to MediMind',
+    placeholder: 'Write your message…',
     envoyer: 'Send',
     raccourci: 'Enter to send · Shift + Enter for a new line',
     ecrit: 'MediMind is typing…',
     arepondu: 'MediMind replied: {contenu}',
-    pasRepondu: "MediMind didn't reply to your last message.",
+    introuvable: {
+      titre: 'Conversation not found',
+      texte: "This link doesn't match any conversation: the address may be wrong, or the conversation no longer exists. Your other conversations are still in the menu.",
+      nouvelle: 'New conversation',
+    },
+    erreurs: {
+      envoi: "Your message wasn't sent (it's been put back in the text box).",
+      reponse: "MediMind couldn't reply.",
+      pasRepondu: "MediMind didn't reply to your last message.",
+      chargement: "Couldn't load the conversation.",
+    },
   },
   aide: {
     urgence: 'MediMind does not replace a health professional. In an emergency in France: {n3114} (suicide prevention, 24/7) or {n112}.',
+    besoin: 'Need to talk to someone right now? {n3114}, free, 24/7 (France).',
   },
   commun: { reessayer: 'Try again', chargement: 'Loading…' },
   humeur: {
