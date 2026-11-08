@@ -6,6 +6,7 @@ export class ApiError extends Error {
     super(corps?.message ?? `Erreur ${status}`)
     this.status = status
     this.errors = corps?.errors ?? {}
+    this.code = corps?.code ?? null
   }
 }
 

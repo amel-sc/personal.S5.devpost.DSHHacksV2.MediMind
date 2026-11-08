@@ -1,6 +1,7 @@
 <script setup>
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch, watchPostEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Message from '@/components/Message.vue'
 import { api, ApiError } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
@@ -10,7 +11,9 @@ import {
   promesseReponse,
   reponseEnCours,
 } from '@/stores/reponsesEnCours'
+import NumeroAide from '@/components/NumeroAide.vue'
 
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const rafraichirConversations = inject('rafraichirConversations', () => {})
@@ -20,18 +23,31 @@ const conversation = computed(() => (route.params.id ? Number(route.params.id) :
 // ---------- État ----------
 const message = ref('')
 const messages = ref([])
-const erreur = ref(null) // { texte, action? } — action est une fonction
-const envoiEnCours = ref(false) // enregistrement du message de l'utilisateur
+/*
+ * erreur = { cle, cause?, action? }
+ *  - cle    : clé de traduction du message principal
+ *  - cause  : l'erreur d'origine, traduite à l'affichage par messageErreur
+ *  - action : fonction appelée par « Réessayer »
+ * Comme on stocke une clé et pas une phrase, le texte suit les changements de langue.
+ */
+const erreur = ref(null)
+const envoiEnCours = ref(false)
 const chargementHistorique = ref(false)
 const introuvable = ref(false)
 const annonce = ref('')
 const enBas = ref(true)
 
-// L'attente de réponse dépend de la conversation AFFICHÉE, pas d'un booléen global
 const reponseAttendue = computed(
   () => conversation.value !== null && reponseEnCours(conversation.value)
 )
 const occupe = computed(() => envoiEnCours.value || reponseAttendue.value)
+
+const texteErreur = computed(() => {
+  const e = erreur.value
+  if (!e) return ''
+  const detail = e.cause ? messageErreur(e.cause) : ''
+  return detail ? `${t(e.cle)} ${detail}` : t(e.cle)
+})
 
 const zoneMessages = ref(null)
 const champ = ref(null)
@@ -41,22 +57,24 @@ const HAUTEUR_MAX = 200
 const animationsReduites = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const pointeurPrecis = window.matchMedia('(pointer: fine)').matches
 
-const suggestions = [
-  { icone: 'bi-wind', texte: 'Propose-moi un exercice de respiration' },
-  { icone: 'bi-emoji-frown', texte: 'Je me sens stressé·e en ce moment' },
-  { icone: 'bi-moon', texte: "J'ai du mal à dormir" },
-  { icone: 'bi-lightbulb', texte: "Comment gérer l'anxiété avant un examen ?" },
+const SUGGESTIONS = [
+  { cle: 'respiration', icone: 'bi-wind' },
+  { cle: 'stress', icone: 'bi-emoji-frown' },
+  { cle: 'sommeil', icone: 'bi-moon' },
+  { cle: 'examen', icone: 'bi-lightbulb' },
 ]
+const suggestions = computed(() =>
+  SUGGESTIONS.map((s) => ({ ...s, texte: t(`conversation.suggestions.${s.cle}`) }))
+)
 
 let idCreeIci = null
 let compteur = 0
-let dernierChargement = 0 // augmente à chaque changement réel de conversation
+let dernierChargement = 0
 let monte = true
 onBeforeUnmount(() => {
   monte = false
 })
 
-// L'utilisateur regarde-t-il toujours ce qu'il regardait au moment du jeton ?
 function estIci(jeton) {
   return monte && jeton === dernierChargement
 }
@@ -126,20 +144,18 @@ function lancerReponse(base) {
   suivreReponse(base.id_conversation, promesse)
 }
 
-// Affiche la réponse SEULEMENT si l'utilisateur regarde encore cette conversation
 async function suivreReponse(idConv, promesse) {
   try {
     const reponse = await promesse
     if (!monte || conversation.value !== idConv || chargementHistorique.value) return
-    // Sinon : la réponse est en base, il la verra en revenant
 
     marquerLue(idConv)
     const msg = versMessage(reponse, idConv)
-    if (messages.value.some((m) => m.id === msg.id)) return // déjà là (chargée avec l'historique)
+    if (messages.value.some((m) => m.id === msg.id)) return
 
     const etaitEnBas = enBas.value
     messages.value.push(msg)
-    annonce.value = `MediMind a répondu : ${reponse.content}`
+    annonce.value = t('conversation.arepondu', { contenu: reponse.content })
     if (etaitEnBas) await defiler()
     focusChamp()
   } catch (e) {
@@ -147,21 +163,21 @@ async function suivreReponse(idConv, promesse) {
     console.error(e)
     if (estIntrouvable(e)) return afficherIntrouvable()
     erreur.value = {
-      texte: `MediMind n'a pas pu répondre. ${messageErreur(e)}`,
+      cle: 'conversation.erreurs.reponse',
+      cause: e,
       action: () => relancer(idConv),
     }
   }
 }
 
-// Redemande une réponse au dernier message de l'utilisateur
 function relancer(idConv) {
   const dernier = messages.value.at(-1)
   if (!dernier || dernier.role !== 'user') return
   erreur.value = null
   lancerReponse({
     message: dernier.content,
-    historique: historique().slice(0, -1), // tout sauf ce dernier message
-    langue: 'fr',
+    historique: historique().slice(0, -1),
+    langue: locale.value, // ← n'est plus 'fr' en dur
     id_conversation: idConv,
   })
 }
@@ -172,7 +188,7 @@ async function chargerHistorique(id) {
   introuvable.value = false
   erreur.value = null
   messages.value = []
-  envoiEnCours.value = false // l'envoi éventuel concernait l'ancienne conversation
+  envoiEnCours.value = false
   enBas.value = true
 
   if (id == null) {
@@ -182,7 +198,6 @@ async function chargerHistorique(id) {
   }
 
   marquerLue(id)
-  // Capturée AVANT la requête : si la réponse arrive pendant le chargement, on ne la rate pas
   const reponseAvant = promesseReponse(id)
   chargementHistorique.value = true
   try {
@@ -193,11 +208,10 @@ async function chargerHistorique(id) {
 
     const attente = reponseAvant ?? promesseReponse(id)
     if (attente) {
-      suivreReponse(id, attente) // une réponse est en route : l'indicateur s'affiche
+      suivreReponse(id, attente)
     } else if (messages.value.at(-1)?.role === 'user') {
-      // Dernier message sans réponse (erreur pendant qu'il était ailleurs, rechargement…)
       erreur.value = {
-        texte: "MediMind n'a pas répondu à ton dernier message.",
+        cle: 'conversation.erreurs.pasRepondu',
         action: () => relancer(id),
       }
     }
@@ -207,7 +221,8 @@ async function chargerHistorique(id) {
     console.error(e)
     if (estIntrouvable(e)) return afficherIntrouvable()
     erreur.value = {
-      texte: `Impossible de charger la conversation. ${messageErreur(e)}`,
+      cle: 'conversation.erreurs.chargement',
+      cause: e,
       action: () => chargerHistorique(id),
     }
   } finally {
@@ -219,7 +234,7 @@ watch(
   conversation,
   (id) => {
     if (id !== null && id === idCreeIci) {
-      idCreeIci = null // conversation créée ici : les messages sont déjà affichés
+      idCreeIci = null
       return
     }
     if (!introuvable.value) message.value = ''
@@ -238,30 +253,30 @@ async function envoyerMessage(texte = message.value) {
   annonce.value = ''
   const jeton = dernierChargement
   const idDepart = conversation.value
-  // Historique capturé MAINTENANT, sans le nouveau message : il ne change plus ensuite
-  const base = { message: contenu, historique: historique(), langue: 'fr', id_conversation: idDepart }
+  const base = {
+    message: contenu,
+    historique: historique(),
+    langue: locale.value,
+    id_conversation: idDepart,
+  }
 
-  // 1. Affichage immédiat
   const cleTemp = `tmp-${++compteur}`
   messages.value.push({ cle: cleTemp, role: 'user', content: contenu, enAttente: true })
   message.value = ''
   envoiEnCours.value = true
   await defiler()
 
-  // 2. Enregistrement
   let envoye
   try {
     envoye = await api.message.send(base)
   } catch (e) {
     console.error(e)
-    if (!estIci(jeton)) return // il est ailleurs : rien à afficher
+    if (!estIci(jeton)) return
     envoiEnCours.value = false
     messages.value = messages.value.filter((m) => m.cle !== cleTemp)
     message.value = contenu
     if (estIntrouvable(e)) return afficherIntrouvable()
-    erreur.value = {
-      texte: `Ton message n'a pas été envoyé (il a été remis dans la zone de saisie). ${messageErreur(e)}`,
-    }
+    erreur.value = { cle: 'conversation.erreurs.envoi', cause: e }
     focusChamp()
     return
   }
@@ -271,7 +286,6 @@ async function envoyerMessage(texte = message.value) {
   if (estIci(jeton)) {
     const i = messages.value.findIndex((m) => m.cle === cleTemp)
     if (i !== -1) messages.value[i] = versMessage(envoye)
-    // On ne change l'URL QUE s'il est toujours sur cet écran (sinon on le ramènerait de force)
     if (idDepart === null) {
       idCreeIci = idConv
       await router.replace({ name: 'conversation', params: { id: idConv } })
@@ -279,7 +293,6 @@ async function envoyerMessage(texte = message.value) {
   }
   if (idDepart === null) rafraichirConversations()
 
-  // 3. Réponse demandée MÊME s'il est parti : elle sera en base à son retour
   lancerReponse({ ...base, id_conversation: idConv })
   if (estIci(jeton)) envoiEnCours.value = false
 }
@@ -291,53 +304,53 @@ function onKeydown(e) {
   }
 }
 
-const annonceLecteur = computed(() => (occupe.value ? 'MediMind écrit…' : annonce.value))
+const annonceLecteur = computed(() => (occupe.value ? t('conversation.ecrit') : annonce.value))
 
 watchPostEffect(() => {
-  if (introuvable.value) document.title = 'Conversation introuvable · MediMind'
-  else if (conversation.value) document.title = 'Conversation · MediMind'
-  else document.title = 'Nouvelle conversation · MediMind'
+  const cle = introuvable.value
+    ? 'conversation.introuvable.titre'
+    : conversation.value ? 'pages.conversation' : 'pages.nouvelleConversation'
+  document.title = `${t(cle)} · MediMind`
 })
 </script>
 
 <template>
   <div class="vue-conversation">
-    <h1 class="visually-hidden">
-      {{ conversation ? 'Conversation avec MediMind' : 'Nouvelle conversation avec MediMind' }}
+    <h1 class="masque-visuellement">
+      {{ conversation ? t('conversation.titre') : t('conversation.titreNouvelle') }}
     </h1>
 
-    <p class="visually-hidden" aria-live="polite">{{ annonceLecteur }}</p>
+    <p class="masque-visuellement" aria-live="polite">{{ annonceLecteur }}</p>
 
+    <!-- Conversation introuvable -->
     <section v-if="introuvable" class="etat-vide" aria-labelledby="titre-introuvable">
-      <h2 id="titre-introuvable" ref="titreIntrouvable" tabindex="-1">Conversation introuvable</h2>
-      <p>
-        Ce lien ne correspond à aucune conversation : l'adresse est peut-être incorrecte,
-        ou la conversation n'existe plus. Tes autres conversations sont toujours dans le menu.
-      </p>
+      <h2 id="titre-introuvable" ref="titreIntrouvable" tabindex="-1">
+        {{ t('conversation.introuvable.titre') }}
+      </h2>
+      <p>{{ t('conversation.introuvable.texte') }}</p>
       <RouterLink :to="{ name: 'conversation' }" class="btn-solid theme-primary btn-styled">
-        Nouvelle conversation
+        {{ t('conversation.introuvable.nouvelle') }}
       </RouterLink>
-      <p>Besoin de parler à quelqu'un maintenant ? <a href="tel:3114">3114</a>, gratuit, 24 h/24.</p>
+      <i18n-t keypath="aide.besoin" tag="p" class="aide">
+        <template #ecoute><NumeroAide type="ecoute" details /></template>
+      </i18n-t>
     </section>
 
     <template v-else>
       <div ref="zoneMessages" class="zone-messages" @scroll.passive="surDefilement">
         <div class="fil" :aria-busy="chargementHistorique">
           <div v-if="chargementHistorique" class="centre">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Chargement de la conversation…</span>
+            <div class="mm-spinner" role="status">
+              <span class="masque-visuellement">{{ t('conversation.chargement') }}</span>
             </div>
           </div>
 
           <div v-else-if="messages.length === 0 && !erreur" class="accueil">
             <div class="logo" aria-hidden="true"><i class="bi bi-chat-heart"></i></div>
-            <h2 class="titre-accueil">Bonjour, je suis MediMind</h2>
-            <p class="texte-accueil">
-              Un espace pour parler de ce que tu ressens, sans jugement.
-              Par quoi veux-tu commencer ?
-            </p>
+            <h2 class="titre-accueil">{{ t('conversation.bonjour') }}</h2>
+            <p class="texte-accueil">{{ t('conversation.intro') }}</p>
             <ul class="suggestions">
-              <li v-for="s in suggestions" :key="s.texte">
+              <li v-for="s in suggestions" :key="s.cle">
                 <button
                   type="button"
                   class="suggestion"
@@ -351,27 +364,30 @@ watchPostEffect(() => {
             </ul>
           </div>
 
-          <ol v-else-if="messages.length > 0" class="liste-messages" aria-label="Messages de la conversation">
+          <ol
+            v-else-if="messages.length > 0"
+            class="liste-messages"
+            :aria-label="t('conversation.listeMessages')"
+          >
             <li v-for="m in messages" :key="m.cle">
               <Message :message="m" />
             </li>
-            <!-- Uniquement si CETTE conversation attend une réponse -->
             <li v-if="occupe" aria-hidden="true">
               <Message :message="{ role: 'assistant', content: '' }" en-cours />
             </li>
           </ol>
 
           <div v-if="erreur" class="alert theme-danger encadre-erreur" role="alert">
-            <p class="texte-erreur">{{ erreur.texte }}</p>
-            <button
+            <p class="texte-erreur">{{ texteErreur }}</p>
+            <!-- <button
               v-if="erreur.action"
               type="button"
               class="btn-outline theme-danger btn-styled"
               :disabled="occupe || chargementHistorique"
               @click="erreur.action()"
             >
-              Réessayer
-            </button>
+              {{ t('commun.reessayer') }}
+            </button> -->
           </div>
         </div>
       </div>
@@ -381,45 +397,42 @@ watchPostEffect(() => {
           v-if="!enBas && messages.length > 0"
           type="button"
           class="bouton-bas"
-          title="Revenir aux derniers messages"
+          :title="t('conversation.revenirBas')"
           @click="defiler()"
         >
           <i class="bi bi-arrow-down" aria-hidden="true"></i>
-          <span class="visually-hidden">Revenir aux derniers messages</span>
+          <span class="masque-visuellement">{{ t('conversation.revenirBas') }}</span>
         </button>
 
         <form class="fil" @submit.prevent="envoyerMessage()">
           <div class="compositeur">
-            <label for="message" class="visually-hidden">Ton message à MediMind</label>
+            <label for="message" class="masque-visuellement">{{ t('conversation.label') }}</label>
             <textarea
               id="message"
               ref="champ"
               v-model="message"
               class="champ-message"
               rows="1"
-              placeholder="Écris ton message…"
+              :placeholder="t('conversation.placeholder')"
               aria-describedby="aide-saisie"
               @keydown="onKeydown"
             ></textarea>
             <button
               type="submit"
               class="bouton-envoyer"
-              title="Envoyer"
+              :title="t('conversation.envoyer')"
               :disabled="!message.trim() || occupe || chargementHistorique"
             >
               <i class="bi bi-send-fill" aria-hidden="true"></i>
-              <span class="visually-hidden">Envoyer</span>
+              <span class="masque-visuellement">{{ t('conversation.envoyer') }}</span>
             </button>
           </div>
 
-          <p id="aide-saisie" class="aide raccourci">
-            Entrée pour envoyer · Maj + Entrée pour aller à la ligne
-          </p>
-          <p class="aide">
-            MediMind ne remplace pas un professionnel de santé.
-            En cas d'urgence : <a href="tel:3114">3114</a> (prévention du suicide, 24h/24)
-            ou <a href="tel:112">112</a>.
-          </p>
+          <p id="aide-saisie" class="aide raccourci">{{ t('conversation.raccourci') }}</p>
+          <i18n-t keypath="aide.pied" tag="p" class="aide">
+            <template #ecoute><NumeroAide type="ecoute" /></template>
+            <template #urgence><NumeroAide type="urgence" /></template>
+          </i18n-t>
         </form>
       </div>
     </template>
@@ -528,15 +541,26 @@ watchPostEffect(() => {
 }
 
 /* --- Erreur --- */
+/* --- Erreur --- */
+/* .alert est déjà flex dans Bootstrap 6 : on règle l'alignement nous-mêmes */
 .encadre-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
   margin-top: 1rem;
 }
 .texte-erreur {
+  flex: 1 1 16rem; /* prend la place disponible, passe au-dessus du bouton si l'écran est étroit */
+  min-width: 0;
   margin: 0;
 }
 .encadre-erreur button {
-  margin-top: 0.5rem;
+  flex-shrink: 0;
+  margin: 0;
 }
+
 
 /* --- Barre de saisie --- */
 .barre-saisie {
@@ -605,9 +629,13 @@ watchPostEffect(() => {
   text-align: center;
   opacity: 0.75;
 }
-.aide a {
+.aide :deep(a) {
   color: inherit;
   font-weight: 600;
+}
+/* Deux lignes d'aide qui se suivent : moins d'espace entre elles */
+.aide + .aide {
+  margin-top: 0.25rem;
 }
 @media (hover: none) {
   .raccourci {

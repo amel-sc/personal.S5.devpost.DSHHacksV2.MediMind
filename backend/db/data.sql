@@ -7,14 +7,15 @@ INSERT INTO humeur (val, desce) VALUES
 (5, 'Très mal');
 
 -- humeur_cause data
-INSERT INTO humeur_cause (val, desce) VALUES
-('Sommeil', 'Sommeil'),
-('Stress', 'Stress'),
-('Famille', 'Famille'),
-('Études', 'Études'),
-('Amis', 'Amis'),
-('Santé', 'Santé'),
-('Couple', 'Couple');
+INSERT INTO humeur_cause (val, desce, code) VALUES
+('Sommeil', 'Sommeil', 'sommeil'),
+('Stress', 'Stress', 'stress'),
+('Famille', 'Famille', 'famille'),
+('Études', 'Études', 'etudes'),
+('Amis', 'Amis', 'amis'),
+('Santé', 'Santé', 'sante'),
+('Couple', 'Couple', 'couple'),
+('Autre', 'Autre', 'autre');
 
 -- humeur_jours_status data
 INSERT INTO humeur_jours_status (val, desce) VALUES

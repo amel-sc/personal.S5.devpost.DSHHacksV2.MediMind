@@ -1,18 +1,39 @@
 <script setup>
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, ref, watch, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/services/api'
 import { messageErreur } from '@/utils/erreur'
 import { versDate, estActive, estDifficile } from '@/utils/humeur'
 import HumeurDetail from '@/components/HumeurDetail.vue'
+import AideUrgence from '@/components/AideUrgence.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
+
+const { t, locale } = useI18n()
 
 const humeurJours = ref(null)
 const humeurJoursCauses = ref([])
 const chargement = ref(true)
-const erreur = ref(null)
+const erreur = ref(null) // objet erreur brut : traduit à l'affichage
 const introuvable = ref(false)
 
+const refSucces = ref(null)
+const refTitreIntrouvable = ref(null)
+
+const texteErreur = computed(() => (erreur.value ? messageErreur(erreur.value) : ''))
+
+/* ---------- Message après enregistrement (envoyé par HumeurForm) ---------- */
+function lireSucces() {
+  const etat = window.history.state
+  const valeur = etat?.enregistree
+  if (valeur !== 'nouvelle' && valeur !== 'maj') return null
+  // On l'efface : un rechargement ou un retour en arrière ne le réaffichera pas
+  window.history.replaceState({ ...etat, enregistree: null }, '')
+  return valeur
+}
+const succes = ref(lireSucces())
+
+/* ---------- Chargement ---------- */
 // Si l'id change vite, on ignore les réponses des anciennes requêtes
 let requeteCourante = 0
 
@@ -24,146 +45,190 @@ async function charger() {
   humeurJours.value = null
   humeurJoursCauses.value = []
 
-  // "/humeur/abc" : inutile d'appeler l'API
+  // Sécurité : le router filtre déjà les id non numériques
   if (!/^[1-9]\d*$/.test(props.id)) {
     introuvable.value = true
     chargement.value = false
+    await focusApresChargement(numero)
     return
   }
 
   try {
-    const response = await api.humeurJours.find(props.id)
+    const reponse = await api.humeurJours.find(props.id)
     if (numero !== requeteCourante) return
 
-    if (!response?.humeur_jours) {
-      introuvable.value = true // au cas où le backend renverrait encore 200 + null
-      return
+    if (!reponse?.humeur_jours) {
+      introuvable.value = true // au cas où le backend renverrait 200 + null
+    } else {
+      humeurJours.value = reponse.humeur_jours
+      humeurJoursCauses.value = reponse.humeur_jours_causes ?? []
     }
-    humeurJours.value = response.humeur_jours
-    humeurJoursCauses.value = response.humeur_jours_causes ?? []
   } catch (e) {
     if (numero !== requeteCourante) return
     console.error(e)
     if (e instanceof ApiError && e.status === 404) introuvable.value = true
-    else erreur.value = messageErreur(e)
+    else erreur.value = e
   } finally {
     if (numero === requeteCourante) chargement.value = false
   }
+
+  await focusApresChargement(numero)
 }
 
-// Remplace onMounted : se relance aussi quand on passe de /humeur/3 à /humeur/5
-watch(() => props.id, charger, { immediate: true })
+// Le contenu remplace le spinner : on place le focus là où c'est utile
+async function focusApresChargement(numero) {
+  if (numero !== requeteCourante) return
+  await nextTick()
+  if (introuvable.value) refTitreIntrouvable.value?.focus()
+  else if (succes.value && humeurJours.value) refSucces.value?.focus()
+}
 
-const formatJour = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+// Se relance aussi en passant de /humeur/3 à /humeur/5
+watch(
+  () => props.id,
+  (_, ancien) => {
+    if (ancien !== undefined) succes.value = null // le message ne concernait que l'humeur précédente
+    charger()
+  },
+  { immediate: true },
+)
+
+/* ---------- Dates ---------- */
+const date = computed(() => {
+  const d = versDate(humeurJours.value?.date_creation)
+  return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null
 })
-const formatHeure = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
-const date = computed(() => versDate(humeurJours.value?.date_creation))
+const jour = computed(() =>
+  date.value
+    ? date.value.toLocaleDateString(locale.value, {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : '',
+)
+const heure = computed(() =>
+  date.value
+    ? date.value.toLocaleTimeString(locale.value, { hour: 'numeric', minute: '2-digit' })
+    : '',
+)
+
 const titre = computed(() =>
-  date.value ? `Humeur du ${formatJour.format(date.value)}` : "Détail de l'humeur"
+  date.value ? t('humeur.page.titre', { date: jour.value }) : t('pages.detailHumeur'),
 )
 const estAujourdhui = computed(
-  () => !!date.value && date.value.toDateString() === new Date().toDateString()
+  () => !!date.value && date.value.toDateString() === new Date().toDateString(),
 )
 const remplacee = computed(() => !!humeurJours.value && !estActive(humeurJours.value))
 const difficile = computed(() => estDifficile(humeurJours.value?.humeur_val))
 
-// Titre de l'onglet (utile aussi pour les lecteurs d'écran)
+/* ---------- Titre de l'onglet (recalculé aussi au changement de langue) ---------- */
 watchEffect(() => {
-  if (chargement.value) return
-  document.title = introuvable.value
-    ? 'Humeur introuvable · MediMind'
-    : `${titre.value} · MediMind`
+  let base
+  if (chargement.value || erreur.value) base = t('pages.detailHumeur')
+  else if (introuvable.value) base = t('humeur.page.introuvable.titre')
+  else base = titre.value
+  document.title = `${base} · MediMind`
 })
 </script>
 
 <template>
-  <div class="flex-grow-1 overflow-auto">
-    <div class="container py-4 page-detail" :aria-busy="chargement">
-      <RouterLink to="/humeur/list" class="btn-text theme-inverse lien-retour mb-3">
+  <div class="vue-humeur-detail">
+    <div class="page-detail">
+      <RouterLink to="/humeur/list" class="btn-text theme-inverse lien-retour">
         <i class="bi bi-arrow-left" aria-hidden="true"></i>
-        Retour au journal
+        {{ t('humeur.form.retour') }}
       </RouterLink>
 
       <!-- Chargement -->
-      <div v-if="chargement" class="centre py-5">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Chargement de l'humeur…</span>
-        </div>
+      <div v-if="chargement" class="etat-chargement" role="status">
+        <span class="mm-spinner" aria-hidden="true"></span>
+        <span>{{ t('humeur.page.chargement') }}</span>
       </div>
 
       <!-- Introuvable -->
-      <div v-else-if="introuvable" class="etat-vide py-5">
-        <p class="fs-1 mb-2" aria-hidden="true">🔍</p>
-        <h1 class="h4 mb-2">Humeur introuvable</h1>
-        <p class="opacity-75 mb-4">Cette entrée n'existe pas ou a été supprimée.</p>
-        <RouterLink to="/humeur/list" class="btn-solid theme-primary btn-styled">
-          Voir mon journal
-        </RouterLink>
+      <div v-else-if="introuvable" class="etat-vide">
+        <p class="emoji-vide" aria-hidden="true">🔍</p>
+        <h1 ref="refTitreIntrouvable" tabindex="-1">{{ t('humeur.page.introuvable.titre') }}</h1>
+        <p class="texte-attenue">{{ t('humeur.page.introuvable.texte') }}</p>
+        <div class="etat-vide-actions">
+          <RouterLink to="/humeur/list" class="btn-solid theme-primary btn-styled">
+            {{ t('humeur.page.introuvable.action') }}
+          </RouterLink>
+        </div>
       </div>
 
       <!-- Erreur -->
       <template v-else-if="erreur">
-        <h1 class="h3 mb-3">Détail de l'humeur</h1>
-        <div class="alert theme-danger" role="alert">
-          <p class="mb-2">{{ erreur }}</p>
+        <h1 class="titre-page">{{ t('pages.detailHumeur') }}</h1>
+        <div class="alert theme-danger encart" role="alert">
+          <p class="sans-marge">{{ texteErreur }}</p>
           <button type="button" class="btn-outline theme-danger btn-styled" @click="charger">
-            Réessayer
+            {{ t('commun.reessayer') }}
           </button>
         </div>
       </template>
 
       <!-- Contenu -->
       <template v-else-if="humeurJours">
-        <header class="mb-4">
-          <h1 class="h3 mb-1 titre-page">{{ titre }}</h1>
-          <p class="meta mb-0">
-            <span v-if="date" class="opacity-75">
-              Notée à
-              <time :datetime="humeurJours.date_creation">{{ formatHeure.format(date) }}</time>
+        <!-- Reçoit le focus : pas de role="alert", pour éviter une double lecture -->
+        <div
+          v-if="succes"
+          ref="refSucces"
+          class="alert theme-success encart-ligne"
+          tabindex="-1"
+        >
+          <i class="bi bi-check-circle" aria-hidden="true"></i>
+          <p class="sans-marge">{{ t(`humeur.page.enregistree.${succes}`) }}</p>
+        </div>
+
+        <header class="entete-page">
+          <h1 class="titre-page">{{ titre }}</h1>
+          <p class="meta">
+            <span v-if="date" class="texte-attenue">
+              <time :datetime="date.toISOString()">{{ t('humeur.detail.noteeA', { heure }) }}</time>
             </span>
-            <span v-if="estAujourdhui" class="badge badge-subtle theme-primary">Aujourd'hui</span>
-            <span v-if="remplacee" class="badge badge-outline theme-secondary">
-              {{ humeurJours.status_desce ?? 'Remplacée' }}
+            <span v-if="estAujourdhui" class="badge badge-subtle theme-primary">
+              {{ t('humeur.page.aujourdhui') }}
+            </span>
+            <span v-if="remplacee" class="badge badge-outline theme-secondary badge-remplacee">
+              {{ t('journal.remplacee') }}
             </span>
           </p>
         </header>
 
-        <div v-if="remplacee" class="alert theme-secondary mb-4">
-          <p class="mb-0">
-            <i class="bi bi-info-circle" aria-hidden="true"></i>
-            Cette saisie a été remplacée par une autre le même jour.
-            Elle n'est pas prise en compte dans vos statistiques.
-          </p>
+        <div v-if="remplacee" class="alert theme-secondary encart-ligne">
+          <i class="bi bi-info-circle" aria-hidden="true"></i>
+          <p class="sans-marge">{{ t('humeur.page.remplacee') }}</p>
         </div>
 
         <HumeurDetail
-          class="mb-4"
-          titre="Votre ressenti"
-          :humeur-jours="humeurJours"
-          :humeur-jours-causes="humeurJoursCauses"
+          :titre="t('humeur.page.ressenti')"
+          :niveau-titre="2"
+          :afficher-meta="false"
+          :humeur-jours
+          :humeur-jours-causes
         />
 
-        <aside v-if="difficile" class="alert theme-info mb-4" aria-label="Soutien">
-          <p class="mb-0">
-            Si ce moment est encore difficile, vous n'êtes pas seul·e.
-            En cas de détresse, le <a href="tel:3114">3114</a> répond gratuitement, 24h/24.
-          </p>
+        <aside v-if="difficile" class="alert theme-info encart-ligne" :aria-label="t('humeur.page.soutien.label')">
+          <i class="bi bi-heart" aria-hidden="true"></i>
+          <div class="encart-contenu">
+            <p class="sans-marge">{{ t('humeur.page.soutien.texte') }}</p>
+            <AideUrgence />
+          </div>
         </aside>
 
         <div class="actions">
           <RouterLink
             v-if="estAujourdhui && !remplacee"
             to="/humeur/new"
-            class="btn-outline theme-primary btn-styled"
+            class="btn-outline theme-primary btn-styled bouton-icone"
           >
             <i class="bi bi-pencil" aria-hidden="true"></i>
-            Mettre à jour mon humeur du jour
+            {{ t('journal.mettreAJour') }}
           </RouterLink>
-          <RouterLink :to="{ name: 'conversation' }" class="btn-solid theme-primary btn-styled">
+          <RouterLink :to="{ name: 'conversation' }" class="btn-solid theme-primary btn-styled bouton-icone">
             <i class="bi bi-chat-heart" aria-hidden="true"></i>
-            En parler avec MediMind
+            {{ t('humeur.page.parler') }}
           </RouterLink>
         </div>
       </template>
@@ -172,49 +237,110 @@ watchEffect(() => {
 </template>
 
 <style scoped>
+.vue-humeur-detail {
+  flex: 1 1 auto;
+  overflow: auto;
+}
 .page-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   max-width: 40rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem;
 }
 .lien-retour {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: 0.5rem;
 }
-.centre {
-  display: flex;
-  justify-content: center;
+.sans-marge {
+  margin: 0;
 }
-.etat-vide {
+.texte-attenue {
+  color: color-mix(in srgb, currentColor 80%, transparent);
+}
+
+/* --- États --- */
+.etat-chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+}
+.emoji-vide {
+  margin: 0;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* --- En-tête --- */
+.entete-page {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  gap: 0.5rem;
 }
-.titre-page::first-letter {
-  text-transform: uppercase;
+.titre-page {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 .meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
 }
+.badge-remplacee {
+  border-style: dashed;
+}
+
+/* --- Encadrés --- */
+.encart {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+}
+.encart-ligne {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+}
+.encart-ligne > .bi {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+.encart-ligne:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+.encart-contenu { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* --- Actions --- */
 .actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.75rem;
 }
+.bouton-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
 @media (max-width: 36rem) {
   .actions {
     flex-direction: column;
+    align-items: stretch;
   }
-  .actions > * {
-    width: 100%;
-    justify-content: center;
-  }
-}
-.entete-app {
-  background-color: var(--mm-surface);
 }
 </style>

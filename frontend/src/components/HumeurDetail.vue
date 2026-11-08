@@ -1,79 +1,299 @@
 <script setup>
 import { computed, useId } from 'vue'
-import { ECHELLE, niveauHumeur } from '@/utils/humeur'
+import { useI18n } from 'vue-i18n'
+import {
+  ECHELLE,
+  niveauHumeur,
+  estActive,
+  versDate,
+  libelleHumeur,
+  libelleCause,
+} from '../utils/humeur'
 
 const props = defineProps({
+  afficherMeta: { type: Boolean, default: true },
   humeurJours: { type: Object, default: null },
   humeurJoursCauses: { type: Array, default: () => [] },
-  titre: { type: String, default: "Votre humeur aujourd'hui" },
+  // Remplace le titre calculé (« Ton humeur aujourd'hui » / « Ton humeur du … »)
+  titre: { type: String, default: null },
+  // Niveau du titre : 2 sous le h1 d'une page, 3 sous un h2, etc.
+  niveauTitre: {
+    type: Number,
+    default: 2,
+    validator: (n) => Number.isInteger(n) && n >= 2 && n <= 5,
+  },
+  // Titre invisible mais lu par les lecteurs d'écran (quand le parent a déjà un titre visible)
+  titreMasque: { type: Boolean, default: false },
 })
 
+const { t, locale } = useI18n()
 const idTitre = useId()
+
+/* ---------- Titres ---------- */
+const baliseTitre = computed(() => `h${props.niveauTitre}`)
+const baliseSousTitre = computed(() => `h${Math.min(props.niveauTitre + 1, 6)}`)
+
+/* ---------- Niveau d'humeur ---------- */
+// Valeurs 1…N, que ECHELLE contienne des nombres ou des objets
+const TOTAL = ECHELLE.length
+const valeursEchelle = Array.from({ length: TOTAL }, (_, i) => i + 1)
+
 const valeur = computed(() => Number(props.humeurJours?.humeur_val))
-const niveau = computed(() => niveauHumeur(valeur.value))
-const causes = computed(() => props.humeurJoursCauses ?? [])
+const valeurValide = computed(
+  () => Number.isInteger(valeur.value) && valeur.value >= 1 && valeur.value <= TOTAL,
+)
+
+const apparence = computed(() =>
+  valeurValide.value
+    ? niveauHumeur(valeur.value)
+    : { emoji: '❔', theme: 'theme-secondary' },
+)
+
+const libelle = computed(() => libelleHumeur(props.humeurJours))
+
+// Le sens de l'échelle n'est pas évident (1 = très bien) : on le précise aux lecteurs d'écran
+const descriptionEchelle = computed(() =>
+  t('humeur.detail.echelle', {
+    n: valeur.value,
+    total: TOTAL,
+    min: t('humeur.niveaux.1'),
+    max: t(`humeur.niveaux.${TOTAL}`),
+  }),
+)
+
+/* ---------- Contenu ---------- */
+const remplacee = computed(() => Boolean(props.humeurJours) && !estActive(props.humeurJours))
 const note = computed(() => String(props.humeurJours?.note ?? '').trim())
+const causes = computed(() => (props.humeurJoursCauses ?? []).filter(Boolean))
+
+/* ---------- Date ---------- */
+const date = computed(() => {
+  const d = versDate(props.humeurJours?.date_creation)
+  return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null
+})
+
+const estAujourdhui = computed(
+  () => date.value?.toDateString() === new Date().toDateString(),
+)
+
+const jour = computed(() => {
+  if (!date.value) return ''
+  const memeAnnee = date.value.getFullYear() === new Date().getFullYear()
+  return date.value.toLocaleDateString(locale.value, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(memeAnnee ? {} : { year: 'numeric' }),
+  })
+})
+
+const heure = computed(() =>
+  date.value
+    ? date.value.toLocaleTimeString(locale.value, { hour: 'numeric', minute: '2-digit' })
+    : '',
+)
+
+const titreAffiche = computed(() => {
+  if (props.titre) return props.titre
+  if (!date.value) return t('humeur.detail.titre')
+  if (estAujourdhui.value) return t('humeur.detail.titreAujourdhui')
+  return t('humeur.detail.titreDate', { date: jour.value })
+})
+
+// Si le titre visible donne déjà le jour, on n'affiche que l'heure
+const texteDate = computed(() => {
+  if (!date.value) return ''
+  const jourDejaDansTitre = !props.titre && !props.titreMasque
+  if (jourDejaDansTitre) return t('humeur.detail.noteeA', { heure: heure.value })
+  if (estAujourdhui.value) return t('humeur.detail.noteeAujourdhui', { heure: heure.value })
+  return t('humeur.detail.noteeLe', { date: jour.value, heure: heure.value })
+})
 </script>
 
 <template>
   <article
     v-if="humeurJours"
     class="card card-subtle"
-    :class="niveau.theme"
+    :class="apparence.theme"
     :aria-labelledby="idTitre"
   >
-    <div class="card-body">
-      <h2 :id="idTitre" class="h5 mb-3">{{ titre }}</h2>
+    <div class="card-body detail-corps">
+      <component
+        :is="baliseTitre"
+        :id="idTitre"
+        class="detail-titre"
+        :class="{ 'masque-visuellement': titreMasque }"
+      >
+        {{ titreAffiche }}
+      </component>
 
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <span class="emoji-humeur" aria-hidden="true">{{ niveau.emoji }}</span>
+      <p v-if="afficherMeta && (texteDate || remplacee)" class="detail-meta">
+        <time v-if="date" :datetime="date.toISOString()">{{ texteDate }}</time>
+        <span v-if="remplacee" class="badge badge-outline theme-secondary badge-remplacee">
+          {{ t('journal.remplacee') }}
+        </span>
+      </p>
+
+      <div class="detail-niveau">
+        <span class="detail-emoji" aria-hidden="true">{{ apparence.emoji }}</span>
         <div>
-          <p class="fs-5 fw-semibold mb-1">
-            {{ humeurJours.humeur_desce ?? 'Humeur non renseignée' }}
+          <p class="detail-libelle">
+            {{ libelle }}
+            <span v-if="valeurValide" class="masque-visuellement">{{ descriptionEchelle }}</span>
           </p>
-          <!-- Échelle visuelle seulement : le texte ci-dessus suffit aux lecteurs d'écran -->
-          <ol class="echelle list-unstyled d-flex gap-1 mb-0" aria-hidden="true">
-            <li v-for="v in ECHELLE" :key="v" :class="{ actif: v === valeur }">
-              {{ niveauHumeur(v).emoji }}
-            </li>
+          <ol v-if="valeurValide" class="echelle" aria-hidden="true">
+            <li
+              v-for="v in valeursEchelle"
+              :key="v"
+              :class="{ actif: v === valeur }"
+            >{{ niveauHumeur(v).emoji }}</li>
           </ol>
         </div>
       </div>
 
-      <template v-if="note">
-        <h3 class="h6 mb-1">Votre note</h3>
-        <p class="note mb-3">{{ note }}</p>
-      </template>
+      <div v-if="note">
+        <component :is="baliseSousTitre" class="detail-sous-titre">
+          {{ t('humeur.detail.note') }}
+        </component>
+        <p class="detail-note">{{ note }}</p>
+      </div>
 
-      <h3 class="h6 mb-2">Ce qui a influencé votre humeur</h3>
-      <ul v-if="causes.length" class="list-unstyled d-flex flex-wrap gap-2 mb-0">
-        <li v-for="cause in causes" :key="cause.id">
-          <span class="badge badge-subtle theme-secondary">
-            {{ cause.cause_desce ?? cause.cause_val }}
-          </span>
-        </li>
-      </ul>
-      <p v-else class="mb-0 opacity-75">Aucune cause renseignée.</p>
+      <div>
+        <component :is="baliseSousTitre" class="detail-sous-titre">
+          {{ t('humeur.detail.causes') }}
+        </component>
+        <ul v-if="causes.length" class="detail-causes">
+          <li v-for="(cause, i) in causes" :key="cause.id ?? i">
+            <span class="badge badge-subtle theme-secondary">{{ libelleCause(cause) }}</span>
+          </li>
+        </ul>
+        <p v-else class="detail-vide">{{ t('humeur.detail.aucuneCause') }}</p>
+      </div>
     </div>
   </article>
 </template>
 
 <style scoped>
-.emoji-humeur {
+/* .card-body est déjà une colonne flex : il suffit d'ajouter l'espacement */
+.detail-corps {
+  gap: 1rem;
+}
+
+/* Taille fixe : l'apparence reste la même, que la balise soit h2, h3 ou h4 */
+.detail-titre {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, currentColor 80%, transparent);
+}
+
+.badge-remplacee {
+  border-style: dashed;
+}
+
+/* Rangée emoji + libellé (div à part, car .card-body est en colonne) */
+.detail-niveau {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.detail-emoji {
+  flex-shrink: 0;
   font-size: 2.5rem;
   line-height: 1;
 }
+
+.detail-libelle {
+  margin: 0 0 0.375rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.echelle {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
 .echelle li {
-  font-size: 1.1rem;
-  opacity: 0.35;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 1.125rem;
+  line-height: 1;
+  opacity: 0.4;
   filter: grayscale(1);
 }
+
+/* L'état actif ne repose pas que sur l'opacité : il a aussi un anneau et un fond */
 .echelle li.actif {
   opacity: 1;
   filter: none;
-  transform: scale(1.2);
+  background: var(--mm-surface);
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
 }
-.note {
-  white-space: pre-line; /* conserve les retours à la ligne */
+
+/* Agrandissement et animation seulement si l'utilisateur ne demande pas moins de mouvement */
+@media (prefers-reduced-motion: no-preference) {
+  .echelle li {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .echelle li.actif {
+    transform: scale(1.15);
+  }
+}
+
+/* Mode contraste élevé (Windows) : opacité et gris n'ont plus de sens, l'anneau reste */
+@media (forced-colors: active) {
+  .echelle li {
+    opacity: 1;
+    filter: none;
+  }
+  .echelle li.actif {
+    outline-color: Highlight;
+  }
+}
+
+.detail-sous-titre {
+  margin: 0 0 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.detail-note {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.detail-causes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-vide {
+  margin: 0;
+  color: color-mix(in srgb, currentColor 80%, transparent);
 }
 </style>

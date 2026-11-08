@@ -1,37 +1,53 @@
 <script setup>
-import { computed, onMounted, provide, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
+import LangueSelecteur from '@/components/LangueSelecteur.vue'
 import { estNonLue, nombreNonLues, reponseEnCours } from '@/stores/reponsesEnCours'
+import PaysSelecteur from './components/PaysSelecteur.vue'
 
+const { t } = useI18n()
 const route = useRoute()
+
 const conversations = ref([])
-const erreur = ref(null)
+const erreur = ref(null) // objet erreur brut (le texte affiché est traduit)
 const chargement = ref(false)
 const drawer = ref(null)
 
-// Message lu par les lecteurs d'écran quand une réponse arrive dans une autre conversation
-const annonceMenu = ref('')
-watch(nombreNonLues, (n, avant) => {
-  if (n > avant) annonceMenu.value = 'MediMind a répondu dans une autre conversation.'
+/* ---------- Bouton du menu ---------- */
+// 3 formes : 0 → « Ouvrir le menu », 1 → « … (1 nouvelle réponse) », n → « … (n nouvelles réponses) »
+const libelleMenu = computed(() => t('menu.ouvrir', nombreNonLues.value))
+
+/* ---------- Annonce pour les lecteurs d'écran ---------- */
+// On garde la CLÉ : le texte suit la langue choisie
+const cleAnnonce = ref('')
+let minuteurAnnonce = null
+
+watch(nombreNonLues, async (n, avant) => {
+  if (n <= avant) return
+  clearTimeout(minuteurAnnonce)
+  // Vider puis remplir : sinon un texte identique n'est pas relu
+  cleAnnonce.value = ''
+  await nextTick()
+  cleAnnonce.value = 'menu.annonce'
+  // Effacée ensuite pour ne pas rester lisible dans la page
+  minuteurAnnonce = setTimeout(() => { cleAnnonce.value = '' }, 5000)
 })
 
-const libelleMenu = computed(() =>
-  nombreNonLues.value > 0
-    ? `Ouvrir le menu (${nombreNonLues.value} nouvelle${nombreNonLues.value > 1 ? 's' : ''} réponse${nombreNonLues.value > 1 ? 's' : ''})`
-    : 'Ouvrir le menu'
-)
+onBeforeUnmount(() => clearTimeout(minuteurAnnonce))
 
+/* ---------- Conversations ---------- */
 async function charger() {
   chargement.value = true
   erreur.value = null
   try {
     const reponse = await api.conversation.lister()
-    conversations.value = reponse.data ?? reponse
+    conversations.value = reponse?.data ?? reponse ?? []
   } catch (e) {
     console.error(e)
-    erreur.value = 'Impossible de charger tes conversations. Réessaie dans un instant.'
+    erreur.value = e
   } finally {
     chargement.value = false
   }
@@ -86,9 +102,12 @@ onMounted(charger)
         <i class="bi bi-list icone-menu" aria-hidden="true"></i>
         <span v-if="nombreNonLues > 0" class="pastille pastille-menu" aria-hidden="true"></span>
       </button>
-      <p class="visually-hidden" aria-live="polite">{{ annonceMenu }}</p>
+      <p class="masque-visuellement" aria-live="polite">{{ cleAnnonce ? t(cleAnnonce) : '' }}</p>
       <span class="nom-app">MediMind</span>
-      <ThemeSelecteur class="theme-selecteur" />
+      <div class="reglages">
+        <LangueSelecteur />
+        <ThemeSelecteur />
+      </div>
     </header>
 
     <!-- Menu latéral gauche -->
@@ -101,11 +120,16 @@ onMounted(charger)
     >
       <div class="drawer-header">
         <h2 id="menuTitre" class="drawer-title titre-menu">MediMind</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="drawer" aria-label="Fermer le menu"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="drawer"
+          :aria-label="t('menu.fermer')"
+        ></button>
       </div>
 
       <div class="drawer-body corps-menu">
-        <nav class="nav-principale" aria-label="Navigation principale">
+        <nav class="nav-principale" :aria-label="t('menu.navigation')">
           <RouterLink
             :to="{ name: 'conversation' }"
             class="btn-text theme-inverse item-menu"
@@ -114,7 +138,7 @@ onMounted(charger)
             @click="fermerDrawer"
           >
             <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            <span class="texte-tronque">Nouvelle conversation</span>
+            <span class="texte-tronque">{{ t('menu.nouvelle') }}</span>
           </RouterLink>
           <RouterLink
             :to="{ name: 'humeurList' }"
@@ -124,34 +148,33 @@ onMounted(charger)
             @click="fermerDrawer"
           >
             <i class="bi bi-journal-text" aria-hidden="true"></i>
-            <span class="texte-tronque">Journal d'humeur</span>
+            <span class="texte-tronque">{{ t('menu.journal') }}</span>
           </RouterLink>
         </nav>
 
         <hr class="separateur" />
 
         <!-- Chargement -->
-        <div v-if="chargement" class="centre-menu">
-          <div class="spinner-border spinner-sm" role="status">
-            <span class="visually-hidden">Chargement des conversations…</span>
-          </div>
+        <div v-if="chargement" class="centre-menu" role="status">
+          <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
+          <span class="masque-visuellement">{{ t('menu.chargement') }}</span>
         </div>
 
         <!-- Erreur -->
         <div v-else-if="erreur" class="alert theme-danger erreur-menu" role="alert">
-          <p class="texte-erreur">{{ erreur }}</p>
+          <p class="texte-erreur">{{ t('menu.erreur') }}</p>
           <button type="button" class="btn-outline theme-danger btn-styled" @click="charger">
-            Réessayer
+            {{ t('commun.reessayer') }}
           </button>
         </div>
 
         <!-- Liste vide -->
         <p v-else-if="conversations.length === 0" class="liste-vide">
-          Aucune conversation pour l'instant.
+          {{ t('menu.vide') }}
         </p>
 
         <!-- Liste des conversations -->
-        <nav v-else class="liste-conversations" aria-label="Mes conversations">
+        <nav v-else class="liste-conversations" :aria-label="t('menu.mesConversations')">
           <RouterLink
             v-for="c in conversations"
             :key="c.id"
@@ -159,22 +182,26 @@ onMounted(charger)
             class="btn-text theme-inverse item-menu"
             :class="{ actif: sectionActive === `conversation-${c.id}` }"
             :aria-current="ariaCurrent(`conversation-${c.id}`)"
-            :title="c.first_message"
+            :title="c.first_message || undefined"
             @click="fermerDrawer"
           >
             <i class="bi bi-chat-left-text" aria-hidden="true"></i>
-            <span class="texte-tronque">{{ c.first_message || 'Conversation sans titre' }}</span>
+            <!-- Texte écrit par l'étudiant : sa langue peut différer de celle de l'interface -->
+            <span class="texte-tronque" dir="auto">{{ c.first_message || t('menu.sansTitre') }}</span>
 
             <template v-if="reponseEnCours(c.id)">
-              <span class="spinner-border spinner-sm indicateur" aria-hidden="true"></span>
-              <span class="visually-hidden">, MediMind est en train de répondre</span>
+              <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
+              <span class="masque-visuellement">{{ t('menu.enCours') }}</span>
             </template>
             <template v-else-if="estNonLue(c.id)">
               <span class="pastille" aria-hidden="true"></span>
-              <span class="visually-hidden">, nouvelle réponse</span>
+              <span class="masque-visuellement">{{ t('menu.nonLue') }}</span>
             </template>
           </RouterLink>
         </nav>
+      </div>
+      <div class="pied-menu">
+        <PaysSelecteur />
       </div>
     </dialog>
 
@@ -204,7 +231,10 @@ onMounted(charger)
   font-size: 1.25rem;
   font-weight: 600;
 }
-.theme-selecteur {
+.reglages {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-inline-start: auto;
 }
 .icone-menu {
@@ -255,7 +285,7 @@ onMounted(charger)
   margin: 0;
   font-size: 0.875rem;
   text-align: center;
-  opacity: 0.75;
+  color: color-mix(in srgb, currentColor 80%, transparent);
 }
 .liste-conversations {
   display: flex;
@@ -265,7 +295,7 @@ onMounted(charger)
   min-height: 0;
 }
 
-/* Lien pleine largeur, icône et texte alignés à gauche */
+/* Lien pleine largeur, icône et texte alignés au début */
 .item-menu {
   display: flex;
   align-items: center;
@@ -283,21 +313,17 @@ onMounted(charger)
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Lien actif : fond, gras ET barre d'accent (pas seulement une nuance de gris) */
-.item-menu.actif {
-  font-weight: 600;
-  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
-  box-shadow: inset 3px 0 0 var(--mm-accent);
+/* Lien actif : fond, gras ET barre d'accent (pas seulement une nuance) */
+/* Survol et lien actif : exactement le même aspect */
+.item-menu:is(:hover, .actif) {
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+  box-shadow: none;
 }
-.item-menu.actif i {
-  color: var(--mm-accent);
+.item-menu:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: -3px;
 }
-/* Mode contraste élevé : les fonds et ombres disparaissent, on garde un repère */
-@media (forced-colors: active) {
-  .item-menu.actif {
-    outline: 2px solid Highlight;
-  }
-}
+
 .bouton-menu {
   position: relative;
 }
@@ -314,15 +340,19 @@ onMounted(charger)
   right: 0.25rem;
   outline: 2px solid var(--mm-fond); /* détache la pastille de l'icône */
 }
-.indicateur {
-  flex-shrink: 0;
-  width: 0.875rem;
-  height: 0.875rem;
-}
+
+/* Mode contraste élevé : fonds et ombres disparaissent, on garde des repères */
 @media (forced-colors: active) {
+  .item-menu.actif {
+    outline: 2px solid Highlight;
+  }
   .pastille {
     background-color: Highlight;
   }
 }
-
+.pied-menu {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--mm-bordure);
+}
 </style>
