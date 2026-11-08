@@ -425,3 +425,213 @@ watchPostEffect(() => {
     </template>
   </div>
 </template>
+
+<style scoped>
+.vue-conversation {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.zone-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.fil {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem;
+}
+.centre {
+  display: flex;
+  justify-content: center;
+  padding-block: 3rem;
+}
+
+/* --- Accueil --- */
+.accueil {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-block: 3rem 1rem;
+}
+.logo {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  font-size: 1.75rem;
+  color: var(--mm-accent);
+  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
+}
+.titre-accueil {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+.texte-accueil {
+  margin: 0 0 1.5rem;
+  opacity: 0.75;
+}
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.suggestion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mm-bordure);
+  border-radius: 0.75rem;
+  background-color: var(--mm-surface);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.suggestion i {
+  color: var(--mm-accent);
+}
+.suggestion:hover {
+  border-color: var(--mm-accent);
+}
+.suggestion:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 2px;
+}
+.suggestion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Messages --- */
+.liste-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --- Erreur --- */
+.encadre-erreur {
+  margin-top: 1rem;
+}
+.texte-erreur {
+  margin: 0;
+}
+.encadre-erreur button {
+  margin-top: 0.5rem;
+}
+
+/* --- Barre de saisie --- */
+.barre-saisie {
+  position: relative;
+  flex-shrink: 0;
+  border-top: 1px solid var(--mm-bordure);
+  background-color: var(--mm-surface);
+}
+.barre-saisie .fil {
+  padding-block: 0.75rem;
+}
+.compositeur {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.375rem 0.375rem 0.375rem 1rem;
+  border: 1px solid var(--mm-bordure);
+  border-radius: 1.5rem;
+  background-color: var(--mm-fond);
+}
+.compositeur:focus-within {
+  border-color: var(--mm-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mm-accent) 30%, transparent);
+}
+@media (forced-colors: active) {
+  .compositeur:focus-within {
+    outline: 2px solid Highlight;
+  }
+}
+.champ-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: hidden;
+}
+.bouton-envoyer {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--mm-accent);
+  color: light-dark(#ffffff, #0b1a2e);
+  cursor: pointer;
+}
+.bouton-envoyer:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.bouton-envoyer:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 2px;
+}
+.aide {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  text-align: center;
+  opacity: 0.75;
+}
+.aide a {
+  color: inherit;
+  font-weight: 600;
+}
+@media (hover: none) {
+  .raccourci {
+    display: none;
+  }
+}
+.bouton-bas {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--mm-bordure);
+  border-radius: 50%;
+  background-color: var(--mm-surface);
+  color: inherit;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+.bouton-bas:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 2px;
+}
+</style>

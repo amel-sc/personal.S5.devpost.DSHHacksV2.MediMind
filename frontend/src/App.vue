@@ -76,15 +76,17 @@ onMounted(charger)
   <div class="app">
     <header class="entete-app">
       <button
-        class="btn-text theme-inverse"
+        class="btn-text theme-inverse bouton-menu"
         type="button"
         data-bs-toggle="drawer"
         data-bs-target="#menuMediMind"
         aria-controls="menuMediMind"
-        aria-label="Ouvrir le menu"
+        :aria-label="libelleMenu"
       >
         <i class="bi bi-list icone-menu" aria-hidden="true"></i>
+        <span v-if="nombreNonLues > 0" class="pastille pastille-menu" aria-hidden="true"></span>
       </button>
+      <p class="visually-hidden" aria-live="polite">{{ annonceMenu }}</p>
       <span class="nom-app">MediMind</span>
       <ThemeSelecteur class="theme-selecteur" />
     </header>
@@ -162,6 +164,15 @@ onMounted(charger)
           >
             <i class="bi bi-chat-left-text" aria-hidden="true"></i>
             <span class="texte-tronque">{{ c.first_message || 'Conversation sans titre' }}</span>
+
+            <template v-if="reponseEnCours(c.id)">
+              <span class="spinner-border spinner-sm indicateur" aria-hidden="true"></span>
+              <span class="visually-hidden">, MediMind est en train de répondre</span>
+            </template>
+            <template v-else-if="estNonLue(c.id)">
+              <span class="pastille" aria-hidden="true"></span>
+              <span class="visually-hidden">, nouvelle réponse</span>
+            </template>
           </RouterLink>
         </nav>
       </div>
@@ -287,4 +298,31 @@ onMounted(charger)
     outline: 2px solid Highlight;
   }
 }
+.bouton-menu {
+  position: relative;
+}
+.pastille {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--mm-accent);
+}
+.pastille-menu {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  outline: 2px solid var(--mm-fond); /* détache la pastille de l'icône */
+}
+.indicateur {
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+@media (forced-colors: active) {
+  .pastille {
+    background-color: Highlight;
+  }
+}
+
 </style>
