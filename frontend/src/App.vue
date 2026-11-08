@@ -3,6 +3,7 @@ import { computed, onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
+import LangueSelecteur from './components/LangueSelecteur.vue'
 import { estNonLue, nombreNonLues, reponseEnCours } from '@/stores/reponsesEnCours'
 
 const route = useRoute()
@@ -88,7 +89,10 @@ onMounted(charger)
       </button>
       <p class="visually-hidden" aria-live="polite">{{ annonceMenu }}</p>
       <span class="nom-app">MediMind</span>
-      <ThemeSelecteur class="theme-selecteur" />
+      <div class="reglages">
+        <LangueSelecteur />
+        <ThemeSelecteur />
+      </div>
     </header>
 
     <!-- Menu latéral gauche -->
@@ -204,7 +208,10 @@ onMounted(charger)
   font-size: 1.25rem;
   font-weight: 600;
 }
-.theme-selecteur {
+.reglages {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-inline-start: auto;
 }
 .icone-menu {
