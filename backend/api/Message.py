@@ -1,6 +1,6 @@
 import sqlite3
 from fastapi import APIRouter
-from schemas.Message import RequestMessage
+from schemas.Message import RequestMessage, ConversationInconnue
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -9,8 +9,15 @@ from db.database import get_connection
 router = APIRouter()
 
 # function to verify if conversation exist by id
-def verifyConversationById(id_conversation: int):
-    with closing(get_connection()) as conn, conn:
+def verifyConversationById(conn, id_conversation: int):
+    row = conn.execute(
+        "SELECT * FROM conversation "
+        "WHERE id = ?",
+        (id_conversation)
+    )
+
+    if row is None:
+        raise ConversationInconnue()
 
 # function to findAll message by conversation
 def findByConversation(id_conversation: int):
