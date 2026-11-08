@@ -196,4 +196,11 @@ export default {
     dateInconnue: 'Unknown date',
     affichees: 'No moods shown | {n} mood shown | {n} moods shown',
   },
+  notFound: {
+    texte: "This address doesn't match any MediMind page.",
+    adresse: 'Requested address:',
+    conversation: 'Start a conversation',
+    journal: 'My mood journal',
+    retour: 'Go back to the previous page',
+  },
 }

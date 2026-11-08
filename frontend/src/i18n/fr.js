@@ -197,4 +197,11 @@ export default {
     dateInconnue: 'Date inconnue',
     affichees: 'Aucune humeur affichée | {n} humeur affichée | {n} humeurs affichées',
   },
+  notFound: {
+    texte: 'Cette adresse ne correspond à aucune page de MediMind.',
+    adresse: 'Adresse demandée :',
+    conversation: 'Démarrer une conversation',
+    journal: "Mon journal d'humeur",
+    retour: 'Revenir à la page précédente',
+  },
 }
