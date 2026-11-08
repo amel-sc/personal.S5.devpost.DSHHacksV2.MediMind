@@ -5,6 +5,9 @@ import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
 import LangueSelecteur from './components/LangueSelecteur.vue'
 import { estNonLue, nombreNonLues, reponseEnCours } from '@/stores/reponsesEnCours'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const conversations = ref([])
@@ -18,11 +21,7 @@ watch(nombreNonLues, (n, avant) => {
   if (n > avant) annonceMenu.value = 'MediMind a répondu dans une autre conversation.'
 })
 
-const libelleMenu = computed(() =>
-  nombreNonLues.value > 0
-    ? `Ouvrir le menu (${nombreNonLues.value} nouvelle${nombreNonLues.value > 1 ? 's' : ''} réponse${nombreNonLues.value > 1 ? 's' : ''})`
-    : 'Ouvrir le menu'
-)
+const libelleMenu = computed(() => t('menu.ouvrir', nombreNonLues.value))
 
 async function charger() {
   chargement.value = true

@@ -10,6 +10,9 @@ import {
   promesseReponse,
   reponseEnCours,
 } from '@/stores/reponsesEnCours'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -41,12 +44,16 @@ const HAUTEUR_MAX = 200
 const animationsReduites = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const pointeurPrecis = window.matchMedia('(pointer: fine)').matches
 
-const suggestions = [
-  { icone: 'bi-wind', texte: 'Propose-moi un exercice de respiration' },
-  { icone: 'bi-emoji-frown', texte: 'Je me sens stressé·e en ce moment' },
-  { icone: 'bi-moon', texte: "J'ai du mal à dormir" },
-  { icone: 'bi-lightbulb', texte: "Comment gérer l'anxiété avant un examen ?" },
-]
+// Les suggestions deviennent un computed : elles changent avec la langue
+const suggestions = computed(() => [
+  { icone: 'bi-wind', texte: t('conversation.suggestions.respiration') },
+  { icone: 'bi-emoji-frown', texte: t('conversation.suggestions.stress') },
+  { icone: 'bi-moon', texte: t('conversation.suggestions.sommeil') },
+  { icone: 'bi-lightbulb', texte: t('conversation.suggestions.examen') },
+])
+
+// La langue envoyée au LLM suit l'interface (c'était 'fr' en dur à deux endroits)
+const { locale } = useI18n()
 
 let idCreeIci = null
 let compteur = 0
@@ -139,7 +146,7 @@ async function suivreReponse(idConv, promesse) {
 
     const etaitEnBas = enBas.value
     messages.value.push(msg)
-    annonce.value = `MediMind a répondu : ${reponse.content}`
+    annonce.value = t('conversation.arepondu', { contenu: reponse.content })
     if (etaitEnBas) await defiler()
     focusChamp()
   } catch (e) {
@@ -239,7 +246,7 @@ async function envoyerMessage(texte = message.value) {
   const jeton = dernierChargement
   const idDepart = conversation.value
   // Historique capturé MAINTENANT, sans le nouveau message : il ne change plus ensuite
-  const base = { message: contenu, historique: historique(), langue: 'fr', id_conversation: idDepart }
+  const base = { message: contenu, historique: historique(), langue: locale.value, id_conversation: idDepart }
 
   // 1. Affichage immédiat
   const cleTemp = `tmp-${++compteur}`
@@ -291,12 +298,14 @@ function onKeydown(e) {
   }
 }
 
-const annonceLecteur = computed(() => (occupe.value ? 'MediMind écrit…' : annonce.value))
+const annonceLecteur = computed(() => (occupe.value ? t('conversation.ecrit') : annonce.value))
+// annonce.value = t('conversation.arepondu', { contenu: reponse.content })
 
 watchPostEffect(() => {
-  if (introuvable.value) document.title = 'Conversation introuvable · MediMind'
-  else if (conversation.value) document.title = 'Conversation · MediMind'
-  else document.title = 'Nouvelle conversation · MediMind'
+  const cle = introuvable.value
+    ? 'pages.conversationIntrouvable'
+    : conversation.value ? 'pages.conversation' : 'pages.nouvelleConversation'
+  document.title = `${t(cle)} · MediMind` // se met à jour tout seul au changement de langue
 })
 </script>
 
@@ -331,7 +340,7 @@ watchPostEffect(() => {
 
           <div v-else-if="messages.length === 0 && !erreur" class="accueil">
             <div class="logo" aria-hidden="true"><i class="bi bi-chat-heart"></i></div>
-            <h2 class="titre-accueil">Bonjour, je suis MediMind</h2>
+            <h2 class="titre-accueil">{{ t('conversation.bonjour') }}</h2>
             <p class="texte-accueil">
               Un espace pour parler de ce que tu ressens, sans jugement.
               Par quoi veux-tu commencer ?
@@ -397,7 +406,7 @@ watchPostEffect(() => {
               v-model="message"
               class="champ-message"
               rows="1"
-              placeholder="Écris ton message…"
+              :placeholder="t('conversation.placeholder')"
               aria-describedby="aide-saisie"
               @keydown="onKeydown"
             ></textarea>
