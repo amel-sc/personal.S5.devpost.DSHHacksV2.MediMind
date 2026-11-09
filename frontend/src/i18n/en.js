@@ -246,4 +246,15 @@ export default {
       confirmation: 'The passwords do not match.',
     },
   },
+  connexion: {
+    titre: 'Sign in',
+    sousTitre: 'Return to your MediMind space.',
+    email: 'Email address',
+    motDePasse: 'Password',
+    afficherMotDePasse: 'Show password',
+    bouton: 'Sign in',
+    enCours: 'Signing in…',
+    pasDeCompte: "Don't have an account yet?",
+    creerCompte: 'Create an account',
+  },
 }

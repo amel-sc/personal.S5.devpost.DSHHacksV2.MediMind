@@ -246,4 +246,15 @@ export default {
       confirmation: 'Les mots de passe ne correspondent pas.',
     },
   },
+  connexion: {
+    titre: 'Se connecter',
+    sousTitre: 'Retrouve ton espace MediMind.',
+    email: 'Adresse e-mail',
+    motDePasse: 'Mot de passe',
+    afficherMotDePasse: 'Afficher le mot de passe',
+    bouton: 'Connexion',
+    enCours: 'Connexion…',
+    pasDeCompte: "Tu n'as pas encore de compte ?",
+    creerCompte: 'Créer un compte',
+  },
 }
