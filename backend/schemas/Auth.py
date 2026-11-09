@@ -12,4 +12,6 @@ class Inscription(BaseModel):
 
 # Inscription error
 class InscriptionError(Exception):
-    pass
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
