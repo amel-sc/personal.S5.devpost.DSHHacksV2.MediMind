@@ -65,5 +65,6 @@ export const api = {
     inscription: (donnees) => requete('POST', '/inscription', donnees),
     connexion: (donnees) => requete('POST', '/connexion', donnees),
     deconnexion: () => requete('POST', '/deconnexion'),
+    moi: () => requete('GET', '/auth/me'),
   }
 }
