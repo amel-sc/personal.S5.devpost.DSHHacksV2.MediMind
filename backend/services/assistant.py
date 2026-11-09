@@ -578,6 +578,15 @@ def construire_system(
         f"{'français' if langue == 'fr' else 'anglais (English only)'}."
     ]
 
+    if analyse.sujet == "reponse":
+        ctx.append(
+            "- Le message actuel répond à une proposition précédente. "
+            "Lis la dernière réponse de MediMind dans l'historique. "
+            "Si l'étudiant accepte, commence immédiatement l'activité proposée : "
+            "ne répète pas les conseils et ne lui redemande pas s'il veut essayer. "
+            "S'il refuse, respecte son choix."
+        )
+
     if analyse.emotion != "neutre":
         ctx.append(
             f"- Émotion principale perçue : {analyse.emotion}, "
@@ -784,7 +793,16 @@ def ask_medimind(question, historique=None, langue_interface="fr", contexte_hume
     # ③ Conversation normale (ou mode suivi après un risque récent)
     mode = "suivi" if risque_recent(historique) else "normal"
     violence = detecter_violence(question)
-    docs, langue_docs = rechercher(construire_requete(question, historique), langue)
+    if analyse.sujet == "reponse":
+        # Une acceptation ou un refus doit d'abord être traité
+        # à partir de la dernière proposition dans l'historique.
+        docs, langue_docs = [], langue
+    else:
+        docs, langue_docs = rechercher(
+            construire_requete(question, historique),
+            langue,
+        )
+
 
     if not docs and mode == "normal" and analyse.sujet == "hors_sujet":
         return _resultat(T["hors_sujet"], langue, "hors_sujet", analyse=analyse)
