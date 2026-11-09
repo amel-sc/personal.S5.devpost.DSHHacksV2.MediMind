@@ -10,6 +10,11 @@ class Inscription(BaseModel):
     mdp: str
     date_naissance: date
 
+# Modèle représentant le JSON attendu
+class Connexion(BaseModel):
+    email: str
+    mdp: str
+
 # Inscription error
 class InscriptionError(Exception):
     def __init__(self, champ: str, code: str):
