@@ -66,10 +66,10 @@ def create_conversation_message(role: str, content: str, id_user: int):
     return id_conversation, id_message
 
 # function to insert message
-def create_message(role: str, content: str, id_conversation: int, alerte: int):
+def create_message(role: str, content: str, id_conversation: int, alerte: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         cur = conn.execute(
             "INSERT INTO message (role, content, id_conversation, alerte) VALUES (?, ?, ?, ?)",
@@ -79,7 +79,7 @@ def create_message(role: str, content: str, id_conversation: int, alerte: int):
 
 # route to findAll message
 @router.get("/api/message")
-def messages(id_conversation: int, utilisateur: dict = Depends(utilisateur_connecte),):
+def messages(id_conversation: int, utilisateur: dict = Depends(utilisateur_connecte)):
 
     messages = findByConversation(id_conversation, utilisateur["id"])
 
@@ -93,10 +93,12 @@ def messages(id_conversation: int, utilisateur: dict = Depends(utilisateur_conne
 
 # route to create new conversation 
 @router.post("/api/message")
-def send_message(data: RequestMessage):
+def send_message(data: RequestMessage, utilisateur: dict = Depends(utilisateur_connecte)):
+
+    id_user = utilisateur["id"]
     # create new message with conversation
     if data.id_conversation is None:
-        id_conversation, id_message = create_conversation_message('user', data.message)
+        id_conversation, id_message = create_conversation_message('user', data.message, id_user)
 
         return JSONResponse(
             status_code = 200,
@@ -110,7 +112,7 @@ def send_message(data: RequestMessage):
         )
 
     else:
-        id_message = create_message('user', data.message, data.id_conversation, 0)
+        id_message = create_message('user', data.message, data.id_conversation, 0, id_user)
 
         return JSONResponse(
             status_code = 200,
