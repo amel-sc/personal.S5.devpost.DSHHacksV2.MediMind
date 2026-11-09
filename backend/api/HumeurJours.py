@@ -27,7 +27,7 @@ def findByDateJour(id_user: int):
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
             "WHERE (hj.date_creation >= ? AND hj.date_creation < ?) "
             "AND hj.id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
-            "AND hj.id_user = ?"
+            "AND hj.id_user = ? "
             "LIMIT 1",
             (date_jour, date_jour_plus1, id_user)
         ).fetchone()

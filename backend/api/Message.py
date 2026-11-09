@@ -6,8 +6,57 @@ from services.assistant import ask_medimind, ModeleIndisponible
 from fastapi.responses import JSONResponse
 from db.database import get_connection
 from api.Auth import utilisateur_connecte
+from api.HumeurJours import findByDateJour
 
 router = APIRouter()
+
+# À adapter aux valeurs réelles de ta table humeur.
+# Exemple uniquement si 1 = très bien ... 5 = très mal.
+LIBELLES_HUMEUR = {
+    1: "très bien",
+    2: "bien",
+    3: "moyen",
+    4: "mal",
+    5: "très mal",
+}
+
+# À adapter aux codes réels de ta table humeur_cause.
+LIBELLES_CAUSES = {
+    "sommeil":"sommeil",
+    "stress":"stress",
+    "famille":"famille",
+    "etudes":"etudes",
+    "amis":"amis",
+    "sante":"sante",
+    "couple":"couple",
+    "autre":"autre",
+}
+
+def construire_contexte_humeur(humeur, causes):
+    if humeur is None:
+        return None
+
+    # On n'utilise pas directement une description issue de la base
+    # comme instruction destinée au modèle.
+    try:
+        valeur = int(humeur["humeur_val"])
+    except (TypeError, ValueError, KeyError):
+        return None
+
+    libelle = LIBELLES_HUMEUR.get(valeur)
+    if libelle is None:
+        return None
+
+    codes_causes = [
+        cause["code"]
+        for cause in causes
+        if cause.get("code") in LIBELLES_CAUSES
+    ]
+
+    return {
+        "humeur": libelle,
+        "causes": [LIBELLES_CAUSES[code] for code in codes_causes],
+    }
 
 # function to get last twelve conversation by id
 def find12LastMessageByConversation(id_conversation: int, id_user: int):
@@ -141,7 +190,20 @@ def traitement_message(data: RequestMessage, utilisateur: dict = Depends(utilisa
     try:
         # get conversation in base for historique
         historique = find12LastMessageByConversation(data.id_conversation, id_user)
-        resultat = ask_medimind(data.message, historique, data.langue)
+
+        # find humeur actuel
+        humeur_actuelle, causes_actuelles = findByDateJour(id_user)
+        contexte_humeur = construire_contexte_humeur(
+            humeur_actuelle,
+            causes_actuelles,
+        )
+
+        resultat = ask_medimind(
+            data.message,
+            historique,
+            data.langue,
+            contexte_humeur=contexte_humeur,
+        )
     except ModeleIndisponible:
         return JSONResponse(
             status_code=503,
