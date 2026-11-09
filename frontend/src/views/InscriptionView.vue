@@ -166,7 +166,7 @@ async function inscrire() {
             id="erreur-email"
             class="texte-invalide"
           >
-            {{ t('inscription.erreurs.'+erreurChamp['email']) }}
+            {{ t('inscription.erreurs.'+erreurChamp.email) }}
           </small>
         </div>
 
