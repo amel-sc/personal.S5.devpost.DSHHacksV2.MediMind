@@ -34,7 +34,7 @@ def create(pseudo: str, date_naissance: date, mdp: str):
         )
 
 # function router to create new user
-@router.post("/inscription")
+@router.post("/api/inscription")
 def inscription(data: Inscription):
     try:
         create(data.pseudo, data.date_naissance, data.mdp)
