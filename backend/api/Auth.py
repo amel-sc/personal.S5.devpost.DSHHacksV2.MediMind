@@ -26,10 +26,18 @@ def findByEmail(conn, email: str):
 
 # function to create new user
 def create(first_name: str, last_name: str, email: str, date_naissance: date, mdp: str):
+    emailNormalize = email.strip().lower()
+    
     with closing(get_connection()) as conn, conn:
+
+        exist = findByEmail(conn, emailNormalize)
+
+        if exist is not None:
+            raise InscriptionError("email_exist")
+
         row = conn.execute(
            "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?, ?, ?)",
-           (first_name, last_name, email, date_naissance.isoformat(), hash_password(mdp)) 
+           (first_name, last_name, emailNormalize, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
 # function router to create new user
