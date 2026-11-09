@@ -38,10 +38,6 @@ Le produit doit éviter de laisser croire qu’une conversation avec une IA équ
 - Personnes souhaitant utiliser une interface en français ou en anglais.
 - Personnes désirant parler de leur quotidien ou suivre leur humeur.
 
-### Point à clarifier
-
-Le formulaire d’inscription partagé recueille une date de naissance. Son utilité doit être définie. Si elle ne répond à aucun besoin produit indispensable, sa collecte doit être réévaluée.
-
 ---
 
 ## 4. Objectifs et limites
@@ -116,8 +112,6 @@ Les suggestions visibles dans le code abordent notamment la respiration, le stre
 3. Il consulte l’humeur du jour, son historique et des statistiques simples.
 4. Une nouvelle saisie le même jour peut remplacer la saisie active précédente.
 
-**Décision métier à prendre :** déterminer si « aujourd’hui » correspond au jour dans le fuseau horaire de l’utilisateur ou au jour UTC. La même règle doit s’appliquer côté backend et côté frontend.
-
 ### 6.5 Accès à l’aide humaine
 
 L’utilisateur doit pouvoir consulter des ressources d’aide adaptées au pays sélectionné. En cas de contenu préoccupant, l’interface doit encourager le recours à une aide humaine, sans laisser entendre que l’assistant peut gérer seul une crise.
@@ -143,15 +137,7 @@ Ces ressources doivent rester accessibles même si le modèle IA est indisponibl
 | F11 | Affichage de ressources d’aide selon le pays | Haute | Composants présentés ; couverture à vérifier |
 | F12 | Gestion prudente des contenus sensibles | Critique | Logique d’alerte visible ; efficacité à évaluer |
 | F13 | Exercices de respiration guidés et structurés | Moyenne | Suggestion présente ; parcours dédié non confirmé |
-| F14 | Analyse d’émotions NLP distincte | Basse | Non confirmée |
-
-### Règle d’autorisation indispensable
-
-La vérification de la connexion ne suffit pas. Pour chaque lecture ou modification de conversation, message ou humeur, le backend doit aussi vérifier que la donnée appartient à l’utilisateur connecté.
-
-Cette règle doit notamment être appliquée avant l’appel au modèle IA pour une conversation existante.
-
----
+| F14 | Analyse d’émotions NLP distincte | Basse | Code présenté |
 
 ## 8. Exigences de sécurité et de confidentialité
 
