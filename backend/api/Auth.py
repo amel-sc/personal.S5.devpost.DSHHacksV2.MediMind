@@ -27,9 +27,9 @@ def findByEmail(email: str):
 
 # function to create new user
 def create(first_name: str, last_name: str, email: str, date_naissance: date, mdp: str):
-    with closing(get_connection()) as conn:
+    with closing(get_connection()) as conn, conn:
         row = conn.execute(
-           "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?)"
+           "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?, ?, ?)",
            (first_name, last_name, email, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
