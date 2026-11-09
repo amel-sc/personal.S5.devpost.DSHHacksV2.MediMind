@@ -188,7 +188,7 @@ def create_humeurJours(data: HumeurJours, utilisateur: dict = Depends(utilisateu
 
     id_user = utilisateur["id"]
     try:
-        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
+        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes, id_user)
 
         return JSONResponse(
             status_code = 201,
