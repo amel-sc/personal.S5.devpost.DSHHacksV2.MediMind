@@ -158,7 +158,8 @@ onMounted(chargerUtilisateur)
           <LangueSelecteur />
           <ThemeSelecteur />
 
-          <div v-if="utilisateur" class="bloc-utilisateur">
+          <!-- Compte visible dans le header seulement sur grand écran -->
+          <div v-if="utilisateur" class="bloc-utilisateur compte-desktop">
             <span class="avatar-utilisateur" aria-hidden="true">
               {{ (utilisateur.first_name || utilisateur.email || '?').charAt(0).toUpperCase() }}
             </span>
@@ -199,6 +200,33 @@ onMounted(chargerUtilisateur)
         </div>
   
         <div class="drawer-body corps-menu">
+          <div v-if="utilisateur" class="compte-mobile">
+            <div class="identite-mobile">
+              <span class="avatar-utilisateur" aria-hidden="true">
+                {{ (utilisateur.first_name || utilisateur.email || '?').charAt(0).toUpperCase() }}
+              </span>
+
+              <div class="identite-texte">
+                <span class="nom-mobile">
+                  {{ [utilisateur.first_name, utilisateur.last_name].filter(Boolean).join(' ') || utilisateur.email }}
+                </span>
+                <span v-if="utilisateur.email" class="email-mobile">
+                  {{ utilisateur.email }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-outline theme-primary btn-styled bouton-mobile"
+              :disabled="chargementUtilisateur"
+              @click="deconnecter"
+            >
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              {{ t('auth.deconnexion') }}
+            </button>
+          </div>
+
           <nav class="nav-principale" :aria-label="t('menu.navigation')">
             <RouterLink
               :to="{ name: 'conversation' }"
@@ -498,4 +526,82 @@ onMounted(chargerUtilisateur)
     color: ButtonText;
   }
 }
+.entete-app {
+  min-width: 0;
+}
+
+.nom-app {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.reglages {
+  min-width: 0;
+}
+
+.compte-mobile {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .entete-app {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .nom-app {
+    font-size: 1rem;
+  }
+
+  .reglages {
+    gap: 0.25rem;
+  }
+
+  /* Le bloc complet quitte le header sur mobile */
+  .compte-desktop {
+    display: none;
+  }
+
+  .compte-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0 1rem;
+    border-bottom: 1px solid var(--mm-bordure);
+  }
+
+  .identite-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .identite-texte {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nom-mobile {
+    font-weight: 600;
+  }
+
+  .nom-mobile,
+  .email-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .email-mobile {
+    font-size: 0.875rem;
+    opacity: 0.75;
+  }
+
+  .bouton-mobile {
+    align-self: flex-start;
+  }
+}
+
 </style>
