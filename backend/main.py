@@ -4,6 +4,8 @@ from db.database import init_db
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from schemas.Message import ConversationInconnue
+from starlette.middleware.sessions import SessionMiddleware
+import os
 
 app = FastAPI()
 
@@ -11,6 +13,16 @@ app = FastAPI()
 @app.on_event("startup")
 def startup():
     init_db()
+
+# session
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ["SESSION_SECRET"],
+    session_cookie="medimind_session",
+    max_age=60 * 60 * 24 * 7,  # 7 jours
+    same_site="lax",
+    https_only=False,  # développement local en HTTP seulement
+)
 
 # exceptions
 @app.exception_handler(StarletteHTTPException)
