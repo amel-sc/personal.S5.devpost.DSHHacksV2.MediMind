@@ -197,12 +197,6 @@ def traitement_message(data: RequestMessage, utilisateur: dict = Depends(utilisa
 
         # Le message actuel est déjà enregistré par /api/message.
         # On le retire de l'historique puisqu'ask_medimind l'ajoutera lui-même.
-        if (
-            historique
-            and historique[-1]["role"] == "user"
-            and historique[-1]["content"] == data.message
-        ):
-            historique.pop()
 
         # find humeur actuel
         humeur_actuelle, causes_actuelles = findByDateJour(id_user)

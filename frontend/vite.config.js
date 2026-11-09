@@ -11,7 +11,7 @@ export default defineConfig({
     vueDevTools(),
   ],
   server:{
-    host: '100.79.8.41',
+    host: '0.0.0.0',
     port: 5173,
 
     proxy: {
