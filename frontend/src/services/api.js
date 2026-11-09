@@ -63,6 +63,7 @@ export const api = {
   },
   auth: {
     inscription: (donnees) => requete('POST', '/inscription', donnees),
-    connexion: (donnees) => requete('POST', '/connexion', donnees)
+    connexion: (donnees) => requete('POST', '/connexion', donnees),
+    deconnexion: () => requete('POST', '/deconnexion'),
   }
 }
