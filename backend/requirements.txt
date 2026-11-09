@@ -1,0 +1,14 @@
+# API
+fastapi
+uvicorn[standard]
+pydantic
+
+# Sessions et fichier .env
+itsdangerous
+python-dotenv
+
+# Moteur MediMind : RAG, modèle local et détection de langue
+chromadb
+sentence-transformers
+ollama
+lingua-language-detector
