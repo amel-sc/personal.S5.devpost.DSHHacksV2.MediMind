@@ -20,8 +20,7 @@ def verify_auth(email: str, mdp: str):
             raise ConnexionError("email", "emailInexistant")
 
         # verify mdp
-        emailNotExist = dict(emailNotExist)
-        if verifier_mot_de_passe(mdp, emailNotExist.mdp) is False:
+        if verifier_mot_de_passe(mdp, emailNotExist["mdp"]) is False:
             raise ConnexionError("mdp", "mdpIncorrect")
 
     return emailNotExist
@@ -60,10 +59,10 @@ def create(first_name: str, last_name: str, email: str, date_naissance: date, md
 @router.post("/api/connexion")
 def connexion(data: Connexion):
     try:
-        user = verify_auth(data.email, date.mdp)
+        user = verify_auth(data.email, data.mdp)
         return JSONResponse(status_code=200, content={
             "message": "Connexion réussi",
-            data: user
+            "data": user
         })
 
     except ConnexionError as e:

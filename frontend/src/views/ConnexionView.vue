@@ -34,7 +34,7 @@ async function connecter() {
   try {
     const data = {
       email: email.value.trim(),
-      mot_de_passe: motDePasse.value,
+      mdp: motDePasse.value,
     }
 
     // À adapter au nom de la méthode et au format réels de ton API.
@@ -256,4 +256,8 @@ async function connecter() {
     padding: 1.5rem;
   }
 }
+.texte-invalide {
+  color: #dc3545;
+}
+
 </style>
