@@ -1,4 +1,5 @@
 import { i18n } from '../i18n'
+import { dateLocale } from './format'
 
 export const ECHELLE = [1, 2, 3, 4, 5] // 1 = Très bien … 5 = Très mal
 
@@ -50,7 +51,7 @@ export function estActive(h) {
 // SQLite renvoie souvent "2026-11-07 10:00:00" : Safari ne sait pas lire l'espace
 export function versDate(valeur) {
   if (!valeur) return null
-  const d = new Date(String(valeur).replace(' ', 'T'))
+  const d = new Date(String(valeur).replace(' ', 'T') + 'Z')
   return Number.isNaN(d.getTime()) ? null : d
 }
 

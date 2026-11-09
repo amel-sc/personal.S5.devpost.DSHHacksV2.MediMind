@@ -9,7 +9,6 @@ import {
   libelleHumeur,
   libelleCause,
 } from '../utils/humeur'
-import { dateLocale } from '@/utils/format';
 
 const props = defineProps({
   afficherMeta: { type: Boolean, default: true },
@@ -119,7 +118,6 @@ const texteDate = computed(() => {
     :aria-labelledby="idTitre"
   >
     <div class="card-body detail-corps">
-      <p> {{ dateLocale(humeurJours.date_creation) }} </p>
       <component
         :is="baliseTitre"
         :id="idTitre"
