@@ -17,7 +17,7 @@ const confirmation = ref('')
 const envoiEnCours = ref(false)
 const inscriptionReussie = ref(false)
 const erreur = ref(null)
-const erreurChamp = ref(null)
+const erreurChamp = ref({})
 const afficherMotDePasse = ref(false)
 
 const dateAujourdhui = new Date().toISOString().slice(0, 10)
@@ -47,7 +47,7 @@ watchPostEffect(() => {
 
 async function inscrire() {
   erreur.value = null
-  erreurChamp.value = null
+  erreurChamp.value = {}
 
   if (confirmation.value !== motDePasse.value) return
   if (!peutEnvoyer.value) return
@@ -70,7 +70,7 @@ async function inscrire() {
   } catch (e) {
     console.error(e)
     erreur.value = messageErreur(e)
-    erreurChamp = e.errors
+    erreurChamp.value = e.errors
   } finally {
     envoiEnCours.value = false
   }
@@ -139,11 +139,11 @@ async function inscrire() {
             maxlength="254"
           />
           <small
-            v-if="erreurChamp['email']"
+            v-if="erreurChamp.email"
             id="erreur-email"
             class="texte-invalide"
           >
-            {{ t('inscription.erreurs'+erreurChamp['email']) }}
+            {{ t('inscription.erreurs.'+erreurChamp['email']) }}
           </small>
         </div>
 

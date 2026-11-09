@@ -33,7 +33,7 @@ def create(first_name: str, last_name: str, email: str, date_naissance: date, md
         exist = findByEmail(conn, emailNormalize)
 
         if exist is not None:
-            raise InscriptionError("email", "emailExist")
+            raise InscriptionError("email", "emailExiste")
 
         row = conn.execute(
            "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?, ?, ?)",
@@ -57,6 +57,6 @@ def inscription(data: Inscription):
         return JSONResponse(status_code=422, content={
             "message": "Certaines informations ne sont pas valides.",
             "errors": {
-                e.champ: e.message
+                e.champ: e.code
             },
         })
