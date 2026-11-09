@@ -245,6 +245,7 @@ export default {
     seConnecter: 'Sign in',
     succes: 'Your account has been created.',
     erreurs: {
+      emailExistant: 'Cette adresse e-mail est déjà utilisée.',
       confirmation: 'The passwords do not match.',
     },
   },

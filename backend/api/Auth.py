@@ -15,7 +15,7 @@ def findByEmail(conn, email: str):
     row = conn.execute(
         "SELECT * FROM utilisateur "
         "WHERE email = ? "
-        "LIMIT = 1",
+        "LIMIT 1",
         (email,)
     ).fetchone()
 
@@ -27,13 +27,13 @@ def findByEmail(conn, email: str):
 # function to create new user
 def create(first_name: str, last_name: str, email: str, date_naissance: date, mdp: str):
     emailNormalize = email.strip().lower()
-    
+
     with closing(get_connection()) as conn, conn:
 
         exist = findByEmail(conn, emailNormalize)
 
         if exist is not None:
-            raise InscriptionError("email_exist")
+            raise InscriptionError("email", "emailExist")
 
         row = conn.execute(
            "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?, ?, ?)",
@@ -53,8 +53,10 @@ def inscription(data: Inscription):
             }
         )
 
-    except InscriptionError:
+    except InscriptionError as e:
         return JSONResponse(status_code=422, content={
             "message": "Certaines informations ne sont pas valides.",
-            "errors": {},
+            "errors": {
+                e.champ: e.message
+            },
         })

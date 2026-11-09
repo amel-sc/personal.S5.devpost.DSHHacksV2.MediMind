@@ -17,6 +17,7 @@ const confirmation = ref('')
 const envoiEnCours = ref(false)
 const inscriptionReussie = ref(false)
 const erreur = ref(null)
+const erreurChamp = ref(null)
 const afficherMotDePasse = ref(false)
 
 const dateAujourdhui = new Date().toISOString().slice(0, 10)
@@ -68,6 +69,7 @@ async function inscrire() {
   } catch (e) {
     console.error(e)
     erreur.value = messageErreur(e)
+    erreurChamp = e.errors
   } finally {
     envoiEnCours.value = false
   }
