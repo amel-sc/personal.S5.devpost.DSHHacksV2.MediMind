@@ -56,3 +56,12 @@ CREATE TABLE IF NOT EXISTS humeur_jours_causes (
     FOREIGN KEY (id_humeur_jours) REFERENCES humeur_jours(id),
     FOREIGN KEY (id_humeur_cause) REFERENCES humeur_cause(id)
 );
+
+-- utilisateur
+CREATE TABLE IF NOT EXISTS utilisateur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pseudo TEXT UNIQUE,
+    mdp TEXT,
+    date_naissance TEXT,
+    date_creatin TEXT DEFAULT CURRENT_TIMESTAMP
+);
