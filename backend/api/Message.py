@@ -10,10 +10,10 @@ from api.Auth import utilisateur_connecte
 router = APIRouter()
 
 # function to get last twelve conversation by id
-def find12LastMessageByConversation(id_conversation: int):
+def find12LastMessageByConversation(id_conversation: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         rows = conn.execute(
             "SELECT * "
@@ -127,18 +127,20 @@ def send_message(data: RequestMessage, utilisateur: dict = Depends(utilisateur_c
 
 # route to send message and get response
 @router.post("/api/message/traitement")
-def traitement_message(data: RequestMessage):
+def traitement_message(data: RequestMessage, utilisateur: dict = Depends(utilisateur_connecte)):
     if data.id_conversation is None:
         raise HTTPException(status_code=422, detail="L'identifiant de conversation est requis.")
 
+    id_user = utilisateur["id"]
+
     # Vérification AVANT l'appel au LLM : on ne paie pas une réponse pour rien
     with closing(get_connection()) as conn:
-        verifyConversationById(conn, data.id_conversation)
+        verifyConversationById(conn, data.id_conversation, id_user)
 
     # try except for asking medimind
     try:
         # get conversation in base for historique
-        historique = find12LastMessageByConversation(data.id_conversation)
+        historique = find12LastMessageByConversation(data.id_conversation, id_user)
         resultat = ask_medimind(data.message, historique, data.langue)
     except ModeleIndisponible:
         return JSONResponse(
@@ -151,7 +153,7 @@ def traitement_message(data: RequestMessage):
         )
     # insert response in base
     alerte = 1 if resultat["alerte"] is not None else 0
-    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte)
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte, id_user)
 
     return JSONResponse(
         status_code = 200,
