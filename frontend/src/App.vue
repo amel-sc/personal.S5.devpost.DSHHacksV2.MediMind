@@ -68,6 +68,10 @@ const sectionActive = computed(() => {
   return null
 })
 
+const estPageAuth = computed(() =>
+  ['connexion', 'inscription'].includes(route.name)
+)
+
 /*
  * aria-current :
  *  - "page" quand le lien mène exactement à la page affichée ;
@@ -90,120 +94,122 @@ onMounted(charger)
 
 <template>
   <div class="app">
-    <header class="entete-app">
-      <button
-        class="btn-text theme-inverse bouton-menu"
-        type="button"
-        data-bs-toggle="drawer"
-        data-bs-target="#menuMediMind"
-        aria-controls="menuMediMind"
-        :aria-label="libelleMenu"
-      >
-        <i class="bi bi-list icone-menu" aria-hidden="true"></i>
-        <span v-if="nombreNonLues > 0" class="pastille pastille-menu" aria-hidden="true"></span>
-      </button>
-      <p class="masque-visuellement" aria-live="polite">{{ cleAnnonce ? t(cleAnnonce) : '' }}</p>
-      <span class="nom-app">MediMind</span>
-      <div class="reglages">
-        <LangueSelecteur />
-        <ThemeSelecteur />
-      </div>
-    </header>
-
-    <!-- Menu latéral gauche -->
-    <dialog
-      id="menuMediMind"
-      ref="drawer"
-      class="drawer drawer-start"
-      tabindex="-1"
-      aria-labelledby="menuTitre"
-    >
-      <div class="drawer-header">
-        <h2 id="menuTitre" class="drawer-title titre-menu">MediMind</h2>
+    <template v-if="!estPageAuth">
+      <header class="entete-app">
         <button
+          class="btn-text theme-inverse bouton-menu"
           type="button"
-          class="btn-close"
-          data-bs-dismiss="drawer"
-          :aria-label="t('menu.fermer')"
-        ></button>
-      </div>
-
-      <div class="drawer-body corps-menu">
-        <nav class="nav-principale" :aria-label="t('menu.navigation')">
-          <RouterLink
-            :to="{ name: 'conversation' }"
-            class="btn-text theme-inverse item-menu"
-            :class="{ actif: sectionActive === 'nouvelle' }"
-            :aria-current="ariaCurrent('nouvelle')"
-            @click="fermerDrawer"
-          >
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            <span class="texte-tronque">{{ t('menu.nouvelle') }}</span>
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'humeurList' }"
-            class="btn-text theme-inverse item-menu"
-            :class="{ actif: sectionActive === 'humeur' }"
-            :aria-current="ariaCurrent('humeur', route.name === 'humeurList')"
-            @click="fermerDrawer"
-          >
-            <i class="bi bi-journal-text" aria-hidden="true"></i>
-            <span class="texte-tronque">{{ t('menu.journal') }}</span>
-          </RouterLink>
-        </nav>
-
-        <hr class="separateur" />
-
-        <!-- Chargement -->
-        <div v-if="chargement" class="centre-menu" role="status">
-          <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
-          <span class="masque-visuellement">{{ t('menu.chargement') }}</span>
+          data-bs-toggle="drawer"
+          data-bs-target="#menuMediMind"
+          aria-controls="menuMediMind"
+          :aria-label="libelleMenu"
+        >
+          <i class="bi bi-list icone-menu" aria-hidden="true"></i>
+          <span v-if="nombreNonLues > 0" class="pastille pastille-menu" aria-hidden="true"></span>
+        </button>
+        <p class="masque-visuellement" aria-live="polite">{{ cleAnnonce ? t(cleAnnonce) : '' }}</p>
+        <span class="nom-app">MediMind</span>
+        <div class="reglages">
+          <LangueSelecteur />
+          <ThemeSelecteur />
         </div>
-
-        <!-- Erreur -->
-        <div v-else-if="erreur" class="alert theme-danger erreur-menu" role="alert">
-          <p class="texte-erreur">{{ t('menu.erreur') }}</p>
-          <button type="button" class="btn-outline theme-danger btn-styled" @click="charger">
-            {{ t('commun.reessayer') }}
-          </button>
+      </header>
+  
+      <!-- Menu latéral gauche -->
+      <dialog
+        id="menuMediMind"
+        ref="drawer"
+        class="drawer drawer-start"
+        tabindex="-1"
+        aria-labelledby="menuTitre"
+      >
+        <div class="drawer-header">
+          <h2 id="menuTitre" class="drawer-title titre-menu">MediMind</h2>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="drawer"
+            :aria-label="t('menu.fermer')"
+          ></button>
         </div>
-
-        <!-- Liste vide -->
-        <p v-else-if="conversations.length === 0" class="liste-vide">
-          {{ t('menu.vide') }}
-        </p>
-
-        <!-- Liste des conversations -->
-        <nav v-else class="liste-conversations" :aria-label="t('menu.mesConversations')">
-          <RouterLink
-            v-for="c in conversations"
-            :key="c.id"
-            :to="{ name: 'conversation', params: { id: c.id } }"
-            class="btn-text theme-inverse item-menu"
-            :class="{ actif: sectionActive === `conversation-${c.id}` }"
-            :aria-current="ariaCurrent(`conversation-${c.id}`)"
-            :title="c.first_message || undefined"
-            @click="fermerDrawer"
-          >
-            <i class="bi bi-chat-left-text" aria-hidden="true"></i>
-            <!-- Texte écrit par l'étudiant : sa langue peut différer de celle de l'interface -->
-            <span class="texte-tronque" dir="auto">{{ c.first_message || t('menu.sansTitre') }}</span>
-
-            <template v-if="reponseEnCours(c.id)">
-              <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
-              <span class="masque-visuellement">{{ t('menu.enCours') }}</span>
-            </template>
-            <template v-else-if="estNonLue(c.id)">
-              <span class="pastille" aria-hidden="true"></span>
-              <span class="masque-visuellement">{{ t('menu.nonLue') }}</span>
-            </template>
-          </RouterLink>
-        </nav>
-      </div>
-      <div class="pied-menu">
-        <PaysSelecteur />
-      </div>
-    </dialog>
+  
+        <div class="drawer-body corps-menu">
+          <nav class="nav-principale" :aria-label="t('menu.navigation')">
+            <RouterLink
+              :to="{ name: 'conversation' }"
+              class="btn-text theme-inverse item-menu"
+              :class="{ actif: sectionActive === 'nouvelle' }"
+              :aria-current="ariaCurrent('nouvelle')"
+              @click="fermerDrawer"
+            >
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              <span class="texte-tronque">{{ t('menu.nouvelle') }}</span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'humeurList' }"
+              class="btn-text theme-inverse item-menu"
+              :class="{ actif: sectionActive === 'humeur' }"
+              :aria-current="ariaCurrent('humeur', route.name === 'humeurList')"
+              @click="fermerDrawer"
+            >
+              <i class="bi bi-journal-text" aria-hidden="true"></i>
+              <span class="texte-tronque">{{ t('menu.journal') }}</span>
+            </RouterLink>
+          </nav>
+  
+          <hr class="separateur" />
+  
+          <!-- Chargement -->
+          <div v-if="chargement" class="centre-menu" role="status">
+            <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
+            <span class="masque-visuellement">{{ t('menu.chargement') }}</span>
+          </div>
+  
+          <!-- Erreur -->
+          <div v-else-if="erreur" class="alert theme-danger erreur-menu" role="alert">
+            <p class="texte-erreur">{{ t('menu.erreur') }}</p>
+            <button type="button" class="btn-outline theme-danger btn-styled" @click="charger">
+              {{ t('commun.reessayer') }}
+            </button>
+          </div>
+  
+          <!-- Liste vide -->
+          <p v-else-if="conversations.length === 0" class="liste-vide">
+            {{ t('menu.vide') }}
+          </p>
+  
+          <!-- Liste des conversations -->
+          <nav v-else class="liste-conversations" :aria-label="t('menu.mesConversations')">
+            <RouterLink
+              v-for="c in conversations"
+              :key="c.id"
+              :to="{ name: 'conversation', params: { id: c.id } }"
+              class="btn-text theme-inverse item-menu"
+              :class="{ actif: sectionActive === `conversation-${c.id}` }"
+              :aria-current="ariaCurrent(`conversation-${c.id}`)"
+              :title="c.first_message || undefined"
+              @click="fermerDrawer"
+            >
+              <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+              <!-- Texte écrit par l'étudiant : sa langue peut différer de celle de l'interface -->
+              <span class="texte-tronque" dir="auto">{{ c.first_message || t('menu.sansTitre') }}</span>
+  
+              <template v-if="reponseEnCours(c.id)">
+                <span class="mm-spinner mm-spinner-sm" aria-hidden="true"></span>
+                <span class="masque-visuellement">{{ t('menu.enCours') }}</span>
+              </template>
+              <template v-else-if="estNonLue(c.id)">
+                <span class="pastille" aria-hidden="true"></span>
+                <span class="masque-visuellement">{{ t('menu.nonLue') }}</span>
+              </template>
+            </RouterLink>
+          </nav>
+        </div>
+        <div class="pied-menu">
+          <PaysSelecteur />
+        </div>
+      </dialog>
+    </template>
 
     <main class="contenu">
       <RouterView />
