@@ -11,8 +11,16 @@ import { watch } from 'vue'
 import { api } from '@/services/api'
 
 const routes = [
-  { path: '/', redirect: { name: 'conversation' } },
-  { path: '/conversation/:id([1-9]\\d*)?', name: 'conversation', component: ConversationView, meta: { requiresAuth: true }, },
+  { 
+    path: '/', 
+    redirect: { name: 'conversation' } 
+  },
+  { 
+    path: '/conversation/:id([1-9]\\d*)?', 
+    name: 'conversation', 
+    component: ConversationView, 
+    meta: { requiresAuth: true }, 
+  },
   {
     path: '/inscription',
     name: 'inscription',
