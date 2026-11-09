@@ -1,5 +1,5 @@
 import sqlite3
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.Message import RequestMessage, ConversationInconnue
 from contextlib import closing
 from services.assistant import ask_medimind, ModeleIndisponible
@@ -24,21 +24,21 @@ def find12LastMessageByConversation(id_conversation: int):
         return [dict(row) for row in rows]
 
 # function to verify if conversation exist by id
-def verifyConversationById(conn, id_conversation: int):
+def verifyConversationById(conn, id_conversation: int, id_user: int):
     row = conn.execute(
         "SELECT * FROM conversation "
-        "WHERE id = ?",
-        (id_conversation,)
+        "WHERE id = ? AND id_user = ?",
+        (id_conversation, id_user)
     ).fetchone() 
 
     if row is None:
         raise ConversationInconnue()
 
 # function to findAll message by conversation
-def findByConversation(id_conversation: int):
+def findByConversation(id_conversation: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         rows = conn.execute(
             "SELECT * "
@@ -79,9 +79,9 @@ def create_message(role: str, content: str, id_conversation: int, alerte: int):
 
 # route to findAll message
 @router.get("/api/message")
-def messages(id_conversation: int):
+def messages(id_conversation: int, utilisateur: dict = Depends(utilisateur_connecte),):
 
-    messages = findByConversation(id_conversation)
+    messages = findByConversation(id_conversation, utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,

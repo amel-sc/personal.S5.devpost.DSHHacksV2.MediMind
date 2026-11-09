@@ -1,5 +1,5 @@
 import sqlite3
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.Message import RequestMessage
 from contextlib import closing
 from services.assistant import ask_medimind
