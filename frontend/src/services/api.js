@@ -15,6 +15,7 @@ async function requete(methode, chemin, donnees) {
 
   const options = {
     method: methode,
+    credentials: 'include',
     headers: { 
       Accept: 'application/json' 
     },
@@ -59,5 +60,11 @@ export const api = {
     lister: () => requete('GET', '/humeur/jours'),
     find: (id) => requete('GET', `/humeur/jours/${id}`),
     today: () => requete('GET', '/humeur/jours/today')
+  },
+  auth: {
+    inscription: (donnees) => requete('POST', '/inscription', donnees),
+    connexion: (donnees) => requete('POST', '/connexion', donnees),
+    deconnexion: () => requete('POST', '/deconnexion'),
+    moi: () => requete('GET', '/auth/me'),
   }
 }

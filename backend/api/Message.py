@@ -2,11 +2,25 @@ import sqlite3
 from fastapi import APIRouter, HTTPException
 from schemas.Message import RequestMessage, ConversationInconnue
 from contextlib import closing
-from services.assistant import ask_medimind
+from services.assistant import ask_medimind, ModeleIndisponible
 from fastapi.responses import JSONResponse
 from db.database import get_connection
 
 router = APIRouter()
+
+# function to get last twelve conversation by id
+def find12LastMessageByConversation(id_conversation: int):
+    with closing(get_connection()) as conn, conn:
+
+        verifyConversationById(conn, id_conversation)
+
+        rows = conn.execute(
+            "SELECT * "
+            "FROM message WHERE id_conversation = ? ORDER BY id DESC",
+            (id_conversation,)
+        ).fetchall()
+
+        return [dict(row) for row in rows]
 
 # function to verify if conversation exist by id
 def verifyConversationById(conn, id_conversation: int):
@@ -51,14 +65,14 @@ def create_conversation_message(role: str, content: str):
     return id_conversation, id_message
 
 # function to insert message
-def create_message(role: str, content: str, id_conversation: int):
+def create_message(role: str, content: str, id_conversation: int, alerte: int):
     with closing(get_connection()) as conn, conn:
 
         verifyConversationById(conn, id_conversation)
 
         cur = conn.execute(
-            "INSERT INTO message (role, content, id_conversation) VALUES (?, ?, ?)",
-            (role, content, id_conversation)
+            "INSERT INTO message (role, content, id_conversation, alerte) VALUES (?, ?, ?, ?)",
+            (role, content, id_conversation, alerte)
         )
         return cur.lastrowid
 
@@ -89,12 +103,13 @@ def send_message(data: RequestMessage):
                 "id_message": id_message,
                 "id_conversation": id_conversation,
                 "role": "user",
-                "content": data.message
+                "content": data.message,
+                "alerte": 0
             }
         )
 
     else:
-        id_message = create_message('user', data.message, data.id_conversation)
+        id_message = create_message('user', data.message, data.id_conversation, 0)
 
         return JSONResponse(
             status_code = 200,
@@ -102,7 +117,8 @@ def send_message(data: RequestMessage):
                 "id_message": id_message,
                 "id_conversation": data.id_conversation,
                 "role": "user",
-                "content": data.message
+                "content": data.message,
+                "alerte": 0
             }
         )
 
@@ -115,17 +131,33 @@ def traitement_message(data: RequestMessage):
     # Vérification AVANT l'appel au LLM : on ne paie pas une réponse pour rien
     with closing(get_connection()) as conn:
         verifyConversationById(conn, data.id_conversation)
-    
-    reponse, langue = ask_medimind(data.message, [m.model_dump()  for m in data.historique], data.langue)
 
+    # try except for asking medimind
+    try:
+        # get conversation in base for historique
+        historique = find12LastMessageByConversation(data.id_conversation)
+        resultat = ask_medimind(data.message, historique, data.langue)
+    except ModeleIndisponible:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "modele_indisponible",
+                "message": "Modèle indisponible.", 
+                "errors": {}
+            },
+        )
     # insert response in base
-    id_message = create_message('assistant', reponse, data.id_conversation)
+    alerte = 1 if resultat["alerte"] is not None else 0
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte)
 
     return JSONResponse(
         status_code = 200,
         content = {
             "id_message": id_message,
             "role": "assistant",
-            "content": reponse,
+            "content": resultat["reponse"],
+            "id_conversation": data.id_conversation,
+            "alerte": alerte,
+            "orienter": resultat["orienter"],
         }
     )
