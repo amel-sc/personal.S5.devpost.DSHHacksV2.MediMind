@@ -243,7 +243,8 @@ export default {
     enCours: 'Création du compte…',
     dejaCompte: 'Tu as déjà un compte ?',
     seConnecter: 'Se connecter',
-    succes: 'Ton compte a été créé.',
+    succesTitre: 'Ton compte est prêt',
+    succes: 'Ton inscription a bien été enregistrée. Tu peux maintenant te connecter.',
     erreurs: {
       emailExiste: 'Cette adresse e-mail est déjà utilisée.',
       confirmation: 'Les mots de passe ne correspondent pas.',

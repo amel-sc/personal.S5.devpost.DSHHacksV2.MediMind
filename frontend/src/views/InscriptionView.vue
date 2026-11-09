@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watchPostEffect } from 'vue'
+import { computed, nextTick, ref, watchPostEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
@@ -21,6 +21,8 @@ const erreurChamp = ref({})
 const afficherMotDePasse = ref(false)
 
 const dateAujourdhui = new Date().toISOString().slice(0, 10)
+
+const zoneSucces = ref(null)
 
 const erreurConfirmation = computed(() => {
   if (!confirmation.value) return ''
@@ -67,6 +69,9 @@ async function inscrire() {
     await api.auth.inscription(data)
 
     inscriptionReussie.value = true
+    inscriptionReussie.value = true
+    await nextTick()
+    zoneSucces.value?.focus()
   } catch (e) {
     console.error(e)
     erreur.value = messageErreur(e)
@@ -89,13 +94,31 @@ async function inscrire() {
         <p>{{ t('inscription.sousTitre') }}</p>
       </header>
 
-      <div
+      <section
         v-if="inscriptionReussie"
-        class="alert theme-success"
+        class="succes-inscription"
+        ref="zoneSucces"
+        aria-labelledby="titre-succes"
         role="status"
+        tabindex="-1"
       >
-        {{ t('inscription.succes') }}
-      </div>
+        <div class="succes-icone" aria-hidden="true">
+          <i class="bi bi-check-lg"></i>
+        </div>
+
+        <h2 id="titre-succes">{{ t('inscription.succesTitre') }}</h2>
+        <p class="succes-texte">{{ t('inscription.succes') }}</p>
+
+        <RouterLink
+          to="/connexion"
+          class="btn-solid theme-primary btn-styled bouton-succes"
+          autofocus
+        >
+          <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+          {{ t('inscription.seConnecter') }}
+        </RouterLink>
+      </section>
+
 
       <form v-else class="formulaire" @submit.prevent="inscrire">
         <div v-if="erreur" class="alert theme-danger" role="alert">
@@ -345,6 +368,73 @@ async function inscrire() {
 @media (max-width: 30rem) {
   .carte-inscription {
     padding: 1.5rem;
+  }
+}
+.succes-inscription {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid color-mix(in srgb, #198754 35%, var(--mm-bordure));
+  border-radius: 1rem;
+  background: color-mix(in srgb, #198754 7%, var(--mm-surface));
+  text-align: center;
+  animation: apparition 220ms ease-out;
+}
+
+.succes-inscription:focus {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 4px;
+}
+
+.succes-icone {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, #198754 15%, transparent);
+  color: #198754;
+  font-size: 1.75rem;
+}
+
+.succes-inscription h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.succes-texte {
+  max-width: 30rem;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.bouton-succes {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  margin-top: 0.5rem;
+  padding-inline: 1.25rem;
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .succes-inscription {
+    animation: none;
   }
 }
 </style>

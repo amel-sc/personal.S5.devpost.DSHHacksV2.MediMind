@@ -243,7 +243,8 @@ export default {
     enCours: 'Creating account…',
     dejaCompte: 'Already have an account?',
     seConnecter: 'Sign in',
-    succes: 'Your account has been created.',
+    succesTitre: 'Your account is ready',
+    succes: 'Your registration is complete. You can now sign in.',
     erreurs: {
       emailExiste: 'This email address is already in use.',
       confirmation: 'The passwords do not match.',
