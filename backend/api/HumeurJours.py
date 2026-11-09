@@ -46,7 +46,7 @@ def findByDateJour():
     return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to find humeur_jours by id
-def findById(id: int):
+def findById(id: int, id_user: int):
     with closing(get_connection()) as conn:  # lecture seule : pas besoin de transaction
         row = conn.execute(
             "SELECT hj.id, hj.note, hj.date_creation, "
@@ -57,8 +57,8 @@ def findById(id: int):
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "WHERE hj.id = ?",
-            (id,)
+            "WHERE hj.id = ? AND id_user = ?",
+            (id, id_user)
         ).fetchone()
 
         if row is None:
@@ -166,8 +166,9 @@ def humeurJours():
 
 # function router to get humeur jours by id
 @router.get("/api/humeur/jours/{id_humeur_jours}")
-def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
-    humeur_jours, humeur_jours_causes = findById(id_humeur_jours)
+def get_humeur_jours(id_humeur_jours: int = Path(gt=0), utilisateur: dict = Depends(utilisateur_connecte)):
+
+    humeur_jours, humeur_jours_causes = findById(id_humeur_jours, utilisateur["id"])
 
     if humeur_jours is None:
         return JSONResponse(
@@ -186,9 +187,8 @@ def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
 @router.post("/api/humeur/jours")
 def create_humeurJours(data: HumeurJours, utilisateur: dict = Depends(utilisateur_connecte)):
 
-    id_user = utilisateur["id"]
     try:
-        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes, id_user)
+        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes, utilisateur["id"])
 
         return JSONResponse(
             status_code = 201,
