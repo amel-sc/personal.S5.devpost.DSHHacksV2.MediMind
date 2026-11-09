@@ -31,6 +31,17 @@ def utilisateur_connecte(request: Request):
 
     return utilisateur
 
+# function to get user by id
+def findById(user_id: str):
+    with closing(get_connection()) as conn:
+        row = conn.execute(
+            "SELECT * FROM utilisateur "
+            "WHERE id = ? "
+            "LIMIT 1",
+            (user_id,)
+        ).fetchone()
+
+    return dict(row)
 
 # function to verify user mail and password
 def verify_auth(email: str, mdp: str):
