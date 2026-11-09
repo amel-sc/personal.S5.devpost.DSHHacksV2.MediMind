@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 router = APIRouter()
 
 # function to get user pseudo
-def findById(pseudo: str):
+def findByPseudo(pseudo: str):
     with closing(get_connection()) as conn:
         row = conn.execute(
             "SELECT * FROM utilisateur "
@@ -22,3 +22,10 @@ def findById(pseudo: str):
             return None
 
     return dict(row)
+
+# function to create new user
+def create(pseudo: str, date_naissance: str, mdp: str):
+    
+
+# function to get user by pseudo and mdp
+

@@ -45,9 +45,6 @@ def findByDateJour():
     return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to find humeur_jours by id
-
-
-# function to find humeur_jours by id
 def findById(id: int):
     with closing(get_connection()) as conn:  # lecture seule : pas besoin de transaction
         row = conn.execute(
