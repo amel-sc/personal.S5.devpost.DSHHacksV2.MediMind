@@ -154,6 +154,26 @@ onMounted(async () => {
         <div class="reglages">
           <LangueSelecteur />
           <ThemeSelecteur />
+
+          <div v-if="utilisateur" class="bloc-utilisateur">
+            <span class="avatar-utilisateur" aria-hidden="true">
+              {{ (utilisateur.first_name || utilisateur.email || '?').charAt(0).toUpperCase() }}
+            </span>
+
+            <span class="nom-utilisateur">
+              {{ utilisateur.first_name || utilisateur.email }}
+            </span>
+
+            <button
+              type="button"
+              class="btn-outline theme-primary bouton-deconnexion"
+              :disabled="chargementUtilisateur"
+              @click="deconnecter"
+            >
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              <span>{{ t('auth.deconnexion') }}</span>
+            </button>
+          </div>
         </div>
       </header>
   
@@ -402,5 +422,77 @@ onMounted(async () => {
   flex-shrink: 0;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--mm-bordure);
+}
+.bloc-utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.avatar-utilisateur {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
+  color: var(--mm-accent);
+  font-weight: 700;
+}
+
+.nom-utilisateur {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.bouton-deconnexion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding-inline: 0.7rem;
+}
+
+.bouton-deconnexion:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 48rem) {
+  .nom-utilisateur {
+    display: none;
+  }
+
+  .bouton-deconnexion span {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .bouton-deconnexion {
+    width: 2.5rem;
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .avatar-utilisateur {
+    border: 1px solid ButtonText;
+    background: Canvas;
+    color: ButtonText;
+  }
 }
 </style>
