@@ -60,17 +60,21 @@ def construire_contexte_humeur(humeur, causes):
 
 # function to get last twelve conversation by id
 def find12LastMessageByConversation(id_conversation: int, id_user: int):
-    with closing(get_connection()) as conn, conn:
-
+    with closing(get_connection()) as conn:
         verifyConversationById(conn, id_conversation, id_user)
 
+        # On récupère les 12 plus récents...
         rows = conn.execute(
-            "SELECT * "
-            "FROM message WHERE id_conversation = ? ORDER BY id DESC",
-            (id_conversation,)
+            "SELECT id, role, content "
+            "FROM message "
+            "WHERE id_conversation = ? "
+            "ORDER BY id DESC "
+            "LIMIT 12",
+            (id_conversation,),
         ).fetchall()
 
-        return [dict(row) for row in rows]
+    # ...puis on les transmet au modèle du plus ancien au plus récent.
+    return [dict(row) for row in reversed(rows)]
 
 # function to verify if conversation exist by id
 def verifyConversationById(conn, id_conversation: int, id_user: int):
@@ -190,6 +194,9 @@ def traitement_message(data: RequestMessage, utilisateur: dict = Depends(utilisa
     try:
         # get conversation in base for historique
         historique = find12LastMessageByConversation(data.id_conversation, id_user)
+
+        # Le message actuel est déjà enregistré par /api/message.
+        # On le retire de l'historique puisqu'ask_medimind l'ajoutera lui-même.
 
         # find humeur actuel
         humeur_actuelle, causes_actuelles = findByDateJour(id_user)
