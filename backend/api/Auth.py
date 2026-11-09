@@ -4,7 +4,8 @@ from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from utils.PasswordUtil import hash_password, verifier_mot_de_passe
 
 router = APIRouter()
 
@@ -24,8 +25,12 @@ def findByPseudo(pseudo: str):
     return dict(row)
 
 # function to create new user
-def create(pseudo: str, date_naissance: str, mdp: str):
-    
+def create(pseudo: str, date_naissance: date, mdp: str):
+    with closing(get_connection()) as conn:
+        row = conn.execute(
+           "INSERT INTO utilisateur (pseudo, date_naissance, mdp) VALUES (?, ?, ?)"
+           (pseudo, date_naissance.isoformat(), hash_password(mdp)) 
+        )
 
 # function to get user by pseudo and mdp
 
