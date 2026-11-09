@@ -172,7 +172,7 @@ async function inscrire() {
 
       <p v-if="!inscriptionReussie" class="lien-connexion">
         {{ t('inscription.dejaCompte') }}
-        <RouterLink :to="{ name: 'connexion' }">
+        <RouterLink to="/connexion">
           {{ t('inscription.seConnecter') }}
         </RouterLink>
       </p>
