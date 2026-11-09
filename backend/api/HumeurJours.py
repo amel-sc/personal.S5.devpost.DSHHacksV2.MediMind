@@ -1,16 +1,17 @@
 import sqlite3
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Depends
 from schemas.HumeurJours import HumeurJours, HumeurInconnue, CauseInconnue
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
 from datetime import datetime, timedelta, timezone
+from api.Auth import utilisateur_connecte
 
 router = APIRouter()
 
 # function to find humeur actif du jour (humeur_jours_status.val = 1, date_creation = now)
-def findByDateJour():
+def findByDateJour(id_user: int):
     date_jour = datetime.now(timezone.utc).date()
     date_jour_plus1 = date_jour + timedelta(days=1)
 
@@ -26,8 +27,9 @@ def findByDateJour():
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
             "WHERE (hj.date_creation >= ? AND hj.date_creation < ?) "
             "AND hj.id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "AND hj.id_user = ? "
             "LIMIT 1",
-            (date_jour, date_jour_plus1)
+            (date_jour, date_jour_plus1, id_user)
         ).fetchone()
 
         if row is not None:
@@ -45,7 +47,7 @@ def findByDateJour():
     return (dict(row), None if row_causes is None else [dict(row_cause) for row_cause in row_causes])
 
 # function to find humeur_jours by id
-def findById(id: int):
+def findById(id: int, id_user: int):
     with closing(get_connection()) as conn:  # lecture seule : pas besoin de transaction
         row = conn.execute(
             "SELECT hj.id, hj.note, hj.date_creation, "
@@ -56,8 +58,8 @@ def findById(id: int):
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "WHERE hj.id = ?",
-            (id,)
+            "WHERE hj.id = ? AND hj.id_user = ?",
+            (id, id_user)
         ).fetchone()
 
         if row is None:
@@ -75,7 +77,7 @@ def findById(id: int):
     return (dict(row), [dict(r) for r in row_causes])
 
 # function to insert new humeur jours
-def create(val_humeur: int, note: str, humeur_causes: list[int]):
+def create(val_humeur: int, note: str, humeur_causes: list[int], id_user: int):
     date_jour = datetime.now(timezone.utc).date()
     date_jour_plus1 = date_jour + timedelta(days=1)
 
@@ -101,15 +103,16 @@ def create(val_humeur: int, note: str, humeur_causes: list[int]):
             "UPDATE humeur_jours "
             "SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) "
             "WHERE id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "AND id_user = ? "
             "AND date_creation >= ? AND date_creation < ?",
-            (date_jour, date_jour_plus1),
+            (id_user, date_jour, date_jour_plus1),
         )
 
         # 2. Insertion de la nouvelle humeur active
         cur = conn.execute(
-            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status) "
-            "VALUES (?, ?, (SELECT id FROM humeur_jours_status WHERE val = 1))",
-            (id_humeur, note),
+            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status, id_user) "
+            "VALUES (?, ?, (SELECT id FROM humeur_jours_status WHERE val = 1), ?)",
+            (id_humeur, note, id_user),
         )
         id_humeur_jours = cur.lastrowid
 
@@ -122,7 +125,7 @@ def create(val_humeur: int, note: str, humeur_causes: list[int]):
     return id_humeur_jours
 
 # function to findAll humeur jours 
-def findAll():
+def findAll(id_user: int):
     with closing(get_connection()) as conn:
         rows = conn.execute(
             "SELECT hj.id, hj.note, hj.date_creation, hj.id_humeur AS humeur_id, hj.id_humeur_jours_status AS status_id, "
@@ -133,14 +136,16 @@ def findAll():
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "ORDER BY hj.date_creation DESC"
+            "WHERE hj.id_user = ? "
+            "ORDER BY hj.date_creation DESC",
+            (id_user,)
         ).fetchall()
         return [dict(row) for row in rows]
 
 # function router to find humeur jours today
 @router.get("/api/humeur/jours/today")
-def humeurJoursToday():
-    humeurToday, humeurTodayCauses = findByDateJour()
+def humeurJoursToday(utilisateur: dict = Depends(utilisateur_connecte)):
+    humeurToday, humeurTodayCauses = findByDateJour(utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,
@@ -152,8 +157,8 @@ def humeurJoursToday():
     
 # function router to find All humeur jours
 @router.get("/api/humeur/jours")
-def humeurJours():
-    humeurJours = findAll()
+def humeurJours(utilisateur: dict = Depends(utilisateur_connecte)):
+    humeurJours = findAll(utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,
@@ -164,8 +169,9 @@ def humeurJours():
 
 # function router to get humeur jours by id
 @router.get("/api/humeur/jours/{id_humeur_jours}")
-def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
-    humeur_jours, humeur_jours_causes = findById(id_humeur_jours)
+def get_humeur_jours(id_humeur_jours: int = Path(gt=0), utilisateur: dict = Depends(utilisateur_connecte)):
+
+    humeur_jours, humeur_jours_causes = findById(id_humeur_jours, utilisateur["id"])
 
     if humeur_jours is None:
         return JSONResponse(
@@ -182,9 +188,10 @@ def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
     )
 # function router to insert new humeur jours
 @router.post("/api/humeur/jours")
-def create_humeurJours(data: HumeurJours):
+def create_humeurJours(data: HumeurJours, utilisateur: dict = Depends(utilisateur_connecte)):
+
     try:
-        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
+        id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes, utilisateur["id"])
 
         return JSONResponse(
             status_code = 201,

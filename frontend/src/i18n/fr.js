@@ -265,4 +265,8 @@ export default {
       mdpIncorrect: 'Adresse e-mail ou mot de passe incorrect.',
     },
   },
+  auth: {
+    deconnexion: 'Se déconnecter',
+    erreurDeconnexion: 'Impossible de te déconnecter pour le moment.',
+  },
 }

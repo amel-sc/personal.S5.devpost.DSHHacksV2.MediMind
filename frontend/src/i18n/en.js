@@ -265,4 +265,8 @@ export default {
       mdpIncorrect: 'Incorrect email address or password.',
     },
   },
+  auth: {
+    deconnexion: 'Sign out',
+    erreurDeconnexion: 'You could not be signed out right now.',
+  },
 }

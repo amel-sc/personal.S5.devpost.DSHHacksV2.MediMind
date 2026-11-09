@@ -1,18 +1,68 @@
 import sqlite3
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.Message import RequestMessage, ConversationInconnue
 from contextlib import closing
 from services.assistant import ask_medimind, ModeleIndisponible
 from fastapi.responses import JSONResponse
 from db.database import get_connection
+from api.Auth import utilisateur_connecte
+from api.HumeurJours import findByDateJour
 
 router = APIRouter()
 
+# À adapter aux valeurs réelles de ta table humeur.
+# Exemple uniquement si 1 = très bien ... 5 = très mal.
+LIBELLES_HUMEUR = {
+    1: "très bien",
+    2: "bien",
+    3: "moyen",
+    4: "mal",
+    5: "très mal",
+}
+
+# À adapter aux codes réels de ta table humeur_cause.
+LIBELLES_CAUSES = {
+    "sommeil":"sommeil",
+    "stress":"stress",
+    "famille":"famille",
+    "etudes":"etudes",
+    "amis":"amis",
+    "sante":"sante",
+    "couple":"couple",
+    "autre":"autre",
+}
+
+def construire_contexte_humeur(humeur, causes):
+    if humeur is None:
+        return None
+
+    # On n'utilise pas directement une description issue de la base
+    # comme instruction destinée au modèle.
+    try:
+        valeur = int(humeur["humeur_val"])
+    except (TypeError, ValueError, KeyError):
+        return None
+
+    libelle = LIBELLES_HUMEUR.get(valeur)
+    if libelle is None:
+        return None
+
+    codes_causes = [
+        cause["code"]
+        for cause in causes
+        if cause.get("code") in LIBELLES_CAUSES
+    ]
+
+    return {
+        "humeur": libelle,
+        "causes": [LIBELLES_CAUSES[code] for code in codes_causes],
+    }
+
 # function to get last twelve conversation by id
-def find12LastMessageByConversation(id_conversation: int):
+def find12LastMessageByConversation(id_conversation: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         rows = conn.execute(
             "SELECT * "
@@ -23,21 +73,21 @@ def find12LastMessageByConversation(id_conversation: int):
         return [dict(row) for row in rows]
 
 # function to verify if conversation exist by id
-def verifyConversationById(conn, id_conversation: int):
+def verifyConversationById(conn, id_conversation: int, id_user: int):
     row = conn.execute(
         "SELECT * FROM conversation "
-        "WHERE id = ?",
-        (id_conversation,)
+        "WHERE id = ? AND id_user = ?",
+        (id_conversation, id_user)
     ).fetchone() 
 
     if row is None:
         raise ConversationInconnue()
 
 # function to findAll message by conversation
-def findByConversation(id_conversation: int):
+def findByConversation(id_conversation: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         rows = conn.execute(
             "SELECT * "
@@ -48,11 +98,11 @@ def findByConversation(id_conversation: int):
         return [dict(row) for row in rows]
 
 # function to create conversation with message
-def create_conversation_message(role: str, content: str):
+def create_conversation_message(role: str, content: str, id_user: int):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
-            "INSERT INTO conversation (first_message) VALUES (?)",
-            (content,)
+            "INSERT INTO conversation (first_message, id_user) VALUES (?, ?)",
+            (content, id_user)
         )
         id_conversation = cur.lastrowid
 
@@ -65,10 +115,10 @@ def create_conversation_message(role: str, content: str):
     return id_conversation, id_message
 
 # function to insert message
-def create_message(role: str, content: str, id_conversation: int, alerte: int):
+def create_message(role: str, content: str, id_conversation: int, alerte: int, id_user: int):
     with closing(get_connection()) as conn, conn:
 
-        verifyConversationById(conn, id_conversation)
+        verifyConversationById(conn, id_conversation, id_user)
 
         cur = conn.execute(
             "INSERT INTO message (role, content, id_conversation, alerte) VALUES (?, ?, ?, ?)",
@@ -78,9 +128,9 @@ def create_message(role: str, content: str, id_conversation: int, alerte: int):
 
 # route to findAll message
 @router.get("/api/message")
-def messages(id_conversation: int):
+def messages(id_conversation: int, utilisateur: dict = Depends(utilisateur_connecte)):
 
-    messages = findByConversation(id_conversation)
+    messages = findByConversation(id_conversation, utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,
@@ -92,10 +142,12 @@ def messages(id_conversation: int):
 
 # route to create new conversation 
 @router.post("/api/message")
-def send_message(data: RequestMessage):
+def send_message(data: RequestMessage, utilisateur: dict = Depends(utilisateur_connecte)):
+
+    id_user = utilisateur["id"]
     # create new message with conversation
     if data.id_conversation is None:
-        id_conversation, id_message = create_conversation_message('user', data.message)
+        id_conversation, id_message = create_conversation_message('user', data.message, id_user)
 
         return JSONResponse(
             status_code = 200,
@@ -109,7 +161,7 @@ def send_message(data: RequestMessage):
         )
 
     else:
-        id_message = create_message('user', data.message, data.id_conversation, 0)
+        id_message = create_message('user', data.message, data.id_conversation, 0, id_user)
 
         return JSONResponse(
             status_code = 200,
@@ -124,19 +176,34 @@ def send_message(data: RequestMessage):
 
 # route to send message and get response
 @router.post("/api/message/traitement")
-def traitement_message(data: RequestMessage):
+def traitement_message(data: RequestMessage, utilisateur: dict = Depends(utilisateur_connecte)):
     if data.id_conversation is None:
         raise HTTPException(status_code=422, detail="L'identifiant de conversation est requis.")
 
+    id_user = utilisateur["id"]
+
     # Vérification AVANT l'appel au LLM : on ne paie pas une réponse pour rien
     with closing(get_connection()) as conn:
-        verifyConversationById(conn, data.id_conversation)
+        verifyConversationById(conn, data.id_conversation, id_user)
 
     # try except for asking medimind
     try:
         # get conversation in base for historique
-        historique = find12LastMessageByConversation(data.id_conversation)
-        resultat = ask_medimind(data.message, historique, data.langue)
+        historique = find12LastMessageByConversation(data.id_conversation, id_user)
+
+        # find humeur actuel
+        humeur_actuelle, causes_actuelles = findByDateJour(id_user)
+        contexte_humeur = construire_contexte_humeur(
+            humeur_actuelle,
+            causes_actuelles,
+        )
+
+        resultat = ask_medimind(
+            data.message,
+            historique,
+            data.langue,
+            contexte_humeur=contexte_humeur,
+        )
     except ModeleIndisponible:
         return JSONResponse(
             status_code=503,
@@ -148,7 +215,7 @@ def traitement_message(data: RequestMessage):
         )
     # insert response in base
     alerte = 1 if resultat["alerte"] is not None else 0
-    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte)
+    id_message = create_message('assistant', resultat["reponse"], data.id_conversation, alerte, id_user)
 
     return JSONResponse(
         status_code = 200,

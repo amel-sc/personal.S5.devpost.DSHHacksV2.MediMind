@@ -270,6 +270,23 @@ TEXTES = {
     },
 }
 
+LIBELLES_HUMEUR = {
+    "fr": {
+        1: "très bien",
+        2: "bien",
+        3: "neutre",
+        4: "mal",
+        5: "très mal",
+    },
+    "en": {
+        1: "very good",
+        2: "good",
+        3: "neutral",
+        4: "bad",
+        5: "very bad",
+    },
+}
+
 # ============================================================
 # Prompts
 # ============================================================
@@ -335,6 +352,14 @@ Deux idées simples pour aujourd'hui :
 - travailler par blocs courts, avec une vraie pause loin de l'écran entre chaque bloc ;
 - noter sur une feuille tout ce qui te trotte dans la tête avant de commencer.
 Tu veux qu'on organise ensemble ta prochaine séance de révision ? »
+
+# UTILISATION DU JOURNAL D’HUMEUR
+Si un contexte d’humeur du jour est fourni par l’application, utilise-le
+uniquement s’il aide à comprendre le message actuel.
+Cette humeur a été déclarée par l’utilisateur : elle peut avoir changé depuis.
+Ne la présente pas comme un diagnostic et ne la répète pas à chaque réponse.
+Le message actuel et les règles de sécurité ont toujours priorité.
+S’il n’y a pas de contexte d’humeur, n’en invente pas.
 """
 
 BLOC_CRISE = """# MODE SÉCURISÉ (prioritaire sur tout le reste)
@@ -532,31 +557,78 @@ def consigne_langue(langue, langue_docs):
 # ============================================================
 # Prompt système dynamique
 # ============================================================
-def construire_system(langue, analyse, *, mode="normal", physique=None, violence=False):
+def construire_system(
+    langue,
+    analyse,
+    *,
+    mode="normal",
+    physique=None,
+    violence=False,
+    contexte_humeur=None,
+):
     blocs = [SYSTEM_PROMPT]
+
     if mode == "crise":
         blocs.append(BLOC_CRISE)
     elif mode == "suivi":
         blocs.append(BLOC_SUIVI)
 
-    ctx = [f"- Langue de la réponse : {'français' if langue == 'fr' else 'anglais (English only)'}."]
+    ctx = [
+        f"- Langue de la réponse : "
+        f"{'français' if langue == 'fr' else 'anglais (English only)'}."
+    ]
+
     if analyse.emotion != "neutre":
         ctx.append(
-            f"- Émotion principale perçue : {analyse.emotion}, intensité {analyse.intensite}/5. "
-            "Ne la nomme pas comme une étiquette : sers-t'en pour ajuster ton ton."
+            f"- Émotion principale perçue : {analyse.emotion}, "
+            f"intensité {analyse.intensite}/5. "
+            "Ne la nomme pas comme une étiquette : "
+            "sers-t'en pour ajuster ton ton."
         )
+
     if mode != "crise":
         if analyse.emotion in CONSIGNES_EMOTION:
             ctx.append(f"- {CONSIGNES_EMOTION[analyse.emotion]}")
+
         if analyse.intensite >= 4:
-            ctx.append("- Il semble très affecté : accueille d'abord, une seule piste au maximum, 3 à 5 phrases.")
+            ctx.append(
+                "- Il semble très affecté : accueille d'abord, "
+                "une seule piste au maximum, 3 à 5 phrases."
+            )
+
         if physique == "symptome":
             ctx.append(BLOC_PHYSIQUE)
+
         if violence:
             ctx.append(BLOC_VIOLENCE)
+
+        # Ajouter la donnée réelle, uniquement lorsqu'elle existe.
+        if contexte_humeur:
+            niveau = contexte_humeur.get("niveau")
+            libelle = LIBELLES_HUMEUR.get(langue, {}).get(niveau)
+
+            if libelle:
+                ctx.append(
+                    f"- Humeur déclarée aujourd'hui dans le journal : "
+                    f"{libelle} ({niveau}/5 ; 1 = très bien, 5 = très mal)."
+                )
+
+                # Ici, les causes sont supposées être des codes contrôlés
+                # par l'application, pas du texte libre.
+                causes = contexte_humeur.get("causes") or []
+                if causes:
+                    ctx.append(
+                        "- Causes sélectionnées : "
+                        + ", ".join(causes[:5])
+                        + "."
+                    )
+
     heure = datetime.now(FUSEAU).hour
     if heure >= 23 or heure < 6:
-        ctx.append("- Il est tard : réponse plus courte ; pour le sommeil, des pistes calmes et sans écran.")
+        ctx.append(
+            "- Il est tard : réponse plus courte ; "
+            "pour le sommeil, des pistes calmes et sans écran."
+        )
 
     blocs.append("# CONTEXTE DE CE MESSAGE\n" + "\n".join(ctx))
     return "\n\n".join(blocs)
@@ -681,7 +753,7 @@ def _repondre_crise(question, historique, langue, analyse):
     return _resultat(texte, langue, "crise", alerte="eleve", analyse=analyse)
 
 
-def ask_medimind(question, historique=None, langue_interface="fr") -> dict:
+def ask_medimind(question, historique=None, langue_interface="fr", contexte_humeur=None,) -> dict:
     question = (question or "").strip()[:MAX_CARACTERES]
     historique = nettoyer_historique(historique)
     langue = detecter_langue(question, langue_interface if langue_interface in TEXTES else "fr")
@@ -721,7 +793,7 @@ def ask_medimind(question, historique=None, langue_interface="fr") -> dict:
         "\n\n".join(f"[Thème : {meta.get('source', '?')}]\n{doc}" for doc, meta in docs)
         if docs else SANS_DOCUMENT
     )
-    system = construire_system(langue, analyse, mode=mode, physique=physique, violence=violence)
+    system = construire_system(langue, analyse, mode=mode, physique=physique, violence=violence, contexte_humeur=contexte_humeur,)
     contenu = message_utilisateur(question, contexte, consigne_langue(langue, langue_docs))
 
     texte, orienter = nettoyer_reponse(generer(system, historique, contenu))

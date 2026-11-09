@@ -11,8 +11,16 @@ import { watch } from 'vue'
 import { api } from '@/services/api'
 
 const routes = [
-  { path: '/', redirect: { name: 'conversation' } },
-  { path: '/conversation/:id([1-9]\\d*)?', name: 'conversation', component: ConversationView, meta: { requiresAuth: true }, },
+  { 
+    path: '/', 
+    redirect: { name: 'conversation' } 
+  },
+  { 
+    path: '/conversation/:id([1-9]\\d*)?', 
+    name: 'conversation', 
+    component: ConversationView, 
+    meta: { requiresAuth: true }, 
+  },
   {
     path: '/inscription',
     name: 'inscription',
@@ -29,20 +37,20 @@ const routes = [
     path: '/humeur/list',
     name: 'humeurList',
     component: HumeurListView,
-    meta: { titre: "Journal d'humeur", section: 'humeur' },
+    meta: { titre: "Journal d'humeur", section: 'humeur', requiresAuth: true },
   },
   {
     path: '/humeur/new',
     name: 'humeurCreate',
     component: HumeurFormView,
-    meta: { titre: 'Nouvelle humeur', section: 'humeur' },
+    meta: { titre: 'Nouvelle humeur', section: 'humeur', requiresAuth: true },
   },
   {
     path: '/humeur/:id([1-9]\\d*)',
     name: 'humeurDetail',
     component: HumeurDetailView,
     props: true,
-    meta: { section: 'humeur' },
+    meta: { section: 'humeur', requiresAuth: true },
   },
   { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView, meta: { titre: 'Page introuvable' } },
 ]
