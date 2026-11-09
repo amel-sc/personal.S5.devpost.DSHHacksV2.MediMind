@@ -1,10 +1,11 @@
 import sqlite3
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from schemas.Message import RequestMessage
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
+from api.Auth import utilisateur_connecte
 
 router = APIRouter()
 
@@ -29,7 +30,7 @@ def create_conversation(first_message: str):
 
 # router to find all conversation
 @router.get("/api/conversation")
-def conversations():
+def conversations(utilisateur: dict = Depends(utilisateur_connecte)):
     conversations = findAll()
 
     return JSONResponse(

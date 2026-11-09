@@ -12,6 +12,9 @@ import {
   reponseEnCours,
 } from '@/stores/reponsesEnCours'
 import NumeroAide from '@/components/NumeroAide.vue'
+import AideUrgence from '@/components/AideUrgence.vue'
+
+const alerte = ref(null)
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -87,6 +90,7 @@ function versMessage(m, idConversation = null) {
     id,
     role: m.role,
     content: m.content,
+    alerte: m.alerte ?? null,
     id_conversation: m.id_conversation ?? idConversation,
   }
 }
@@ -155,6 +159,7 @@ async function suivreReponse(idConv, promesse) {
 
     const etaitEnBas = enBas.value
     messages.value.push(msg)
+    if (reponse.alerte) alerte.value = reponse.alerte
     annonce.value = t('conversation.arepondu', { contenu: reponse.content })
     if (etaitEnBas) await defiler()
     focusChamp()
@@ -190,6 +195,7 @@ async function chargerHistorique(id) {
   messages.value = []
   envoiEnCours.value = false
   enBas.value = true
+  alerte.value = null
 
   if (id == null) {
     chargementHistorique.value = false
@@ -204,6 +210,7 @@ async function chargerHistorique(id) {
     const corps = await api.message.lister(id)
     if (!estIci(jeton)) return
     messages.value = (corps.data ?? []).map((m) => versMessage(m, id))
+    alerte.value = messages.value.findLast((m) => m.alerte)?.alerte ?? null
     chargementHistorique.value = false
 
     const attente = reponseAvant ?? promesseReponse(id)
@@ -377,9 +384,11 @@ watchPostEffect(() => {
             </li>
           </ol>
 
+          <AideUrgence v-if="alerte" class="alerte-chat" />
+
           <div v-if="erreur" class="alert theme-danger encadre-erreur" role="alert">
             <p class="texte-erreur">{{ texteErreur }}</p>
-            <!-- <button
+            <button
               v-if="erreur.action"
               type="button"
               class="btn-outline theme-danger btn-styled"
@@ -387,7 +396,7 @@ watchPostEffect(() => {
               @click="erreur.action()"
             >
               {{ t('commun.reessayer') }}
-            </button> -->
+            </button>
           </div>
         </div>
       </div>
@@ -661,5 +670,8 @@ watchPostEffect(() => {
 .bouton-bas:focus-visible {
   outline: 3px solid var(--mm-accent);
   outline-offset: 2px;
+}
+.alerte-chat {
+  margin-top: 1rem;
 }
 </style>

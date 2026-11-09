@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS message (
     role TEXT NOT NULL CHECK (role IN ('assistant', 'user')),
     content TEXT NOT NULL,
     id_conversation INTEGER NOT NULL,
+    alerte INTEGER NOT NULL DEFAULT 0 CHECK (alerte IN (0, 1)),
     FOREIGN KEY (id_conversation) REFERENCES conversation(id)
 );
 
@@ -54,4 +55,15 @@ CREATE TABLE IF NOT EXISTS humeur_jours_causes (
     id_humeur_cause INT NOT NULL,
     FOREIGN KEY (id_humeur_jours) REFERENCES humeur_jours(id),
     FOREIGN KEY (id_humeur_cause) REFERENCES humeur_cause(id)
+);
+
+-- utilisateur
+CREATE TABLE IF NOT EXISTS utilisateur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT UNIQUE,
+    mdp TEXT,
+    date_naissance TEXT,
+    date_creatin TEXT DEFAULT CURRENT_TIMESTAMP
 );
