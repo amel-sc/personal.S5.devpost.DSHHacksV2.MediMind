@@ -59,5 +59,8 @@ export const api = {
     lister: () => requete('GET', '/humeur/jours'),
     find: (id) => requete('GET', `/humeur/jours/${id}`),
     today: () => requete('GET', '/humeur/jours/today')
+  },
+  auth: {
+    inscription: (donnees) => requete('POST', '/inscription', donnees),
   }
 }
