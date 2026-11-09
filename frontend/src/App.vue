@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
@@ -10,6 +10,7 @@ import PaysSelecteur from './components/PaysSelecteur.vue'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const conversations = ref([])
 const erreur = ref(null) // objet erreur brut (le texte affiché est traduit)
