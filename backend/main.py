@@ -6,6 +6,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from schemas.Message import ConversationInconnue
 from starlette.middleware.sessions import SessionMiddleware
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
 app = FastAPI()
 
@@ -15,13 +17,20 @@ def startup():
     init_db()
 
 # session
+chemin_env = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=chemin_env)
+
+secret = os.getenv("SESSION_SECRET")
+if not secret:
+    raise RuntimeError("SESSION_SECRET est absent du fichier .env")
+
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.environ["SESSION_SECRET"],
+    secret_key=secret,
     session_cookie="medimind_session",
-    max_age=60 * 60 * 24 * 7,  # 7 jours
+    max_age=60 * 60 * 24 * 7,
     same_site="lax",
-    https_only=False,  # développement local en HTTP seulement
+    https_only=False,  # développement local en HTTP uniquement
 )
 
 # exceptions
