@@ -228,4 +228,22 @@ export default {
     retour: 'Revenir à la page précédente',
   },
   modele_indisponible: "MediMind est momentanément indisponible. Réessaie dans un instant. Si tu te sens en danger, les numéros d'aide sont affichés en bas de l'écran.",
+  inscription: {
+    titre: 'Créer un compte',
+    sousTitre: 'Rejoins MediMind pour prendre soin de toi.',
+    prenom: 'Prénom',
+    email: 'Adresse e-mail',
+    motDePasse: 'Mot de passe',
+    confirmation: 'Confirmer le mot de passe',
+    aideMotDePasse: 'Utilise au moins 8 caractères.',
+    afficherMotDePasse: 'Afficher les mots de passe',
+    bouton: 'Créer mon compte',
+    enCours: 'Création du compte…',
+    dejaCompte: 'Tu as déjà un compte ?',
+    seConnecter: 'Se connecter',
+    succes: 'Ton compte a été créé.',
+    erreurs: {
+      confirmation: 'Les mots de passe ne correspondent pas.',
+    },
+  },
 }

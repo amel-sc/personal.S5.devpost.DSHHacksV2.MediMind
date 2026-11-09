@@ -228,4 +228,22 @@ export default {
     retour: 'Go back to the previous page',
   },
   modele_indisponible: "MediMind is temporarily unavailable. Try again in a moment. If you feel in danger, help numbers are shown at the bottom of the screen.",
+  inscription: {
+    titre: 'Create an account',
+    sousTitre: 'Join MediMind and take care of yourself.',
+    prenom: 'First name',
+    email: 'Email address',
+    motDePasse: 'Password',
+    confirmation: 'Confirm password',
+    aideMotDePasse: 'Use at least 8 characters.',
+    afficherMotDePasse: 'Show passwords',
+    bouton: 'Create account',
+    enCours: 'Creating account…',
+    dejaCompte: 'Already have an account?',
+    seConnecter: 'Sign in',
+    succes: 'Your account has been created.',
+    erreurs: {
+      confirmation: 'The passwords do not match.',
+    },
+  },
 }
