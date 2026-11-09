@@ -53,3 +53,4 @@ export function versDate(valeur) {
   const d = new Date(String(valeur).replace(' ', 'T'))
   return Number.isNaN(d.getTime()) ? null : d
 }
+

@@ -3,11 +3,14 @@ export function dateHeure(texte) {
   return d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
 }
 // function to convert date to date local
-function dateLocale(dateUtc) {
+export function dateLocale(dateUtc) {
   // SQLite renvoie souvent "YYYY-MM-DD HH:MM:SS", sans suffixe de fuseau.
   const iso = dateUtc.replace(' ', 'T') + 'Z'
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   }).format(new Date(iso))
 }
