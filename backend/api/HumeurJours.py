@@ -57,7 +57,7 @@ def findById(id: int, id_user: int):
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "WHERE hj.id = ? AND id_user = ?",
+            "WHERE hj.id = ? AND hj.id_user = ?",
             (id, id_user)
         ).fetchone()
 
@@ -124,7 +124,7 @@ def create(val_humeur: int, note: str, humeur_causes: list[int], id_user: int):
     return id_humeur_jours
 
 # function to findAll humeur jours 
-def findAll():
+def findAll(id_user: int):
     with closing(get_connection()) as conn:
         rows = conn.execute(
             "SELECT hj.id, hj.note, hj.date_creation, hj.id_humeur AS humeur_id, hj.id_humeur_jours_status AS status_id, "
@@ -135,7 +135,9 @@ def findAll():
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "ORDER BY hj.date_creation DESC"
+            "ORDER BY hj.date_creation DESC "
+            "WHERE hj.id_user = ?",
+            (id_user,)
         ).fetchall()
         return [dict(row) for row in rows]
 
@@ -154,8 +156,8 @@ def humeurJoursToday():
     
 # function router to find All humeur jours
 @router.get("/api/humeur/jours")
-def humeurJours():
-    humeurJours = findAll()
+def humeurJours(utilisateur: dict = Depends(utilisateur_connecte)):
+    humeurJours = findAll(utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,
