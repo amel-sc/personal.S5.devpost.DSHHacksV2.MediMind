@@ -28,12 +28,16 @@ async function chargerUtilisateur() {
   try {
     const reponse = await api.auth.moi()
     utilisateur.value = reponse?.user ?? null
-  } catch (e) {
-    if (e.status !== 401) {
-      console.error(e)
-    }
 
+    if (utilisateur.value) {
+      await charger()
+    } else {
+      conversations.value = []
+    }
+  } catch (e) {
+    if (e.status !== 401) console.error(e)
     utilisateur.value = null
+    conversations.value = []
   } finally {
     chargementUtilisateur.value = false
   }
@@ -48,6 +52,8 @@ async function deconnecter() {
   try {
     await api.auth.deconnexion()
     utilisateur.value = null
+    conversations.value = []
+    erreur.value = null
     await router.replace({ name: 'connexion' })
   } catch (e) {
     console.error(e)
@@ -128,13 +134,7 @@ function fermerDrawer() {
   drawer.value?.close()
 }
 
-onMounted(async () => {
-  await chargerUtilisateur()
-
-  if (utilisateur.value) {
-    await charger()
-  }
-})
+onMounted(chargerUtilisateur)
 </script>
 
 <template>
