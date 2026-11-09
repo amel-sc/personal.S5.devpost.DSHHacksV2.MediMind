@@ -16,6 +16,42 @@ const erreur = ref(null) // objet erreur brut (le texte affiché est traduit)
 const chargement = ref(false)
 const drawer = ref(null)
 
+const utilisateur = ref(null)
+const chargementUtilisateur = ref(true)
+const erreurDeconnexion = ref(null)
+
+// function to get utilisateur in session
+async function chargerUtilisateur() {
+  chargementUtilisateur.value = true
+
+  try {
+    const reponse = await api.auth.moi()
+    utilisateur.value = reponse?.user ?? null
+  } catch (e) {
+    if (e.status !== 401) {
+      console.error(e)
+    }
+
+    utilisateur.value = null
+  } finally {
+    chargementUtilisateur.value = false
+  }
+}
+
+// function de disconnect
+async function deconnecter() {
+  erreurDeconnexion.value = null
+
+  try {
+    await api.auth.deconnexion()
+    utilisateur.value = null
+    await router.replace({ name: 'connexion' })
+  } catch (e) {
+    console.error(e)
+    erreurDeconnexion.value = t('auth.erreurDeconnexion')
+  }
+}
+
 /* ---------- Bouton du menu ---------- */
 // 3 formes : 0 → « Ouvrir le menu », 1 → « … (1 nouvelle réponse) », n → « … (n nouvelles réponses) »
 const libelleMenu = computed(() => t('menu.ouvrir', nombreNonLues.value))
