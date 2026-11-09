@@ -388,7 +388,7 @@ watchPostEffect(() => {
 
           <div v-if="erreur" class="alert theme-danger encadre-erreur" role="alert">
             <p class="texte-erreur">{{ texteErreur }}</p>
-            <!-- <button
+            <button
               v-if="erreur.action"
               type="button"
               class="btn-outline theme-danger btn-styled"
@@ -396,7 +396,7 @@ watchPostEffect(() => {
               @click="erreur.action()"
             >
               {{ t('commun.reessayer') }}
-            </button> -->
+            </button>
           </div>
         </div>
       </div>
