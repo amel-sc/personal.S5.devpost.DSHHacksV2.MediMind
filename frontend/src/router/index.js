@@ -4,12 +4,19 @@ import HumeurListView from '@/views/HumeurListView.vue'
 import HumeurDetailView from '@/views/HumeurDetailView.vue'
 import HumeurFormView from '@/views/HumeurFormView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
+import InscriptionView from '@/views/InscriptionView.vue'
 import { i18n } from '@/i18n'
 import { watch } from 'vue'
 
 const routes = [
   { path: '/', redirect: { name: 'conversation' } },
   { path: '/conversation/:id([1-9]\\d*)?', name: 'conversation', component: ConversationView },
+  {
+    path: '/inscription',
+    name: 'inscription',
+    component: InscriptionView,
+    meta: { titre: "Inscription" },
+  },
   {
     path: '/humeur/list',
     name: 'humeurList',
