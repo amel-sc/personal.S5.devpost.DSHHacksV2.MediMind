@@ -4,7 +4,9 @@ from datetime import date
 
 # Modèle représentant le JSON attendu
 class Inscription(BaseModel):
-    pseudo: str
+    first_name: str
+    last_name: str
+    email: str
     mdp: str
     date_naissance: date
 

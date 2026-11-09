@@ -10,14 +10,14 @@ from schemas.Auth import Inscription, InscriptionError
 
 router = APIRouter()
 
-# function to get user pseudo
-def findByPseudo(pseudo: str):
+# function to get user email
+def findByEmail(email: str):
     with closing(get_connection()) as conn:
         row = conn.execute(
             "SELECT * FROM utilisateur "
-            "WHERE pseudo = ? "
+            "WHERE email = ? "
             "LIMIT = 1",
-            (pseudo,)
+            (email,)
         ).fetchone()
 
         if row is None:
@@ -26,18 +26,18 @@ def findByPseudo(pseudo: str):
     return dict(row)
 
 # function to create new user
-def create(pseudo: str, date_naissance: date, mdp: str):
+def create(first_name: str, last_name: str, email: str, date_naissance: date, mdp: str):
     with closing(get_connection()) as conn:
         row = conn.execute(
-           "INSERT INTO utilisateur (pseudo, date_naissance, mdp) VALUES (?, ?, ?)"
-           (pseudo, date_naissance.isoformat(), hash_password(mdp)) 
+           "INSERT INTO utilisateur (first_name, last_name, email, date_naissance, mdp) VALUES (?, ?, ?)"
+           (first_name, last_name, email, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
 # function router to create new user
 @router.post("/api/inscription")
 def inscription(data: Inscription):
     try:
-        create(data.pseudo, data.date_naissance, data.mdp)
+        create(data.first_name, data.last_name, data.email, data.date_naissance, data.mdp)
         return JSONResponse(
             status_code=201,
             content={
