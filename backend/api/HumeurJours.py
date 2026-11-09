@@ -136,8 +136,8 @@ def findAll(id_user: int):
             "FROM humeur_jours hj "
             "LEFT JOIN humeur h ON h.id = hj.id_humeur "
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
-            "ORDER BY hj.date_creation DESC "
-            "WHERE hj.id_user = ?",
+            "WHERE hj.id_user = ? "
+            "ORDER BY hj.date_creation DESC",
             (id_user,)
         ).fetchall()
         return [dict(row) for row in rows]
