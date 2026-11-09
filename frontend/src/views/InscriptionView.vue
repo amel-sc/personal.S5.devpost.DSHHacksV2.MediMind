@@ -47,6 +47,7 @@ watchPostEffect(() => {
 
 async function inscrire() {
   erreur.value = null
+  erreurChamp.value = null
 
   if (confirmation.value !== motDePasse.value) return
   if (!peutEnvoyer.value) return
@@ -137,6 +138,13 @@ async function inscrire() {
             required
             maxlength="254"
           />
+          <small
+            v-if="erreurChamp['email']"
+            id="erreur-email"
+            class="texte-invalide"
+          >
+            {{ t('inscription.erreurs'+erreurChamp['email']) }}
+          </small>
         </div>
 
         <div class="champ">
