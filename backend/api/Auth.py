@@ -88,6 +88,12 @@ def create(first_name: str, last_name: str, email: str, date_naissance: date, md
            (first_name, last_name, emailNormalize, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
+# funtion router to do deconnexion
+@router.post("/api/deconnexion")
+def deconnexion(request: Request):
+    request.session.clear()
+    return {"message": "Déconnexion réussie"}
+
 # function router to do connexion
 @router.post("/api/connexion")
 def connexion(data: Connexion, request: Request):
