@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watchPostEffect } from 'vue'
+import { computed, ref, watchPostEffect, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
@@ -15,6 +15,8 @@ const afficherMotDePasse = ref(false)
 const envoiEnCours = ref(false)
 const erreur = ref(null)
 const erreurChamp = ref({})
+
+const chargerUtilisateur = inject('chargerUtilisateur', null)
 
 const peutEnvoyer = computed(
   () => email.value.trim() && motDePasse.value && !envoiEnCours.value,
@@ -39,6 +41,10 @@ async function connecter() {
 
     // À adapter au nom de la méthode et au format réels de ton API.
     const resultat = await api.auth.connexion(data)
+
+    if (chargerUtilisateur) {
+      await chargerUtilisateur()
+    }
 
     const destination = "/"
 

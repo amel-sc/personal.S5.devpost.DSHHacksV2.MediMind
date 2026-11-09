@@ -39,6 +39,8 @@ async function chargerUtilisateur() {
   }
 }
 
+provide('chargerUtilisateur', chargerUtilisateur)
+
 // function de disconnect
 async function deconnecter() {
   erreurDeconnexion.value = null
