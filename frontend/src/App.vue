@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/services/api'
 import ThemeSelecteur from '@/components/ThemeSelecteur.vue'
@@ -10,11 +10,56 @@ import PaysSelecteur from './components/PaysSelecteur.vue'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const conversations = ref([])
 const erreur = ref(null) // objet erreur brut (le texte affiché est traduit)
 const chargement = ref(false)
 const drawer = ref(null)
+
+const utilisateur = ref(null)
+const chargementUtilisateur = ref(true)
+const erreurDeconnexion = ref(null)
+
+// function to get utilisateur in session
+async function chargerUtilisateur() {
+  chargementUtilisateur.value = true
+
+  try {
+    const reponse = await api.auth.moi()
+    utilisateur.value = reponse?.user ?? null
+
+    if (utilisateur.value) {
+      await charger()
+    } else {
+      conversations.value = []
+    }
+  } catch (e) {
+    if (e.status !== 401) console.error(e)
+    utilisateur.value = null
+    conversations.value = []
+  } finally {
+    chargementUtilisateur.value = false
+  }
+}
+
+provide('chargerUtilisateur', chargerUtilisateur)
+
+// function de disconnect
+async function deconnecter() {
+  erreurDeconnexion.value = null
+
+  try {
+    await api.auth.deconnexion()
+    utilisateur.value = null
+    conversations.value = []
+    erreur.value = null
+    await router.replace({ name: 'connexion' })
+  } catch (e) {
+    console.error(e)
+    erreurDeconnexion.value = t('auth.erreurDeconnexion')
+  }
+}
 
 /* ---------- Bouton du menu ---------- */
 // 3 formes : 0 → « Ouvrir le menu », 1 → « … (1 nouvelle réponse) », n → « … (n nouvelles réponses) »
@@ -89,7 +134,7 @@ function fermerDrawer() {
   drawer.value?.close()
 }
 
-onMounted(charger)
+onMounted(chargerUtilisateur)
 </script>
 
 <template>
@@ -112,6 +157,27 @@ onMounted(charger)
         <div class="reglages">
           <LangueSelecteur />
           <ThemeSelecteur />
+
+          <!-- Compte visible dans le header seulement sur grand écran -->
+          <div v-if="utilisateur" class="bloc-utilisateur compte-desktop">
+            <span class="avatar-utilisateur" aria-hidden="true">
+              {{ (utilisateur.first_name || utilisateur.email || '?').charAt(0).toUpperCase() }}
+            </span>
+
+            <span class="nom-utilisateur">
+              {{ utilisateur.first_name || utilisateur.email }}
+            </span>
+
+            <button
+              type="button"
+              class="btn-outline theme-primary bouton-deconnexion"
+              :disabled="chargementUtilisateur"
+              @click="deconnecter"
+            >
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              <span>{{ t('auth.deconnexion') }}</span>
+            </button>
+          </div>
         </div>
       </header>
   
@@ -134,6 +200,33 @@ onMounted(charger)
         </div>
   
         <div class="drawer-body corps-menu">
+          <div v-if="utilisateur" class="compte-mobile">
+            <div class="identite-mobile">
+              <span class="avatar-utilisateur" aria-hidden="true">
+                {{ (utilisateur.first_name || utilisateur.email || '?').charAt(0).toUpperCase() }}
+              </span>
+
+              <div class="identite-texte">
+                <span class="nom-mobile">
+                  {{ [utilisateur.first_name, utilisateur.last_name].filter(Boolean).join(' ') || utilisateur.email }}
+                </span>
+                <span v-if="utilisateur.email" class="email-mobile">
+                  {{ utilisateur.email }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-outline theme-primary btn-styled bouton-mobile"
+              :disabled="chargementUtilisateur"
+              @click="deconnecter"
+            >
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              {{ t('auth.deconnexion') }}
+            </button>
+          </div>
+
           <nav class="nav-principale" :aria-label="t('menu.navigation')">
             <RouterLink
               :to="{ name: 'conversation' }"
@@ -361,4 +454,154 @@ onMounted(charger)
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--mm-bordure);
 }
+.bloc-utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.avatar-utilisateur {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--mm-accent) 15%, transparent);
+  color: var(--mm-accent);
+  font-weight: 700;
+}
+
+.nom-utilisateur {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.bouton-deconnexion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding-inline: 0.7rem;
+}
+
+.bouton-deconnexion:focus-visible {
+  outline: 3px solid var(--mm-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 48rem) {
+  .nom-utilisateur {
+    display: none;
+  }
+
+  .bouton-deconnexion span {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .bouton-deconnexion {
+    width: 2.5rem;
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .avatar-utilisateur {
+    border: 1px solid ButtonText;
+    background: Canvas;
+    color: ButtonText;
+  }
+}
+.entete-app {
+  min-width: 0;
+}
+
+.nom-app {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.reglages {
+  min-width: 0;
+}
+
+.compte-mobile {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .entete-app {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .nom-app {
+    font-size: 1rem;
+  }
+
+  .reglages {
+    gap: 0.25rem;
+  }
+
+  /* Le bloc complet quitte le header sur mobile */
+  .compte-desktop {
+    display: none;
+  }
+
+  .compte-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0 1rem;
+    border-bottom: 1px solid var(--mm-bordure);
+  }
+
+  .identite-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .identite-texte {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nom-mobile {
+    font-weight: 600;
+  }
+
+  .nom-mobile,
+  .email-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .email-mobile {
+    font-size: 0.875rem;
+    opacity: 0.75;
+  }
+
+  .bouton-mobile {
+    align-self: flex-start;
+  }
+}
+
 </style>

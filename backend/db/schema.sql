@@ -1,8 +1,21 @@
+-- utilisateur
+CREATE TABLE IF NOT EXISTS utilisateur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT UNIQUE,
+    mdp TEXT,
+    date_naissance TEXT,
+    date_creatin TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 -- conversation
 CREATE TABLE IF NOT EXISTS conversation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
-    first_message TEXT
+    first_message TEXT,
+    id_user INTEGER,
+    FOREIGN KEY (id_user) REFERENCES utilisateur(id)
 );
 
 -- message
@@ -40,10 +53,12 @@ CREATE TABLE IF NOT EXISTS humeur_jours_status (
 -- humeur_jours
 CREATE TABLE IF NOT EXISTS humeur_jours (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_humeur INT NOT NULL,
+    id_humeur INTEGER NOT NULL,
     date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
     note TEXT,
-    id_humeur_jours_status INT,
+    id_humeur_jours_status INTEGER,
+    id_user INTEGER,
+    FOREIGN KEY (id_user) REFERENCES utilisateur(id),
     FOREIGN KEY (id_humeur) REFERENCES humeur(id),
     FOREIGN KEY (id_humeur_jours_status) REFERENCES humeur_jours_status(id)
 );
@@ -51,19 +66,8 @@ CREATE TABLE IF NOT EXISTS humeur_jours (
 -- humeur_jours_causes
 CREATE TABLE IF NOT EXISTS humeur_jours_causes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_humeur_jours INT NOT NULL,
-    id_humeur_cause INT NOT NULL,
+    id_humeur_jours INTEGER NOT NULL,
+    id_humeur_cause INTEGER NOT NULL,
     FOREIGN KEY (id_humeur_jours) REFERENCES humeur_jours(id),
     FOREIGN KEY (id_humeur_cause) REFERENCES humeur_cause(id)
-);
-
--- utilisateur
-CREATE TABLE IF NOT EXISTS utilisateur (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    first_name TEXT,
-    last_name TEXT,
-    email TEXT UNIQUE,
-    mdp TEXT,
-    date_naissance TEXT,
-    date_creatin TEXT DEFAULT CURRENT_TIMESTAMP
 );
