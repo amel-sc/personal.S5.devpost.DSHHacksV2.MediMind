@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from api import Message, Conversation, Humeur, HumeurCause, HumeurJours
+from api import Message, Conversation, Humeur, HumeurCause, HumeurJours, Auth
 from db.database import init_db
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -37,3 +37,4 @@ app.include_router(Conversation.router)
 app.include_router(Humeur.router)
 app.include_router(HumeurCause.router)
 app.include_router(HumeurJours.router)
+app.include_router(Auth.router)

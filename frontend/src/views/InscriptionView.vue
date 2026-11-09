@@ -163,9 +163,7 @@ async function inscrire() {
             name="new-password"
             autocomplete="new-password"
             required
-            minlength="8"
           />
-          <small class="aide-champ">{{ t('inscription.aideMotDePasse') }}</small>
         </div>
 
         <div class="champ">
@@ -179,7 +177,6 @@ async function inscrire() {
             name="confirm-password"
             autocomplete="new-password"
             required
-            minlength="8"
             :aria-invalid="Boolean(erreurConfirmation)"
             :aria-describedby="erreurConfirmation ? 'erreur-confirmation' : undefined"
           />
