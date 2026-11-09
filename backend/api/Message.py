@@ -49,11 +49,11 @@ def findByConversation(id_conversation: int, id_user: int):
         return [dict(row) for row in rows]
 
 # function to create conversation with message
-def create_conversation_message(role: str, content: str):
+def create_conversation_message(role: str, content: str, id_user: int):
     with closing(get_connection()) as conn, conn:
         cur = conn.execute(
-            "INSERT INTO conversation (first_message) VALUES (?)",
-            (content,)
+            "INSERT INTO conversation (first_message, id_user) VALUES (?, ?)",
+            (content, id_user)
         )
         id_conversation = cur.lastrowid
 
