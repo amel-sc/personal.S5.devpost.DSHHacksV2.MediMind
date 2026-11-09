@@ -7,3 +7,7 @@ class Inscription(BaseModel):
     pseudo: str
     mdp: str
     date_naissance: date
+
+# Inscription error
+class InscriptionError(Exception):
+    pass

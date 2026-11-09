@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from db.database import get_connection
 from datetime import date, datetime, timedelta, timezone
 from utils.PasswordUtil import hash_password, verifier_mot_de_passe
+from schemas.Auth import Inscription, InscriptionError
 
 router = APIRouter()
 
@@ -32,5 +33,21 @@ def create(pseudo: str, date_naissance: date, mdp: str):
            (pseudo, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
-# function to get user by pseudo and mdp
+# function router to create new user
+@router.post("/inscription")
+def inscription(data: Inscription):
+    try:
+        create(data.pseudo, data.date_naissance, data.mdp)
+        return JSONResponse(
+            status_code=201,
+            content={
+                "message": "Inscription réussi",
+                "errors": {}
+            }
+        )
 
+    except InscriptionError:
+        return JSONResponse(status_code=422, content={
+            "message": "Certaines informations ne sont pas valides.",
+            "errors": {},
+        })
