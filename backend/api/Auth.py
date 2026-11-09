@@ -1,5 +1,5 @@
 import sqlite3
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Depends, HTTPException, Request, status
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
@@ -9,6 +9,28 @@ from utils.PasswordUtil import hash_password, verifier_mot_de_passe
 from schemas.Auth import Inscription, InscriptionError, ConnexionError, Connexion
 
 router = APIRouter()
+
+# function to verify utilisateur in session
+def utilisateur_connecte(request: Request):
+    user_id = request.session.get("user_id")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Non authentifié",
+        )
+
+    utilisateur = findById(user_id)
+
+    if utilisateur is None:
+        request.session.clear()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session invalide",
+        )
+
+    return utilisateur
+
 
 # function to verify user mail and password
 def verify_auth(email: str, mdp: str):
@@ -57,12 +79,21 @@ def create(first_name: str, last_name: str, email: str, date_naissance: date, md
 
 # function router to do connexion
 @router.post("/api/connexion")
-def connexion(data: Connexion):
+def connexion(data: Connexion, request: Request):
     try:
         user = verify_auth(data.email, data.mdp)
+
+        request.session["user_id"] = user["id"]
+
         return JSONResponse(status_code=200, content={
             "message": "Connexion réussi",
-            "data": user
+            "user": {
+                "id": user["id"],
+                "first_name": user["first_name"],
+                "last_name": user["last_name"],
+                "email": user["email"],
+                "date_naissance": user["date_naissance"],
+            }
         })
 
     except ConnexionError as e:
