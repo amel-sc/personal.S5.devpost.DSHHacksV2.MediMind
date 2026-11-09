@@ -260,5 +260,9 @@ export default {
     enCours: 'Signing in…',
     pasDeCompte: "Don't have an account yet?",
     creerCompte: 'Create an account',
+    erreurs: {
+      emailInexistant: 'No account matches this email address.',
+      mdpIncorrect: 'Incorrect email address or password.',
+    },
   },
 }

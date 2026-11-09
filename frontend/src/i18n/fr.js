@@ -260,5 +260,9 @@ export default {
     enCours: 'Connexion…',
     pasDeCompte: "Tu n'as pas encore de compte ?",
     creerCompte: 'Créer un compte',
+    erreurs: {
+      emailInexistant: 'Aucun compte ne correspond à cette adresse e-mail.',
+      mdpIncorrect: 'Adresse e-mail ou mot de passe incorrect.',
+    },
   },
 }

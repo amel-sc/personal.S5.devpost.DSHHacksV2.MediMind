@@ -17,7 +17,7 @@ def verify_auth(email: str, mdp: str):
         emailNotExist = findByEmail(conn, email)
 
         if emailNotExist is None:
-            raise ConnexionError("email", "emailNotExist")
+            raise ConnexionError("email", "emailInexistant")
 
         # verify mdp
         emailNotExist = dict(emailNotExist)
