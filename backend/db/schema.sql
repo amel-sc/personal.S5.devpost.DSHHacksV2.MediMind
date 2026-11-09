@@ -60,7 +60,9 @@ CREATE TABLE IF NOT EXISTS humeur_jours_causes (
 -- utilisateur
 CREATE TABLE IF NOT EXISTS utilisateur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pseudo TEXT UNIQUE,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT UNIQUE,
     mdp TEXT,
     date_naissance TEXT,
     date_creatin TEXT DEFAULT CURRENT_TIMESTAMP
