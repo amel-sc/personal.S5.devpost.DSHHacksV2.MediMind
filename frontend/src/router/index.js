@@ -5,6 +5,7 @@ import HumeurDetailView from '@/views/HumeurDetailView.vue'
 import HumeurFormView from '@/views/HumeurFormView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import InscriptionView from '@/views/InscriptionView.vue'
+import ConnexionView from '@/views/ConnexionView.vue'
 import { i18n } from '@/i18n'
 import { watch } from 'vue'
 
@@ -16,6 +17,12 @@ const routes = [
     name: 'inscription',
     component: InscriptionView,
     meta: { titre: "Inscription" },
+  },
+  {
+    path: '/connexion',
+    name: 'connexion',
+    component: ConnexionView,
+    meta: { titre: "Connexion" },
   },
   {
     path: '/humeur/list',
