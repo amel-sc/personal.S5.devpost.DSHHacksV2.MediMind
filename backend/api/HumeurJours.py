@@ -1,11 +1,12 @@
 import sqlite3
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Depends
 from schemas.HumeurJours import HumeurJours, HumeurInconnue, CauseInconnue
 from contextlib import closing
 from services.assistant import ask_medimind
 from fastapi.responses import JSONResponse
 from db.database import get_connection
 from datetime import datetime, timedelta, timezone
+from api.Auth import utilisateur_connecte
 
 router = APIRouter()
 
@@ -75,7 +76,7 @@ def findById(id: int):
     return (dict(row), [dict(r) for r in row_causes])
 
 # function to insert new humeur jours
-def create(val_humeur: int, note: str, humeur_causes: list[int]):
+def create(val_humeur: int, note: str, humeur_causes: list[int], id_user: int):
     date_jour = datetime.now(timezone.utc).date()
     date_jour_plus1 = date_jour + timedelta(days=1)
 
@@ -101,15 +102,16 @@ def create(val_humeur: int, note: str, humeur_causes: list[int]):
             "UPDATE humeur_jours "
             "SET id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 2) "
             "WHERE id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "AND id_user = ? "
             "AND date_creation >= ? AND date_creation < ?",
-            (date_jour, date_jour_plus1),
+            (id_user, date_jour, date_jour_plus1),
         )
 
         # 2. Insertion de la nouvelle humeur active
         cur = conn.execute(
-            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status) "
-            "VALUES (?, ?, (SELECT id FROM humeur_jours_status WHERE val = 1))",
-            (id_humeur, note),
+            "INSERT INTO humeur_jours (id_humeur, note, id_humeur_jours_status, id_user) "
+            "VALUES (?, ?, (SELECT id FROM humeur_jours_status WHERE val = 1), ?)",
+            (id_humeur, note, id_user),
         )
         id_humeur_jours = cur.lastrowid
 
@@ -182,7 +184,9 @@ def get_humeur_jours(id_humeur_jours: int = Path(gt=0)):
     )
 # function router to insert new humeur jours
 @router.post("/api/humeur/jours")
-def create_humeurJours(data: HumeurJours):
+def create_humeurJours(data: HumeurJours, utilisateur: dict = Depends(utilisateur_connecte)):
+
+    id_user = utilisateur["id"]
     try:
         id_humeur_jours = create(data.id_humeur, data.note, data.id_humeur_causes)
 
