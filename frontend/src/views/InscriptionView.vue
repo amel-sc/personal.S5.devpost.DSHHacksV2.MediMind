@@ -19,6 +19,8 @@ const inscriptionReussie = ref(false)
 const erreur = ref(null)
 const afficherMotDePasse = ref(false)
 
+const dateAujourdhui = new Date().toISOString().slice(0, 10)
+
 const erreurConfirmation = computed(() => {
   if (!confirmation.value) return ''
   return confirmation.value === motDePasse.value
@@ -31,7 +33,7 @@ const peutEnvoyer = computed(
     nom.value.trim() &&
     prenom.value.trim() &&
     email.value.trim() &&
-    dateNaissance.value.trim() &&
+    dateNaissance.value &&
     motDePasse.value &&
     confirmation.value &&
     !erreurConfirmation.value &&
@@ -57,7 +59,7 @@ async function inscrire() {
       last_name: nom.value.trim(),
       email: email.value.trim(),
       mdp: motDePasse.value,
-      date_naissance: dateNaissance.value.trim()
+      date_naissance: dateNaissance.value
     }
 
     await api.auth.inscription(data)
@@ -134,6 +136,22 @@ async function inscrire() {
             maxlength="254"
           />
         </div>
+
+        <div class="champ">
+          <label for="date-naissance">{{ t('inscription.dateNaissance') }}</label>
+          <input
+            id="date-naissance"
+            v-model="dateNaissance"
+            class="form-control"
+            type="date"
+            name="date_naissance"
+            aria-label="Date picker"
+            autocomplete="bday"
+            :max="dateAujourdhui"
+            required
+          />
+        </div>
+
 
         <div class="champ">
           <label for="mot-de-passe">{{ t('inscription.motDePasse') }}</label>

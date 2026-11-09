@@ -234,6 +234,7 @@ export default {
     prenom: 'Prénom',
     nom: 'Nom',
     email: 'Adresse e-mail',
+    dateNaissance: 'Date de naissance',
     motDePasse: 'Mot de passe',
     confirmation: 'Confirmer le mot de passe',
     aideMotDePasse: 'Utilise au moins 8 caractères.',
