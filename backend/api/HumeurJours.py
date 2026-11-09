@@ -11,7 +11,7 @@ from api.Auth import utilisateur_connecte
 router = APIRouter()
 
 # function to find humeur actif du jour (humeur_jours_status.val = 1, date_creation = now)
-def findByDateJour():
+def findByDateJour(id_user: int):
     date_jour = datetime.now(timezone.utc).date()
     date_jour_plus1 = date_jour + timedelta(days=1)
 
@@ -27,8 +27,9 @@ def findByDateJour():
             "LEFT JOIN humeur_jours_status hjs ON hjs.id = hj.id_humeur_jours_status "
             "WHERE (hj.date_creation >= ? AND hj.date_creation < ?) "
             "AND hj.id_humeur_jours_status = (SELECT id FROM humeur_jours_status WHERE val = 1) "
+            "AND hj.id_user = ?"
             "LIMIT 1",
-            (date_jour, date_jour_plus1)
+            (date_jour, date_jour_plus1, id_user)
         ).fetchone()
 
         if row is not None:
@@ -143,8 +144,8 @@ def findAll(id_user: int):
 
 # function router to find humeur jours today
 @router.get("/api/humeur/jours/today")
-def humeurJoursToday():
-    humeurToday, humeurTodayCauses = findByDateJour()
+def humeurJoursToday(utilisateur: dict = Depends(utilisateur_connecte)):
+    humeurToday, humeurTodayCauses = findByDateJour(utilisateur["id"])
 
     return JSONResponse(
         status_code = 200,
