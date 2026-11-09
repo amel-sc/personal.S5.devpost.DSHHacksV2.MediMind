@@ -39,19 +39,10 @@ async function connecter() {
 
     // À adapter au nom de la méthode et au format réels de ton API.
     const resultat = await api.auth.connexion(data)
-    console.log("Message : "+resultat.message)
-    console.log("Data : "+ resultat.data == null ? '' : resultat.data)
-    console.log("errors: "+ resultat.errors == null ? '' : resultat.errors)
 
-    // // À adapter à la réponse du backend et au système d’authentification du projet.
-    // if (resultat?.access_token) {
-    //   localStorage.setItem('access_token', resultat.access_token)
-    // }
+    const destination = "/"
 
-    // const destination =
-    //   typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-
-    // await router.replace(destination)
+    await router.replace(destination)
   } catch (e) {
     console.error(e)
     erreur.value = messageErreur(e)
