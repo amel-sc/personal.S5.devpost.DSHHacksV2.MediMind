@@ -106,7 +106,18 @@ async function inscrire() {
             name="given-name"
             autocomplete="given-name"
             required
-            maxlength="80"
+          />
+        </div>
+
+        <div class="champ">
+          <label for="nom">{{ t('inscription.nom') }}</label>
+          <input
+            id="nom"
+            v-model.trim="nom"
+            class="form-control"
+            name="given-name"
+            autocomplete="given-name"
+            required
           />
         </div>
 

@@ -232,6 +232,7 @@ export default {
     titre: 'Create an account',
     sousTitre: 'Join MediMind and take care of yourself.',
     prenom: 'First name',
+    nom: 'Last name',
     email: 'Email address',
     motDePasse: 'Password',
     confirmation: 'Confirm password',
