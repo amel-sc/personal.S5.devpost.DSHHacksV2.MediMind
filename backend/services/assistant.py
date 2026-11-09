@@ -13,6 +13,11 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Literal
 from zoneinfo import ZoneInfo
+import os
+from types import SimpleNamespace
+from openai import OpenAI
+from dotenv import load_dotenv
+from pathlib import Path
 
 import chromadb
 from chromadb.utils import embedding_functions
@@ -25,8 +30,15 @@ logger = logging.getLogger("medimind")
 # ============================================================
 # Configuration
 # ============================================================
-MODELE = "qwen3:4b-instruct"
-MODELE_ANALYSE = MODELE      # tu peux mettre un modèle plus petit et plus rapide
+chemin_env = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=chemin_env)
+api = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY"),
+    timeout=30,
+)
+MODELE = "openai/gpt-oss-20b"      # vérifie la liste des modèles dans ta console
+MODELE_ANALYSE = MODELE
 KEEP_ALIVE = "30m"           # garde le modèle en mémoire entre deux messages
 NUM_CTX = 8192               # sinon Ollama coupe le début du prompt (le system prompt !)
 MAX_TOURS = 6                # 6 échanges = 12 messages
@@ -476,17 +488,23 @@ def proteger(texte: str) -> str:
 
 def _chat(model, messages, options, fmt=None):
     try:
-        return ollama.chat(
+        kwargs = dict(
             model=model,
             messages=messages,
-            options={"num_ctx": NUM_CTX, **options},
-            format=fmt,
-            keep_alive=KEEP_ALIVE,
+            temperature=options.get("temperature", 0.4),
+            max_tokens=options.get("num_predict", 450) + 1000,   # marge pour le raisonnement
+            extra_body={"reasoning_effort": "low"},               # réflexion courte = plus rapide
         )
-    except Exception as e:  # connexion refusée, délai dépassé, modèle absent…
-        logger.error("Ollama indisponible : %s", e)
+        if fmt is not None:
+            kwargs["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "analyse", "schema": fmt},
+            }
+        r = api.chat.completions.create(**kwargs)
+        return SimpleNamespace(message=r.choices[0].message)
+    except Exception as e:
+        logger.error("API indisponible : %s", e)
         raise ModeleIndisponible(str(e)) from e
-
 
 # ============================================================
 # Analyse (sujet, risque, émotion) en JSON structuré
@@ -497,19 +515,18 @@ def analyser(question, historique) -> Analyse:
         f"Dernier message de MediMind : {contexte}\n\nMessage de l'étudiant : {question}"
         if contexte else f"Message de l'étudiant : {question}"
     )
-    r = _chat(MODELE_ANALYSE, [
-            {"role": "system", "content": ANALYSE_PROMPT},
-            {"role": "user", "content": contenu},
-        ],
-        {"temperature": 0, "num_predict": 120},
-        fmt=Analyse.model_json_schema(),
-    )
     try:
+        r = _chat(MODELE_ANALYSE, [
+                {"role": "system", "content": ANALYSE_PROMPT},
+                {"role": "user", "content": contenu},
+            ],
+            {"temperature": 0, "num_predict": 120},
+            fmt=Analyse.model_json_schema(),
+        )
         return Analyse.model_validate_json(r.message.content)
-    except (ValidationError, ValueError):
-        logger.warning("Analyse illisible, valeurs par défaut utilisées")
+    except (ModeleIndisponible, ValidationError, ValueError):
+        logger.warning("Analyse indisponible, valeurs par défaut utilisées")
         return Analyse()
-
 
 # ============================================================
 # RAG
