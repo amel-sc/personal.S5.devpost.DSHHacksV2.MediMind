@@ -9,7 +9,9 @@ const { t } = useI18n()
 const router = useRouter()
 
 const prenom = ref('')
+const nom = ref('')
 const email = ref('')
+const dateNaissance = ref('')
 const motDePasse = ref('')
 const confirmation = ref('')
 const envoiEnCours = ref(false)
@@ -26,8 +28,10 @@ const erreurConfirmation = computed(() => {
 
 const peutEnvoyer = computed(
   () =>
+    nom.value.trim() &&
     prenom.value.trim() &&
     email.value.trim() &&
+    dateNaissance.value.trim() &&
     motDePasse.value &&
     confirmation.value &&
     !erreurConfirmation.value &&
@@ -47,12 +51,16 @@ async function inscrire() {
   envoiEnCours.value = true
 
   try {
-    // À adapter à la signature réelle de ton API.
-    await api.auth.inscription({
-      prenom: prenom.value.trim(),
+    // data
+    const data = {
+      first_name: prenom.value.trim(),
+      last_name: nom.value.trim(),
       email: email.value.trim(),
-      mot_de_passe: motDePasse.value,
-    })
+      mdp: motDePasse.value,
+      date_naissance: dateNaissance.value.trim()
+    }
+
+    await api.auth.inscription(data)
 
     inscriptionReussie.value = true
   } catch (e) {
