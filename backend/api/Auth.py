@@ -88,6 +88,16 @@ def create(first_name: str, last_name: str, email: str, date_naissance: date, md
            (first_name, last_name, emailNormalize, date_naissance.isoformat(), hash_password(mdp)) 
         )
 
+# # function to test dependence to session
+# @router.get("/api/auth/me")
+# def moi(utilisateur=Depends(utilisateur_connecte)):
+#     return {
+#         "id": utilisateur["id"],
+#         "first_name": utilisateur["first_name"],
+#         "last_name": utilisateur["last_name"],
+#         "email": utilisateur["email"],
+#     }
+
 # funtion router to do deconnexion
 @router.post("/api/deconnexion")
 def deconnexion(request: Request):

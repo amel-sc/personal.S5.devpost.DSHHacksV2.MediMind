@@ -15,6 +15,7 @@ async function requete(methode, chemin, donnees) {
 
   const options = {
     method: methode,
+    credentials: 'include',
     headers: { 
       Accept: 'application/json' 
     },
