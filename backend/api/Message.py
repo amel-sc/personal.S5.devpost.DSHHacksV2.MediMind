@@ -5,6 +5,7 @@ from contextlib import closing
 from services.assistant import ask_medimind, ModeleIndisponible
 from fastapi.responses import JSONResponse
 from db.database import get_connection
+from api.Auth import utilisateur_connecte
 
 router = APIRouter()
 
