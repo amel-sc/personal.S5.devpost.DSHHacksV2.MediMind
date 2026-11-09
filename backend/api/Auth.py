@@ -6,9 +6,25 @@ from fastapi.responses import JSONResponse
 from db.database import get_connection
 from datetime import date, datetime, timedelta, timezone
 from utils.PasswordUtil import hash_password, verifier_mot_de_passe
-from schemas.Auth import Inscription, InscriptionError
+from schemas.Auth import Inscription, InscriptionError, ConnexionError
 
 router = APIRouter()
+
+# function to verify user mail and password
+def verify_auth(email: str, mdp: str):
+    # verify email exist
+    with closing(get_connection()) as conn, conn:
+        emailNotExist = findByEmail(conn, email)
+
+        if emailNotExist is None:
+            raise ConnexionError("email", "emailNotExist")
+
+        # verify mdp
+        emailNotExist = dict(emailNotExist)
+        if verifier_mot_de_passe(mdp, emailNotExist.mdp) is False:
+            raise ConnexionError("mdp", "mdpIncorrect")
+
+    return emailNotExist
 
 # function to get user email
 def findByEmail(conn, email: str):

@@ -16,3 +16,10 @@ class InscriptionError(Exception):
         self.champ = champ
         self.code = code
         super().__init__(code)
+
+# Connexion error
+class ConnexionError(Exception):
+    def __init__(self, champ: str, code: str):
+        self.champ = champ
+        self.code = code
+        super().__init__(code)
