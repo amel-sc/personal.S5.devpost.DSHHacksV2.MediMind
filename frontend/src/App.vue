@@ -125,7 +125,13 @@ function fermerDrawer() {
   drawer.value?.close()
 }
 
-onMounted(charger)
+onMounted(async () => {
+  await chargerUtilisateur()
+
+  if (utilisateur.value) {
+    await charger()
+  }
+})
 </script>
 
 <template>
