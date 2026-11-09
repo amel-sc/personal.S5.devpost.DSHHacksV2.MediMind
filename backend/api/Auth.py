@@ -11,17 +11,16 @@ from schemas.Auth import Inscription, InscriptionError
 router = APIRouter()
 
 # function to get user email
-def findByEmail(email: str):
-    with closing(get_connection()) as conn:
-        row = conn.execute(
-            "SELECT * FROM utilisateur "
-            "WHERE email = ? "
-            "LIMIT = 1",
-            (email,)
-        ).fetchone()
+def findByEmail(conn, email: str):
+    row = conn.execute(
+        "SELECT * FROM utilisateur "
+        "WHERE email = ? "
+        "LIMIT = 1",
+        (email,)
+    ).fetchone()
 
-        if row is None:
-            return None
+    if row is None:
+        return None
 
     return dict(row)
 
