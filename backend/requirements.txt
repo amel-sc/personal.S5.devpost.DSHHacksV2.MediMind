@@ -16,3 +16,5 @@ lingua-language-detector
 # others
 pwdlib
 pwdlib[argon2]
+openai 
+python-dotenv

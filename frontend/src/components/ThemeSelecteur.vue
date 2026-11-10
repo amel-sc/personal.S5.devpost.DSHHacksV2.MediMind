@@ -6,7 +6,7 @@ const { theme } = useTheme()
 const uid = useId()
 
 const options = [
-  { valeur: 'auto', label: 'Automatique', icone: 'bi-circle-half' },
+  // { valeur: 'auto', label: 'Automatique', icone: 'bi-circle-half' },
   { valeur: 'light', label: 'Clair', icone: 'bi-sun' },
   { valeur: 'dark', label: 'Sombre', icone: 'bi-moon-stars' },
 ]
