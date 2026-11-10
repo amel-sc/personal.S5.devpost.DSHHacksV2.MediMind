@@ -6,9 +6,9 @@ const THEMES = ['auto', 'light', 'dark']
 function lire() {
   try {
     const v = localStorage.getItem(CLE)
-    return THEMES.includes(v) ? v : 'auto'
+    return THEMES.includes(v) ? v : 'dark'
   } catch {
-    return 'auto' // navigation privée, stockage bloqué…
+    return 'dark' // navigation privée, stockage bloqué…
   }
 }
 

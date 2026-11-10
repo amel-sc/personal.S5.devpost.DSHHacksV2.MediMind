@@ -41,6 +41,9 @@ def findById(user_id: str):
             (user_id,)
         ).fetchone()
 
+        if row is None:
+            return row
+
     return dict(row)
 
 # function to verify user mail and password
